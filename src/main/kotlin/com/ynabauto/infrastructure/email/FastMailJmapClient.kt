@@ -27,10 +27,13 @@ class FastMailJmapClient(restClientBuilder: RestClient.Builder, private val obje
             ?: throw RuntimeException("No JMAP mail account found for user: $user")
 
         val emailIds = queryOrderEmails(session.apiUrl, accountId, token, sinceDate)
+        log.debug { "Email/query returned ${emailIds.size} email IDs" }
 
         if (emailIds.isEmpty()) return emptyList()
 
-        return fetchEmailDetails(session.apiUrl, accountId, token, emailIds)
+        val orders = fetchEmailDetails(session.apiUrl, accountId, token, emailIds)
+        log.debug { "Fetched ${orders.size} email orders from ${emailIds.size} IDs" }
+        return orders
     }
 
     private fun getSession(token: String): JmapSession {

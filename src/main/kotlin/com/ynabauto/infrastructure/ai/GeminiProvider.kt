@@ -21,6 +21,7 @@ class GeminiProvider(restClientBuilder: RestClient.Builder, private val objectMa
 
     override fun classify(items: List<String>, rules: List<CategoryRule>, apiKey: String): String {
         val prompt = buildPrompt(items, rules)
+        log.debug { "Gemini prompt: $prompt" }
         val request = GeminiRequest(
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
         )
@@ -34,8 +35,10 @@ class GeminiProvider(restClientBuilder: RestClient.Builder, private val objectMa
         log.debug { "Gemini response: $rawBody" }
 
         val response = rawBody?.let { objectMapper.readValue(it, GeminiResponse::class.java) }
-        return response?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
+        val result = response?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
             ?: throw RuntimeException("No classification response from Gemini")
+        log.debug { "Gemini classified items=$items → categoryId=$result" }
+        return result
     }
 
     private fun buildPrompt(items: List<String>, rules: List<CategoryRule>): String {

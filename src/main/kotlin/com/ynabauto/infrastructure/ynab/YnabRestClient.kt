@@ -64,6 +64,7 @@ class YnabRestClient(restClientBuilder: RestClient.Builder, private val objectMa
             .body(YnabUpdateRequest(YnabTransactionPatch(memo = memo, categoryId = categoryId)))
             .retrieve()
             .toBodilessEntity()
+        log.debug { "updateTransaction complete for transactionId=$transactionId" }
     }
 }
 
