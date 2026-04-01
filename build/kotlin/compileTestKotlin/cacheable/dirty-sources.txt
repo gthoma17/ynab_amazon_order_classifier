@@ -1,5 +1,0 @@
-/home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier/src/test/kotlin/com/ynabauto/domain/AmazonOrderEntityTest.kt
-/home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier/src/test/kotlin/com/ynabauto/domain/SyncLogEntityTest.kt
-/home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier/src/test/kotlin/com/ynabauto/domain/AppConfigEntityTest.kt
-/home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier/src/test/kotlin/com/ynabauto/infrastructure/persistence/FlywayMigrationTest.kt
-/home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier/src/test/kotlin/com/ynabauto/domain/CategoryRuleEntityTest.kt
