@@ -1,5 +1,7 @@
 package com.ynabauto.infrastructure.email
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,7 +26,8 @@ class FastMailJmapClientTest {
     fun setup() {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
-        fastMailClient = FastMailJmapClient(RestClient.builder().requestFactory(restTemplate.requestFactory))
+        val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        fastMailClient = FastMailJmapClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
     }
 
     @Test

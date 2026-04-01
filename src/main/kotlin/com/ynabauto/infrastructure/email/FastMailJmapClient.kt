@@ -1,13 +1,14 @@
 package com.ynabauto.infrastructure.email
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.time.Instant
 
 @Component
-class FastMailJmapClient(restClientBuilder: RestClient.Builder) : EmailProviderClient {
+class FastMailJmapClient(restClientBuilder: RestClient.Builder, private val objectMapper: ObjectMapper) : EmailProviderClient {
 
     companion object {
         const val FASTMAIL_BASE_URL = "https://api.fastmail.com"
@@ -33,12 +34,14 @@ class FastMailJmapClient(restClientBuilder: RestClient.Builder) : EmailProviderC
     }
 
     private fun getSession(token: String): JmapSession {
-        val session = client.get()
+        val rawBody = client.get()
             .uri("$FASTMAIL_BASE_URL/.well-known/jmap")
             .header("Authorization", "Bearer $token")
             .retrieve()
-            .body(JmapSession::class.java)
-            ?: throw RuntimeException("Failed to get JMAP session")
+            .body(String::class.java)
+        log.debug { "JMAP session response: $rawBody" }
+        rawBody ?: throw RuntimeException("Failed to get JMAP session")
+        val session = objectMapper.readValue(rawBody, JmapSession::class.java)
         log.debug { "JMAP session: apiUrl=${session.apiUrl}, accounts=${session.primaryAccounts.keys}" }
         return session
     }
@@ -125,15 +128,15 @@ class FastMailJmapClient(restClientBuilder: RestClient.Builder) : EmailProviderC
     }
 
     private fun postJmap(apiUrl: String, token: String, request: JmapRequest): JmapResponse {
-        val response = client.post()
+        val rawBody = client.post()
             .uri(apiUrl)
             .header("Authorization", "Bearer $token")
             .body(request)
             .retrieve()
-            .body(JmapResponse::class.java)
-            ?: throw RuntimeException("Empty JMAP response")
-        log.debug { "JMAP response: $response" }
-        return response
+            .body(String::class.java)
+        log.debug { "JMAP response: $rawBody" }
+        rawBody ?: throw RuntimeException("Empty JMAP response")
+        return objectMapper.readValue(rawBody, JmapResponse::class.java)
     }
 }
 

@@ -1,12 +1,13 @@
 package com.ynabauto.infrastructure.ai
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.ynabauto.domain.CategoryRule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 
 @Component
-class GeminiProvider(restClientBuilder: RestClient.Builder) : ClassificationProvider {
+class GeminiProvider(restClientBuilder: RestClient.Builder, private val objectMapper: ObjectMapper) : ClassificationProvider {
 
     companion object {
         const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
@@ -24,14 +25,15 @@ class GeminiProvider(restClientBuilder: RestClient.Builder) : ClassificationProv
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
         )
 
-        val response = client.post()
+        val rawBody = client.post()
             .uri("/models/$MODEL:generateContent?key={key}", apiKey)
             .body(request)
             .retrieve()
-            .body(GeminiResponse::class.java)
+            .body(String::class.java)
 
-        log.debug { "Gemini response: $response" }
+        log.debug { "Gemini response: $rawBody" }
 
+        val response = rawBody?.let { objectMapper.readValue(it, GeminiResponse::class.java) }
         return response?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
             ?: throw RuntimeException("No classification response from Gemini")
     }

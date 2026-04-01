@@ -1,5 +1,7 @@
 package com.ynabauto.infrastructure.ynab
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -26,7 +28,8 @@ class YnabRestClientTest {
     fun setup() {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
-        ynabRestClient = YnabRestClient(RestClient.builder().requestFactory(restTemplate.requestFactory))
+        val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        ynabRestClient = YnabRestClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
     }
 
     // --- getTransactions ---

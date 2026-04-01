@@ -1,5 +1,7 @@
 package com.ynabauto.infrastructure.ai
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ynabauto.domain.CategoryRule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -26,7 +28,8 @@ class GeminiProviderTest {
     fun setup() {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
-        geminiProvider = GeminiProvider(RestClient.builder().requestFactory(restTemplate.requestFactory))
+        val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        geminiProvider = GeminiProvider(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
     }
 
     private val sampleRules = listOf(
