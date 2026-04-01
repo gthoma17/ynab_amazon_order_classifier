@@ -21,7 +21,7 @@ class OrderController(
         return amazonOrderRepository.findByStatus(OrderStatus.PENDING).map { order ->
             val items: List<String> = objectMapper.readValue(order.itemsJson, object : TypeReference<List<String>>() {})
             PendingOrderResponse(
-                id = order.id!!,
+                id = requireNotNull(order.id) { "Persisted AmazonOrder must have a non-null id" },
                 orderDate = order.orderDate,
                 totalAmount = order.totalAmount,
                 items = items,

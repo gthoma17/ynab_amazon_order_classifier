@@ -5,6 +5,7 @@ import com.ynabauto.infrastructure.ynab.YnabTransaction
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlin.math.abs
 
 object MatchingStrategy {
 
@@ -25,8 +26,8 @@ object MatchingStrategy {
         val expectedMilliunits = order.totalAmount.multiply(BigDecimal(1000)).toLong()
 
         return transactions.firstOrNull { txn ->
-            val amountMatches = Math.abs(Math.abs(txn.amount) - expectedMilliunits) <= AMOUNT_TOLERANCE_MILLIUNITS
-            val daysDiff = Math.abs(txn.date.toEpochDay() - orderDate.toEpochDay())
+            val amountMatches = abs(abs(txn.amount) - expectedMilliunits) <= AMOUNT_TOLERANCE_MILLIUNITS
+            val daysDiff = abs(txn.date.toEpochDay() - orderDate.toEpochDay())
             val dateMatches = daysDiff <= DATE_WINDOW_DAYS
             amountMatches && dateMatches
         }
