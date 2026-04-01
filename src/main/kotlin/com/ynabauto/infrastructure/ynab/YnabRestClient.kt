@@ -1,6 +1,7 @@
 package com.ynabauto.infrastructure.ynab
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.time.LocalDate
@@ -10,6 +11,7 @@ class YnabRestClient(restClientBuilder: RestClient.Builder) : YnabClient {
 
     companion object {
         const val BASE_URL = "https://api.ynab.com/v1"
+        private val log = KotlinLogging.logger {}
     }
 
     private val client = restClientBuilder
@@ -26,7 +28,9 @@ class YnabRestClient(restClientBuilder: RestClient.Builder) : YnabClient {
             .header("Authorization", "Bearer $token")
             .retrieve()
             .body(YnabTransactionsResponse::class.java)
-        return response?.data?.transactions?.map { it.toYnabTransaction() } ?: emptyList()
+        val transactions = response?.data?.transactions?.map { it.toYnabTransaction() } ?: emptyList()
+        log.debug { "getTransactions budgetId=$budgetId sinceDate=$sinceDate returned ${transactions.size} transactions" }
+        return transactions
     }
 
     override fun getCategories(budgetId: String, token: String): List<YnabCategory> {
@@ -35,7 +39,7 @@ class YnabRestClient(restClientBuilder: RestClient.Builder) : YnabClient {
             .header("Authorization", "Bearer $token")
             .retrieve()
             .body(YnabCategoriesResponse::class.java)
-        return response?.data?.categoryGroups
+        val categories = response?.data?.categoryGroups
             ?.filter { !it.deleted }
             ?.flatMap { group ->
                 group.categories
@@ -43,9 +47,12 @@ class YnabRestClient(restClientBuilder: RestClient.Builder) : YnabClient {
                     .map { YnabCategory(it.id, it.name, group.name) }
             }
             ?: emptyList()
+        log.debug { "getCategories budgetId=$budgetId returned ${categories.size} categories" }
+        return categories
     }
 
     override fun updateTransaction(budgetId: String, transactionId: String, token: String, memo: String, categoryId: String) {
+        log.debug { "updateTransaction budgetId=$budgetId transactionId=$transactionId categoryId=$categoryId" }
         client.put()
             .uri("/budgets/{budgetId}/transactions/{transactionId}", budgetId, transactionId)
             .header("Authorization", "Bearer $token")

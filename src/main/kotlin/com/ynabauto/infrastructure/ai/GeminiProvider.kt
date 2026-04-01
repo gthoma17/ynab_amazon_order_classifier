@@ -1,6 +1,7 @@
 package com.ynabauto.infrastructure.ai
 
 import com.ynabauto.domain.CategoryRule
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 
@@ -9,7 +10,8 @@ class GeminiProvider(restClientBuilder: RestClient.Builder) : ClassificationProv
 
     companion object {
         const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-        const val MODEL = "gemini-1.5-flash"
+        const val MODEL = "gemini-2.5-flash-lite"
+        private val log = KotlinLogging.logger {}
     }
 
     private val client = restClientBuilder
@@ -27,6 +29,8 @@ class GeminiProvider(restClientBuilder: RestClient.Builder) : ClassificationProv
             .body(request)
             .retrieve()
             .body(GeminiResponse::class.java)
+
+        log.debug { "Gemini response: $response" }
 
         return response?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
             ?: throw RuntimeException("No classification response from Gemini")
