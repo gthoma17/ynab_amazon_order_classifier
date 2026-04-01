@@ -62,7 +62,7 @@
 </td>
 <td>
 <div class="infoBox duration">
-<div class="counter">4.200s</div>
+<div class="counter">4.758s</div>
 <p>duration</p>
 </div>
 </td>
@@ -99,7 +99,7 @@
 <td>1</td>
 <td>0</td>
 <td>0</td>
-<td>0.544s</td>
+<td>0.661s</td>
 <td class="success">100%</td>
 </tr>
 <tr>
@@ -110,7 +110,7 @@
 <td>1</td>
 <td>0</td>
 <td>0</td>
-<td>0.007s</td>
+<td>0.008s</td>
 <td class="success">100%</td>
 </tr>
 <tr>
@@ -143,7 +143,7 @@
 <td>1</td>
 <td>0</td>
 <td>0</td>
-<td>0.011s</td>
+<td>0.013s</td>
 <td class="success">100%</td>
 </tr>
 </table>
@@ -152,8 +152,8 @@
 <div class="tab">
 <h2>standard output</h2>
 <span class="code">
-<pre id="root-0-test-stdout-com.ynabauto.domain.AmazonOrderEntityTest">06:44:22.922 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ynabauto.domain.AmazonOrderEntityTest]: AmazonOrderEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-06:44:23.043 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.AmazonOrderEntityTest
+<pre id="root-0-test-stdout-com.ynabauto.domain.AmazonOrderEntityTest">07:00:55.307 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ynabauto.domain.AmazonOrderEntityTest]: AmazonOrderEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+07:00:55.501 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.AmazonOrderEntityTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -164,27 +164,27 @@
 
  :: Spring Boot ::                (v3.3.5)
 
-2026-04-01T06:44:23.373Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Starting AmazonOrderEntityTest using Java 17.0.18 with PID 4698 (started by runner in /home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier)
-2026-04-01T06:44:23.375Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : No active profile set, falling back to 1 default profile: &quot;default&quot;
-2026-04-01T06:44:23.793Z  INFO 4698 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-04-01T06:44:23.852Z  INFO 4698 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 51 ms. Found 4 JPA repository interfaces.
-2026-04-01T06:44:24.317Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-01T06:44:24.400Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@4be0a27d
-2026-04-01T06:44:24.402Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-01T06:44:24.422Z  INFO 4698 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:sqlite:file::memory: (SQLite 3.46)
-2026-04-01T06:44:24.447Z  INFO 4698 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table &quot;main&quot;.&quot;flyway_schema_history&quot; does not exist yet
-2026-04-01T06:44:24.449Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.009s)
-2026-04-01T06:44:24.453Z  INFO 4698 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table &quot;main&quot;.&quot;flyway_schema_history&quot; ...
-2026-04-01T06:44:24.484Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema &quot;main&quot;: &lt;&lt; Empty Schema &gt;&gt;
-2026-04-01T06:44:24.496Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema &quot;main&quot; to version &quot;1 - init&quot;
-2026-04-01T06:44:24.515Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema &quot;main&quot;, now at version v1 (execution time 00:00.003s)
-2026-04-01T06:44:24.595Z  INFO 4698 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-04-01T06:44:24.647Z  INFO 4698 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
-2026-04-01T06:44:24.682Z  INFO 4698 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-04-01T06:44:24.968Z  INFO 4698 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-04-01T06:44:25.715Z  INFO 4698 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-04-01T06:44:25.718Z  INFO 4698 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-04-01T06:44:26.375Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Started AmazonOrderEntityTest in 3.277 seconds (process running for 4.294)
+2026-04-01T07:00:55.984Z  INFO 4192 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Starting AmazonOrderEntityTest using Java 17.0.18 with PID 4192 (started by runner in /home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier)
+2026-04-01T07:00:55.986Z  INFO 4192 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2026-04-01T07:00:56.502Z  INFO 4192 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-01T07:00:56.570Z  INFO 4192 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 59 ms. Found 4 JPA repository interfaces.
+2026-04-01T07:00:57.013Z  INFO 4192 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-01T07:00:57.125Z  INFO 4192 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@5232e3f1
+2026-04-01T07:00:57.127Z  INFO 4192 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-01T07:00:57.149Z  INFO 4192 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:sqlite:file::memory: (SQLite 3.46)
+2026-04-01T07:00:57.179Z  INFO 4192 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table &quot;main&quot;.&quot;flyway_schema_history&quot; does not exist yet
+2026-04-01T07:00:57.182Z  INFO 4192 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.011s)
+2026-04-01T07:00:57.185Z  INFO 4192 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table &quot;main&quot;.&quot;flyway_schema_history&quot; ...
+2026-04-01T07:00:57.230Z  INFO 4192 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema &quot;main&quot;: &lt;&lt; Empty Schema &gt;&gt;
+2026-04-01T07:00:57.240Z  INFO 4192 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema &quot;main&quot; to version &quot;1 - init&quot;
+2026-04-01T07:00:57.258Z  INFO 4192 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema &quot;main&quot;, now at version v1 (execution time 00:00.002s)
+2026-04-01T07:00:57.335Z  INFO 4192 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-01T07:00:57.388Z  INFO 4192 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-04-01T07:00:57.422Z  INFO 4192 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-01T07:00:57.720Z  INFO 4192 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-01T07:00:58.411Z  INFO 4192 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-01T07:00:58.413Z  INFO 4192 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-01T07:00:59.067Z  INFO 4192 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Started AmazonOrderEntityTest in 3.501 seconds (process running for 5.088)
 </pre>
 <button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-com.ynabauto.domain.AmazonOrderEntityTest">Copy</button>
 </span>
@@ -199,7 +199,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="https://www.gradle.org">Gradle 9.4.1</a> at Apr 1, 2026, 6:44:27 AM</p>
+<a href="https://www.gradle.org">Gradle 9.4.1</a> at Apr 1, 2026, 7:01:00 AM</p>
 </div>
 </div>
 </body>

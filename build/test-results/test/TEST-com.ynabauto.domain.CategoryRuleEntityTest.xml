@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.ynabauto.domain.CategoryRuleEntityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-01T06:44:27.023Z" hostname="runnervmrg6be" time="0.049">
+<testsuite name="com.ynabauto.domain.CategoryRuleEntityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-01T07:00:59.836Z" hostname="runnervmrg6be" time="0.043">
   <properties/>
   <testcase name="can update userDescription on a CategoryRule()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.006"/>
-  <testcase name="can save and retrieve a CategoryRule()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.005"/>
-  <testcase name="can list all CategoryRules()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.01"/>
-  <testcase name="can find CategoryRule by ynabCategoryId()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.008"/>
-  <system-out><![CDATA[2026-04-01T06:44:27.025Z  INFO 4698 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.ynabauto.domain.CategoryRuleEntityTest]: CategoryRuleEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-04-01T06:44:27.036Z  INFO 4698 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.CategoryRuleEntityTest
+  <testcase name="can save and retrieve a CategoryRule()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.004"/>
+  <testcase name="can list all CategoryRules()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.009"/>
+  <testcase name="can find CategoryRule by ynabCategoryId()" classname="com.ynabauto.domain.CategoryRuleEntityTest" time="0.007"/>
+  <system-out><![CDATA[2026-04-01T07:00:59.838Z  INFO 4192 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.ynabauto.domain.CategoryRuleEntityTest]: CategoryRuleEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-04-01T07:00:59.847Z  INFO 4192 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.CategoryRuleEntityTest
 Hibernate: insert into category_rules (updated_at,user_description,ynab_category_id,ynab_category_name) values (?,?,?,?)
 Hibernate: select last_insert_rowid()
 Hibernate: insert into category_rules (updated_at,user_description,ynab_category_id,ynab_category_name) values (?,?,?,?)

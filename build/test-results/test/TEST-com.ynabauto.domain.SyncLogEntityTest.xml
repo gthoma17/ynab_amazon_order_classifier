@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.ynabauto.domain.SyncLogEntityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-01T06:44:27.074Z" hostname="runnervmrg6be" time="0.056">
+<testsuite name="com.ynabauto.domain.SyncLogEntityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-01T07:00:59.881Z" hostname="runnervmrg6be" time="0.044">
   <properties/>
   <testcase name="can retrieve most recent SyncLog for a given source()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.01"/>
-  <testcase name="can save and retrieve a SyncLog()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.005"/>
-  <testcase name="can find SyncLogs by source()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.013"/>
-  <testcase name="can save a failed SyncLog with an error message()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.008"/>
-  <system-out><![CDATA[2026-04-01T06:44:27.076Z  INFO 4698 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.ynabauto.domain.SyncLogEntityTest]: SyncLogEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-04-01T06:44:27.085Z  INFO 4698 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.SyncLogEntityTest
+  <testcase name="can save and retrieve a SyncLog()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.004"/>
+  <testcase name="can find SyncLogs by source()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.01"/>
+  <testcase name="can save a failed SyncLog with an error message()" classname="com.ynabauto.domain.SyncLogEntityTest" time="0.004"/>
+  <system-out><![CDATA[2026-04-01T07:00:59.882Z  INFO 4192 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.ynabauto.domain.SyncLogEntityTest]: SyncLogEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-04-01T07:00:59.891Z  INFO 4192 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.SyncLogEntityTest
 Hibernate: insert into sync_logs (last_run,message,source,status) values (?,?,?,?)
 Hibernate: select last_insert_rowid()
 Hibernate: insert into sync_logs (last_run,message,source,status) values (?,?,?,?)

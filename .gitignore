@@ -1,0 +1,13 @@
+# Build output
+build/
+
+# Gradle wrapper
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
