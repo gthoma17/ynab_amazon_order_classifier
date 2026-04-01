@@ -1,0 +1,36 @@
+package com.ynabauto.service
+
+import com.ynabauto.domain.AppConfig
+import com.ynabauto.domain.CategoryRule
+import com.ynabauto.infrastructure.persistence.AppConfigRepository
+import com.ynabauto.infrastructure.persistence.CategoryRuleRepository
+import org.springframework.stereotype.Service
+import java.time.Instant
+
+@Service
+class ConfigService(
+    private val appConfigRepository: AppConfigRepository,
+    private val categoryRuleRepository: CategoryRuleRepository
+) {
+
+    companion object {
+        const val YNAB_TOKEN = "YNAB_TOKEN"
+        const val YNAB_BUDGET_ID = "YNAB_BUDGET_ID"
+        const val FASTMAIL_USER = "FASTMAIL_USER"
+        const val FASTMAIL_TOKEN = "FASTMAIL_TOKEN"
+        const val GEMINI_KEY = "GEMINI_KEY"
+    }
+
+    fun getValue(key: String): String? =
+        appConfigRepository.findById(key).map { it.value }.orElse(null)
+
+    fun setValue(key: String, value: String) {
+        appConfigRepository.save(AppConfig(key = key, value = value, updatedAt = Instant.now()))
+    }
+
+    fun getAllCategoryRules(): List<CategoryRule> = categoryRuleRepository.findAll()
+
+    fun saveCategoryRules(rules: List<CategoryRule>) {
+        categoryRuleRepository.saveAll(rules)
+    }
+}
