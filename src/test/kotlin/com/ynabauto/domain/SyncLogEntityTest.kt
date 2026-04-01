@@ -3,11 +3,13 @@ package com.ynabauto.domain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import java.time.Instant
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class SyncLogEntityTest {
 
     @Autowired

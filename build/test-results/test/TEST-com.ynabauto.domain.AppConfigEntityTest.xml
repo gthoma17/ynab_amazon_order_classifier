@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ynabauto.domain.AppConfigEntityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-01T06:44:26.973Z" hostname="runnervmrg6be" time="0.048">
+  <properties/>
+  <testcase name="can update an existing AppConfig value()" classname="com.ynabauto.domain.AppConfigEntityTest" time="0.01"/>
+  <testcase name="can find AppConfig by key()" classname="com.ynabauto.domain.AppConfigEntityTest" time="0.005"/>
+  <testcase name="can delete an AppConfig entry()" classname="com.ynabauto.domain.AppConfigEntityTest" time="0.008"/>
+  <testcase name="can save and retrieve an AppConfig entry()" classname="com.ynabauto.domain.AppConfigEntityTest" time="0.004"/>
+  <system-out><![CDATA[2026-04-01T06:44:26.976Z  INFO 4698 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.ynabauto.domain.AppConfigEntityTest]: AppConfigEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-04-01T06:44:26.988Z  INFO 4698 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.AppConfigEntityTest
+Hibernate: select ac1_0.key,ac1_0.updated_at,ac1_0.value from app_config ac1_0 where ac1_0.key=?
+Hibernate: select ac1_0.key,ac1_0.updated_at,ac1_0.value from app_config ac1_0 where ac1_0.key=?
+Hibernate: select ac1_0.key,ac1_0.updated_at,ac1_0.value from app_config ac1_0 where ac1_0.key=?
+Hibernate: select ac1_0.key,ac1_0.updated_at,ac1_0.value from app_config ac1_0 where ac1_0.key=?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

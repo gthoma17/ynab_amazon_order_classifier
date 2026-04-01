@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ynabauto.domain.AmazonOrderEntityTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-04-01T06:44:22.772Z" hostname="runnervmrg6be" time="4.198">
+  <properties/>
+  <testcase name="can find AmazonOrders by status()" classname="com.ynabauto.domain.AmazonOrderEntityTest" time="0.544"/>
+  <testcase name="can save and retrieve an AmazonOrder()" classname="com.ynabauto.domain.AmazonOrderEntityTest" time="0.007"/>
+  <testcase name="can update status from PENDING to MATCHED and set ynabTransactionId()" classname="com.ynabauto.domain.AmazonOrderEntityTest" time="0.014"/>
+  <testcase name="emailMessageId must be unique()" classname="com.ynabauto.domain.AmazonOrderEntityTest" time="0.011"/>
+  <testcase name="can transition order through full lifecycle to COMPLETED()" classname="com.ynabauto.domain.AmazonOrderEntityTest" time="0.005"/>
+  <system-out><![CDATA[06:44:22.922 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ynabauto.domain.AmazonOrderEntityTest]: AmazonOrderEntityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+06:44:23.043 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ynabauto.Application for test class com.ynabauto.domain.AmazonOrderEntityTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.5)
+
+2026-04-01T06:44:23.373Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Starting AmazonOrderEntityTest using Java 17.0.18 with PID 4698 (started by runner in /home/runner/work/ynab_amazon_order_classifier/ynab_amazon_order_classifier)
+2026-04-01T06:44:23.375Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : No active profile set, falling back to 1 default profile: "default"
+2026-04-01T06:44:23.793Z  INFO 4698 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-01T06:44:23.852Z  INFO 4698 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 51 ms. Found 4 JPA repository interfaces.
+2026-04-01T06:44:24.317Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-01T06:44:24.400Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@4be0a27d
+2026-04-01T06:44:24.402Z  INFO 4698 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-01T06:44:24.422Z  INFO 4698 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:sqlite:file::memory: (SQLite 3.46)
+2026-04-01T06:44:24.447Z  INFO 4698 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "main"."flyway_schema_history" does not exist yet
+2026-04-01T06:44:24.449Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.009s)
+2026-04-01T06:44:24.453Z  INFO 4698 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "main"."flyway_schema_history" ...
+2026-04-01T06:44:24.484Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema "main": << Empty Schema >>
+2026-04-01T06:44:24.496Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "main" to version "1 - init"
+2026-04-01T06:44:24.515Z  INFO 4698 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "main", now at version v1 (execution time 00:00.003s)
+2026-04-01T06:44:24.595Z  INFO 4698 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-01T06:44:24.647Z  INFO 4698 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-04-01T06:44:24.682Z  INFO 4698 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-01T06:44:24.968Z  INFO 4698 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-01T06:44:25.715Z  INFO 4698 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-01T06:44:25.718Z  INFO 4698 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-01T06:44:26.375Z  INFO 4698 --- [    Test worker] c.ynabauto.domain.AmazonOrderEntityTest  : Started AmazonOrderEntityTest in 3.277 seconds (process running for 4.294)
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+Hibernate: select ao1_0.id,ao1_0.created_at,ao1_0.email_message_id,ao1_0.items_json,ao1_0.order_date,ao1_0.status,ao1_0.total_amount,ao1_0.ynab_category_id,ao1_0.ynab_transaction_id from amazon_orders ao1_0 where ao1_0.status=?
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+2026-04-01T06:44:26.958Z  WARN 4698 --- [    Test worker] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 19, SQLState: null
+2026-04-01T06:44:26.959Z ERROR 4698 --- [    Test worker] o.h.engine.jdbc.spi.SqlExceptionHelper   : [SQLITE_CONSTRAINT_UNIQUE] A UNIQUE constraint failed (UNIQUE constraint failed: amazon_orders.email_message_id)
+Hibernate: insert into amazon_orders (created_at,email_message_id,items_json,order_date,status,total_amount,ynab_category_id,ynab_transaction_id) values (?,?,?,?,?,?,?,?)
+Hibernate: select last_insert_rowid()
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
