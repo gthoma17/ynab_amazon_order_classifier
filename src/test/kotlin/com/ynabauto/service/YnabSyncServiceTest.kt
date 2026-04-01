@@ -9,46 +9,26 @@ import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.infrastructure.ynab.YnabTransaction
+import io.mockk.every
+import io.mockk.justRun
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.atLeastOnce
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-/** Returns a non-null placeholder so Kotlin's null-safety doesn't interfere with Mockito matchers. */
-private fun anyLocalDate(): LocalDate = Mockito.any(LocalDate::class.java) ?: LocalDate.EPOCH
-
-@ExtendWith(MockitoExtension::class)
 class YnabSyncServiceTest {
 
-    @Mock
-    private lateinit var ynabClient: YnabClient
-
-    @Mock
-    private lateinit var amazonOrderRepository: AmazonOrderRepository
-
-    @Mock
-    private lateinit var syncLogRepository: SyncLogRepository
-
-    @Mock
-    private lateinit var configService: ConfigService
-
-    @Mock
-    private lateinit var classificationService: ClassificationService
-
+    private val ynabClient = mockk<YnabClient>()
+    private val amazonOrderRepository = mockk<AmazonOrderRepository>()
+    private val syncLogRepository = mockk<SyncLogRepository>()
+    private val configService = mockk<ConfigService>()
+    private val classificationService = mockk<ClassificationService>()
     private lateinit var ynabSyncService: YnabSyncService
 
     @BeforeEach
@@ -76,42 +56,54 @@ class YnabSyncServiceTest {
 
     @Test
     fun `sync skips when YNAB credentials are not configured`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn(null)
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns null
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns null
 
         ynabSyncService.sync()
 
-        verifyNoInteractions(ynabClient)
-        verifyNoInteractions(syncLogRepository)
+        verify { ynabClient wasNot io.mockk.Called }
+        verify { syncLogRepository wasNot io.mockk.Called }
+    }
+
+    @Test
+    fun `sync skips when YNAB budget ID is not configured`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns null
+
+        ynabSyncService.sync()
+
+        verify { ynabClient wasNot io.mockk.Called }
+        verify { syncLogRepository wasNot io.mockk.Called }
     }
 
     @Test
     fun `sync saves SUCCESS log when no pending orders`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn("ynab-token")
-        `when`(configService.getValue(ConfigService.YNAB_BUDGET_ID)).thenReturn("budget-1")
-        `when`(amazonOrderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(emptyList())
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns emptyList()
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
         ynabSyncService.sync()
 
-        val captor = ArgumentCaptor.forClass(SyncLog::class.java)
-        verify(syncLogRepository).save(captor.capture())
-        assertEquals(SyncSource.YNAB, captor.value.source)
-        assertEquals(SyncStatus.SUCCESS, captor.value.status)
-        assertNull(captor.value.message)
+        assertEquals(SyncSource.YNAB, syncLogSlot.captured.source)
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+        assertNull(syncLogSlot.captured.message)
     }
 
     @Test
     fun `sync saves FAIL log when YNAB client throws`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn("ynab-token")
-        `when`(configService.getValue(ConfigService.YNAB_BUDGET_ID)).thenReturn("budget-1")
-        `when`(amazonOrderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(listOf(makeOrder(1L, "49.99")))
-        Mockito.doThrow(RuntimeException("YNAB API error")).`when`(ynabClient).getTransactions(anyString(), anyString(), anyLocalDate())
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(makeOrder(1L, "49.99"))
+        every { ynabClient.getTransactions(any(), any(), any()) } throws RuntimeException("YNAB API error")
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
         ynabSyncService.sync()
 
-        val captor = ArgumentCaptor.forClass(SyncLog::class.java)
-        verify(syncLogRepository).save(captor.capture())
-        assertEquals(SyncStatus.FAIL, captor.value.status)
-        assertEquals("YNAB API error", captor.value.message)
+        assertEquals(SyncStatus.FAIL, syncLogSlot.captured.status)
+        assertEquals("YNAB API error", syncLogSlot.captured.message)
     }
 
     // --- processOrder ---
@@ -123,7 +115,7 @@ class YnabSyncServiceTest {
 
         ynabSyncService.processOrder(order, txns, "budget-1", "token")
 
-        verifyNoInteractions(amazonOrderRepository)
+        verify { amazonOrderRepository wasNot io.mockk.Called }
     }
 
     @Test
@@ -131,19 +123,17 @@ class YnabSyncServiceTest {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-match", -49990L, LocalDate.of(2024, 1, 15))
         val matchedOrder = order.copy(status = OrderStatus.MATCHED, ynabTransactionId = "txn-match")
-
-        `when`(amazonOrderRepository.save(matchedOrder)).thenReturn(matchedOrder)
-        `when`(classificationService.classify(matchedOrder)).thenReturn("cat-electronics")
+        val captures = mutableListOf<AmazonOrder>()
+        every { amazonOrderRepository.save(capture(captures)) } answers { firstArg() }
+        every { classificationService.classify(matchedOrder) } returns "cat-electronics"
+        justRun { ynabClient.updateTransaction(any(), any(), any(), any(), any()) }
 
         ynabSyncService.processOrder(order, listOf(txn), "budget-1", "token")
 
-        val captor = ArgumentCaptor.forClass(AmazonOrder::class.java)
-        verify(amazonOrderRepository, atLeastOnce()).save(captor.capture())
-        val allSaved = captor.allValues
-        assertEquals(OrderStatus.MATCHED, allSaved[0].status)
-        assertEquals("txn-match", allSaved[0].ynabTransactionId)
-        assertEquals(OrderStatus.COMPLETED, allSaved[1].status)
-        assertEquals("cat-electronics", allSaved[1].ynabCategoryId)
+        assertEquals(OrderStatus.MATCHED, captures[0].status)
+        assertEquals("txn-match", captures[0].ynabTransactionId)
+        assertEquals(OrderStatus.COMPLETED, captures[1].status)
+        assertEquals("cat-electronics", captures[1].ynabCategoryId)
     }
 
     @Test
@@ -151,15 +141,13 @@ class YnabSyncServiceTest {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-update", -49990L, LocalDate.of(2024, 1, 15))
         val matchedOrder = order.copy(status = OrderStatus.MATCHED, ynabTransactionId = "txn-update")
-
-        `when`(amazonOrderRepository.save(matchedOrder)).thenReturn(matchedOrder)
-        `when`(classificationService.classify(matchedOrder)).thenReturn("cat-food")
+        every { amazonOrderRepository.save(any()) } answers { firstArg() }
+        every { classificationService.classify(matchedOrder) } returns "cat-food"
+        justRun { ynabClient.updateTransaction(any(), any(), any(), any(), any()) }
 
         ynabSyncService.processOrder(order, listOf(txn), "budget-1", "token")
 
-        verify(ynabClient).updateTransaction(
-            "budget-1", "txn-update", "token", "Amazon order (id=1)", "cat-food"
-        )
+        verify { ynabClient.updateTransaction("budget-1", "txn-update", "token", "Amazon order (id=1)", "cat-food") }
     }
 
     @Test
@@ -167,15 +155,12 @@ class YnabSyncServiceTest {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-1", -49990L, LocalDate.of(2024, 1, 15))
         val matchedOrder = order.copy(status = OrderStatus.MATCHED, ynabTransactionId = "txn-1")
-
-        `when`(amazonOrderRepository.save(matchedOrder)).thenReturn(matchedOrder)
-        `when`(classificationService.classify(matchedOrder)).thenThrow(RuntimeException("Gemini error"))
+        val savedSlot = slot<AmazonOrder>()
+        every { amazonOrderRepository.save(capture(savedSlot)) } answers { firstArg() }
+        every { classificationService.classify(matchedOrder) } throws RuntimeException("Gemini error")
 
         ynabSyncService.processOrder(order, listOf(txn), "budget-1", "token")
 
-        val captor = ArgumentCaptor.forClass(AmazonOrder::class.java)
-        verify(amazonOrderRepository).save(captor.capture())
-        assertEquals(OrderStatus.MATCHED, captor.value.status)
+        assertEquals(OrderStatus.MATCHED, savedSlot.captured.status)
     }
 }
-

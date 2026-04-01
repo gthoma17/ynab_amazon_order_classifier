@@ -1,14 +1,13 @@
 package com.ynabauto.web
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.ninjasquad.springmockk.MockkBean
 import com.ynabauto.domain.AmazonOrder
 import com.ynabauto.domain.OrderStatus
 import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
+import io.mockk.every
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -22,7 +21,7 @@ class OrderControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockkBean
     private lateinit var amazonOrderRepository: AmazonOrderRepository
 
     @Test
@@ -38,7 +37,7 @@ class OrderControllerTest {
                 createdAt = Instant.parse("2024-01-15T10:05:00Z")
             )
         )
-        `when`(amazonOrderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(orders)
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns orders
 
         mockMvc.perform(get("/api/orders/pending"))
             .andExpect(status().isOk)
@@ -52,7 +51,7 @@ class OrderControllerTest {
 
     @Test
     fun `GET api orders pending returns empty list when no pending orders`() {
-        `when`(amazonOrderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(emptyList())
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns emptyList()
 
         mockMvc.perform(get("/api/orders/pending"))
             .andExpect(status().isOk)

@@ -6,29 +6,20 @@ import com.ynabauto.domain.CategoryRule
 import com.ynabauto.domain.OrderStatus
 import com.ynabauto.infrastructure.ai.ClassificationProvider
 import com.ynabauto.infrastructure.persistence.CategoryRuleRepository
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
 
-@ExtendWith(MockitoExtension::class)
 class ClassificationServiceTest {
 
-    @Mock
-    private lateinit var classificationProvider: ClassificationProvider
-
-    @Mock
-    private lateinit var categoryRuleRepository: CategoryRuleRepository
-
-    @Mock
-    private lateinit var configService: ConfigService
-
+    private val classificationProvider = mockk<ClassificationProvider>()
+    private val categoryRuleRepository = mockk<CategoryRuleRepository>()
+    private val configService = mockk<ConfigService>()
     private lateinit var classificationService: ClassificationService
 
     @BeforeEach
@@ -55,9 +46,9 @@ class ClassificationServiceTest {
 
     @Test
     fun `classify returns category ID from provider`() {
-        `when`(configService.getValue(ConfigService.GEMINI_KEY)).thenReturn("gemini-key")
-        `when`(categoryRuleRepository.findAll()).thenReturn(sampleRules)
-        `when`(classificationProvider.classify(listOf("USB Cable"), sampleRules, "gemini-key")).thenReturn("cat-electronics")
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns "gemini-key"
+        every { categoryRuleRepository.findAll() } returns sampleRules
+        every { classificationProvider.classify(listOf("USB Cable"), sampleRules, "gemini-key") } returns "cat-electronics"
 
         val result = classificationService.classify(makeOrder("""["USB Cable"]"""))
 
@@ -66,9 +57,9 @@ class ClassificationServiceTest {
 
     @Test
     fun `classify passes parsed items list to provider`() {
-        `when`(configService.getValue(ConfigService.GEMINI_KEY)).thenReturn("gemini-key")
-        `when`(categoryRuleRepository.findAll()).thenReturn(sampleRules)
-        `when`(classificationProvider.classify(listOf("Item A", "Item B"), sampleRules, "gemini-key")).thenReturn("cat-household")
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns "gemini-key"
+        every { categoryRuleRepository.findAll() } returns sampleRules
+        every { classificationProvider.classify(listOf("Item A", "Item B"), sampleRules, "gemini-key") } returns "cat-household"
 
         val result = classificationService.classify(makeOrder("""["Item A","Item B"]"""))
 
@@ -77,7 +68,7 @@ class ClassificationServiceTest {
 
     @Test
     fun `classify throws RuntimeException when Gemini key is not configured`() {
-        `when`(configService.getValue(ConfigService.GEMINI_KEY)).thenReturn(null)
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns null
 
         assertThrows<RuntimeException> {
             classificationService.classify(makeOrder("""["USB Cable"]"""))
@@ -86,8 +77,8 @@ class ClassificationServiceTest {
 
     @Test
     fun `classify throws RuntimeException when no category rules are configured`() {
-        `when`(configService.getValue(ConfigService.GEMINI_KEY)).thenReturn("gemini-key")
-        `when`(categoryRuleRepository.findAll()).thenReturn(emptyList())
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns "gemini-key"
+        every { categoryRuleRepository.findAll() } returns emptyList()
 
         assertThrows<RuntimeException> {
             classificationService.classify(makeOrder("""["USB Cable"]"""))

@@ -10,41 +10,25 @@ import com.ynabauto.infrastructure.email.EmailOrder
 import com.ynabauto.infrastructure.email.EmailProviderClient
 import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
+import io.mockk.every
+import io.mockk.justRun
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
 
-/** Returns a non-null placeholder so Kotlin's null-safety doesn't interfere with Mockito matchers. */
-private fun anyInstant(): Instant = Mockito.any(Instant::class.java) ?: Instant.EPOCH
-
-@ExtendWith(MockitoExtension::class)
 class EmailIngestionServiceTest {
 
-    @Mock
-    private lateinit var emailProviderClient: EmailProviderClient
-
-    @Mock
-    private lateinit var amazonOrderRepository: AmazonOrderRepository
-
-    @Mock
-    private lateinit var syncLogRepository: SyncLogRepository
-
-    @Mock
-    private lateinit var configService: ConfigService
-
+    private val emailProviderClient = mockk<EmailProviderClient>()
+    private val amazonOrderRepository = mockk<AmazonOrderRepository>()
+    private val syncLogRepository = mockk<SyncLogRepository>()
+    private val configService = mockk<ConfigService>()
     private lateinit var emailIngestionService: EmailIngestionService
 
     @BeforeEach
@@ -124,73 +108,60 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `ingest skips when FastMail credentials are not configured`() {
-        `when`(configService.getValue(ConfigService.FASTMAIL_USER)).thenReturn(null)
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
 
         emailIngestionService.ingest()
 
-        verifyNoInteractions(emailProviderClient)
-        verifyNoInteractions(syncLogRepository)
+        verify { emailProviderClient wasNot io.mockk.Called }
+        verify { syncLogRepository wasNot io.mockk.Called }
     }
 
     @Test
     fun `ingest saves SUCCESS sync log after processing emails`() {
-        `when`(configService.getValue(ConfigService.FASTMAIL_USER)).thenReturn("user@fastmail.com")
-        `when`(configService.getValue(ConfigService.FASTMAIL_TOKEN)).thenReturn("my-token")
-        `when`(syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL)).thenReturn(null)
-        Mockito.doReturn(emptyList<EmailOrder>()).`when`(emailProviderClient).searchOrders(
-            org.mockito.ArgumentMatchers.anyString(),
-            org.mockito.ArgumentMatchers.anyString(),
-            anyInstant()
-        )
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns null
+        every { emailProviderClient.searchOrders(any(), any(), any()) } returns emptyList()
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
         emailIngestionService.ingest()
 
-        val captor = ArgumentCaptor.forClass(SyncLog::class.java)
-        verify(syncLogRepository).save(captor.capture())
-        assertEquals(SyncSource.EMAIL, captor.value.source)
-        assertEquals(SyncStatus.SUCCESS, captor.value.status)
-        assertNull(captor.value.message)
+        assertEquals(SyncSource.EMAIL, syncLogSlot.captured.source)
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+        assertNull(syncLogSlot.captured.message)
     }
 
     @Test
     fun `ingest saves FAIL sync log when email provider throws`() {
-        `when`(configService.getValue(ConfigService.FASTMAIL_USER)).thenReturn("user@fastmail.com")
-        `when`(configService.getValue(ConfigService.FASTMAIL_TOKEN)).thenReturn("my-token")
-        `when`(syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL)).thenReturn(null)
-        Mockito.doThrow(RuntimeException("Connection failed")).`when`(emailProviderClient).searchOrders(
-            org.mockito.ArgumentMatchers.anyString(),
-            org.mockito.ArgumentMatchers.anyString(),
-            anyInstant()
-        )
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns null
+        every { emailProviderClient.searchOrders(any(), any(), any()) } throws RuntimeException("Connection failed")
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
         emailIngestionService.ingest()
 
-        val captor = ArgumentCaptor.forClass(SyncLog::class.java)
-        verify(syncLogRepository).save(captor.capture())
-        assertEquals(SyncStatus.FAIL, captor.value.status)
-        assertEquals("Connection failed", captor.value.message)
+        assertEquals(SyncStatus.FAIL, syncLogSlot.captured.status)
+        assertEquals("Connection failed", syncLogSlot.captured.message)
     }
 
     @Test
     fun `ingest uses last successful sync time as since date`() {
         val lastRun = Instant.parse("2024-01-10T00:00:00Z")
         val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
-        `when`(configService.getValue(ConfigService.FASTMAIL_USER)).thenReturn("user@fastmail.com")
-        `when`(configService.getValue(ConfigService.FASTMAIL_TOKEN)).thenReturn("my-token")
-        `when`(syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL)).thenReturn(lastLog)
-        var capturedSinceDate: Instant? = null
-        Mockito.doAnswer { inv ->
-            capturedSinceDate = inv.getArgument(2)
-            emptyList<EmailOrder>()
-        }.`when`(emailProviderClient).searchOrders(
-            org.mockito.ArgumentMatchers.anyString(),
-            org.mockito.ArgumentMatchers.anyString(),
-            anyInstant()
-        )
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
+        val sinceDateSlot = slot<Instant>()
+        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { syncLogRepository.save(any()) } answers { firstArg() }
 
         emailIngestionService.ingest()
 
-        assertEquals(lastRun, capturedSinceDate)
+        assertEquals(lastRun, sinceDateSlot.captured)
     }
 
     @Test
@@ -200,29 +171,29 @@ class EmailIngestionServiceTest {
             orderDate = Instant.now(), totalAmount = BigDecimal("10.00"),
             itemsJson = """["Item"]""", status = OrderStatus.PENDING, createdAt = Instant.now()
         )
-        `when`(amazonOrderRepository.findAll()).thenReturn(listOf(existing))
+        every { amazonOrderRepository.findAll() } returns listOf(existing)
 
         emailIngestionService.processEmail(
             EmailOrder(messageId = "msg-dup@amazon.com", receivedAt = Instant.now(), bodyText = "Order Total: \$10.00")
         )
 
-        verify(amazonOrderRepository, never()).save(org.mockito.ArgumentMatchers.any(AmazonOrder::class.java))
+        verify(exactly = 0) { amazonOrderRepository.save(any()) }
     }
 
     @Test
     fun `processEmail saves order when body is parseable and messageId is new`() {
-        `when`(amazonOrderRepository.findAll()).thenReturn(emptyList())
+        every { amazonOrderRepository.findAll() } returns emptyList()
         val email = EmailOrder(
             messageId = "msg-new@amazon.com",
             receivedAt = Instant.parse("2024-01-15T10:00:00Z"),
             bodyText = "1 of: Keyboard\nOrder Total: \$79.99"
         )
+        val savedSlot = slot<AmazonOrder>()
+        every { amazonOrderRepository.save(capture(savedSlot)) } answers { firstArg() }
 
         emailIngestionService.processEmail(email)
 
-        val captor = ArgumentCaptor.forClass(AmazonOrder::class.java)
-        verify(amazonOrderRepository).save(captor.capture())
-        val saved = captor.value
+        val saved = savedSlot.captured
         assertEquals("msg-new@amazon.com", saved.emailMessageId)
         assertEquals(BigDecimal("79.99"), saved.totalAmount)
         assertEquals(OrderStatus.PENDING, saved.status)
@@ -230,7 +201,7 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `processEmail skips when body cannot be parsed`() {
-        `when`(amazonOrderRepository.findAll()).thenReturn(emptyList())
+        every { amazonOrderRepository.findAll() } returns emptyList()
         val email = EmailOrder(
             messageId = "msg-unparseable@amazon.com",
             receivedAt = Instant.now(),
@@ -239,8 +210,6 @@ class EmailIngestionServiceTest {
 
         emailIngestionService.processEmail(email)
 
-        verify(amazonOrderRepository, never()).save(org.mockito.ArgumentMatchers.any(AmazonOrder::class.java))
+        verify(exactly = 0) { amazonOrderRepository.save(any()) }
     }
 }
-
-

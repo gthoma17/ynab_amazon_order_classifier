@@ -1,14 +1,14 @@
 package com.ynabauto.web
 
+import com.ninjasquad.springmockk.MockkBean
 import com.ynabauto.domain.SyncLog
 import com.ynabauto.domain.SyncSource
 import com.ynabauto.domain.SyncStatus
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
+import io.mockk.every
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -21,7 +21,7 @@ class LogControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockkBean
     private lateinit var syncLogRepository: SyncLogRepository
 
     @Test
@@ -30,7 +30,7 @@ class LogControllerTest {
             SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = Instant.parse("2024-01-15T10:00:00Z"), status = SyncStatus.SUCCESS, message = null),
             SyncLog(id = 2L, source = SyncSource.YNAB, lastRun = Instant.parse("2024-01-15T10:05:00Z"), status = SyncStatus.FAIL, message = "Connection refused")
         )
-        `when`(syncLogRepository.findAll()).thenReturn(logs)
+        every { syncLogRepository.findAll() } returns logs
 
         mockMvc.perform(get("/api/logs"))
             .andExpect(status().isOk)
@@ -45,7 +45,7 @@ class LogControllerTest {
 
     @Test
     fun `GET api logs returns empty list when no logs exist`() {
-        `when`(syncLogRepository.findAll()).thenReturn(emptyList())
+        every { syncLogRepository.findAll() } returns emptyList()
 
         mockMvc.perform(get("/api/logs"))
             .andExpect(status().isOk)

@@ -33,7 +33,7 @@ class EmailIngestionService(
         private val DEFAULT_LOOKBACK_DAYS = 30L
     }
 
-    @Scheduled(fixedDelayString = "\${app.email.poll-interval-ms:300000}")
+    @Scheduled(fixedDelayString = "\${app.email.poll-interval-ms:43200000}")
     fun ingest() {
         val user = configService.getValue(ConfigService.FASTMAIL_USER)
         val token = configService.getValue(ConfigService.FASTMAIL_TOKEN)

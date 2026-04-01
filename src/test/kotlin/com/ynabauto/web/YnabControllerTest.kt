@@ -1,13 +1,13 @@
 package com.ynabauto.web
 
+import com.ninjasquad.springmockk.MockkBean
 import com.ynabauto.infrastructure.ynab.YnabCategory
 import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.service.ConfigService
+import io.mockk.every
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -19,21 +19,19 @@ class YnabControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockkBean
     private lateinit var ynabClient: YnabClient
 
-    @MockBean
+    @MockkBean
     private lateinit var configService: ConfigService
 
     @Test
     fun `GET api ynab categories returns categories from YNAB client`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn("token-123")
-        `when`(configService.getValue(ConfigService.YNAB_BUDGET_ID)).thenReturn("budget-abc")
-        `when`(ynabClient.getCategories("budget-abc", "token-123")).thenReturn(
-            listOf(
-                YnabCategory(id = "cat-1", name = "Groceries", categoryGroupName = "Monthly Bills"),
-                YnabCategory(id = "cat-2", name = "Electronics", categoryGroupName = "Personal")
-            )
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "token-123"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-abc"
+        every { ynabClient.getCategories("budget-abc", "token-123") } returns listOf(
+            YnabCategory(id = "cat-1", name = "Groceries", categoryGroupName = "Monthly Bills"),
+            YnabCategory(id = "cat-2", name = "Electronics", categoryGroupName = "Personal")
         )
 
         mockMvc.perform(get("/api/ynab/categories"))
@@ -47,7 +45,7 @@ class YnabControllerTest {
 
     @Test
     fun `GET api ynab categories returns 500 when YNAB token not configured`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn(null)
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns null
 
         mockMvc.perform(get("/api/ynab/categories"))
             .andExpect(status().isInternalServerError)
@@ -55,8 +53,8 @@ class YnabControllerTest {
 
     @Test
     fun `GET api ynab categories returns 500 when YNAB budget ID not configured`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn("token-123")
-        `when`(configService.getValue(ConfigService.YNAB_BUDGET_ID)).thenReturn(null)
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "token-123"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns null
 
         mockMvc.perform(get("/api/ynab/categories"))
             .andExpect(status().isInternalServerError)

@@ -1,18 +1,18 @@
 package com.ynabauto.web
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.ninjasquad.springmockk.MockkBean
 import com.ynabauto.domain.CategoryRule
 import com.ynabauto.service.ConfigService
 import com.ynabauto.web.dto.ApiKeysRequest
+import io.mockk.every
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -27,18 +27,18 @@ class ConfigControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockkBean
     private lateinit var configService: ConfigService
 
     private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun `GET api config keys returns all key values`() {
-        `when`(configService.getValue(ConfigService.YNAB_TOKEN)).thenReturn("my-ynab-token")
-        `when`(configService.getValue(ConfigService.YNAB_BUDGET_ID)).thenReturn("budget-123")
-        `when`(configService.getValue(ConfigService.FASTMAIL_USER)).thenReturn("user@fastmail.com")
-        `when`(configService.getValue(ConfigService.FASTMAIL_TOKEN)).thenReturn(null)
-        `when`(configService.getValue(ConfigService.GEMINI_KEY)).thenReturn(null)
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "my-ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-123"
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns null
 
         mockMvc.perform(get("/api/config/keys"))
             .andExpect(status().isOk)
@@ -52,6 +52,7 @@ class ConfigControllerTest {
     @Test
     fun `PUT api config keys updates only provided keys`() {
         val request = ApiKeysRequest(ynabToken = "new-token", ynabBudgetId = "new-budget")
+        justRun { configService.setValue(any(), any()) }
 
         mockMvc.perform(
             put("/api/config/keys")
@@ -60,8 +61,8 @@ class ConfigControllerTest {
         )
             .andExpect(status().isNoContent)
 
-        verify(configService).setValue(ConfigService.YNAB_TOKEN, "new-token")
-        verify(configService).setValue(ConfigService.YNAB_BUDGET_ID, "new-budget")
+        verify { configService.setValue(ConfigService.YNAB_TOKEN, "new-token") }
+        verify { configService.setValue(ConfigService.YNAB_BUDGET_ID, "new-budget") }
     }
 
     @Test
@@ -70,7 +71,7 @@ class ConfigControllerTest {
             CategoryRule(id = 1L, ynabCategoryId = "cat-1", ynabCategoryName = "Food", userDescription = "Groceries", updatedAt = Instant.now()),
             CategoryRule(id = 2L, ynabCategoryId = "cat-2", ynabCategoryName = "Tech", userDescription = "Electronics", updatedAt = Instant.now())
         )
-        `when`(configService.getAllCategoryRules()).thenReturn(rules)
+        every { configService.getAllCategoryRules() } returns rules
 
         mockMvc.perform(get("/api/config/categories"))
             .andExpect(status().isOk)
@@ -82,12 +83,8 @@ class ConfigControllerTest {
 
     @Test
     fun `PUT api config categories saves category rules`() {
-        val capturedRules = mutableListOf<CategoryRule>()
-        Mockito.doAnswer { inv ->
-            @Suppress("UNCHECKED_CAST")
-            capturedRules.addAll(inv.getArgument<List<*>>(0) as List<CategoryRule>)
-            null
-        }.`when`(configService).saveCategoryRules(ArgumentMatchers.anyList())
+        val capturedRules = slot<List<CategoryRule>>()
+        justRun { configService.saveCategoryRules(capture(capturedRules)) }
 
         val body = """
             [
@@ -103,8 +100,8 @@ class ConfigControllerTest {
         )
             .andExpect(status().isNoContent)
 
-        assertEquals(2, capturedRules.size)
-        assertEquals("cat-1", capturedRules[0].ynabCategoryId)
-        assertEquals("cat-2", capturedRules[1].ynabCategoryId)
+        assertEquals(2, capturedRules.captured.size)
+        assertEquals("cat-1", capturedRules.captured[0].ynabCategoryId)
+        assertEquals("cat-2", capturedRules.captured[1].ynabCategoryId)
     }
 }

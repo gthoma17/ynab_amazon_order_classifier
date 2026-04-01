@@ -4,28 +4,21 @@ import com.ynabauto.domain.AppConfig
 import com.ynabauto.domain.CategoryRule
 import com.ynabauto.infrastructure.persistence.AppConfigRepository
 import com.ynabauto.infrastructure.persistence.CategoryRuleRepository
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import java.util.Optional
 
-@ExtendWith(MockitoExtension::class)
 class ConfigServiceTest {
 
-    @Mock
-    private lateinit var appConfigRepository: AppConfigRepository
-
-    @Mock
-    private lateinit var categoryRuleRepository: CategoryRuleRepository
-
+    private val appConfigRepository = mockk<AppConfigRepository>()
+    private val categoryRuleRepository = mockk<CategoryRuleRepository>()
     private lateinit var configService: ConfigService
 
     @BeforeEach
@@ -36,7 +29,7 @@ class ConfigServiceTest {
     @Test
     fun `getValue returns value when key exists`() {
         val config = AppConfig(key = ConfigService.YNAB_TOKEN, value = "my-ynab-token", updatedAt = Instant.now())
-        `when`(appConfigRepository.findById(ConfigService.YNAB_TOKEN)).thenReturn(Optional.of(config))
+        every { appConfigRepository.findById(ConfigService.YNAB_TOKEN) } returns Optional.of(config)
 
         val result = configService.getValue(ConfigService.YNAB_TOKEN)
 
@@ -45,7 +38,7 @@ class ConfigServiceTest {
 
     @Test
     fun `getValue returns null when key does not exist`() {
-        `when`(appConfigRepository.findById(ConfigService.YNAB_TOKEN)).thenReturn(Optional.empty())
+        every { appConfigRepository.findById(ConfigService.YNAB_TOKEN) } returns Optional.empty()
 
         val result = configService.getValue(ConfigService.YNAB_TOKEN)
 
@@ -54,12 +47,13 @@ class ConfigServiceTest {
 
     @Test
     fun `setValue saves AppConfig with correct key and value`() {
+        val savedSlot = slot<AppConfig>()
+        every { appConfigRepository.save(capture(savedSlot)) } answers { firstArg() }
+
         configService.setValue(ConfigService.FASTMAIL_USER, "user@fastmail.com")
 
-        val captor = ArgumentCaptor.forClass(AppConfig::class.java)
-        verify(appConfigRepository).save(captor.capture())
-        assertEquals(ConfigService.FASTMAIL_USER, captor.value.key)
-        assertEquals("user@fastmail.com", captor.value.value)
+        assertEquals(ConfigService.FASTMAIL_USER, savedSlot.captured.key)
+        assertEquals("user@fastmail.com", savedSlot.captured.value)
     }
 
     @Test
@@ -68,7 +62,7 @@ class ConfigServiceTest {
             CategoryRule(id = 1L, ynabCategoryId = "cat-1", ynabCategoryName = "Food", userDescription = "Groceries", updatedAt = Instant.now()),
             CategoryRule(id = 2L, ynabCategoryId = "cat-2", ynabCategoryName = "Tech", userDescription = "Electronics", updatedAt = Instant.now())
         )
-        `when`(categoryRuleRepository.findAll()).thenReturn(rules)
+        every { categoryRuleRepository.findAll() } returns rules
 
         val result = configService.getAllCategoryRules()
 
@@ -81,10 +75,11 @@ class ConfigServiceTest {
         val rules = listOf(
             CategoryRule(id = null, ynabCategoryId = "cat-1", ynabCategoryName = "Food", userDescription = "Groceries", updatedAt = Instant.now())
         )
+        every { categoryRuleRepository.saveAll(rules) } returns rules
 
         configService.saveCategoryRules(rules)
 
-        verify(categoryRuleRepository).saveAll(rules)
+        verify { categoryRuleRepository.saveAll(rules) }
     }
 
     @Test
