@@ -15,20 +15,18 @@ import java.time.Instant
 data class SyncLog(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     val id: Long? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source", nullable = false)
+    @Column(nullable = false)
     val source: SyncSource,
 
-    @Column(name = "last_run", nullable = false)
+    @Column(nullable = false)
     val lastRun: Instant,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     val status: SyncStatus,
 
-    @Column(name = "message")
     val message: String? = null
 )

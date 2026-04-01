@@ -16,31 +16,28 @@ import java.time.Instant
 data class AmazonOrder(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     val id: Long? = null,
 
-    @Column(name = "email_message_id", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     val emailMessageId: String,
 
-    @Column(name = "order_date", nullable = false)
+    @Column(nullable = false)
     val orderDate: Instant,
 
-    @Column(name = "total_amount", nullable = false)
+    @Column(nullable = false)
     val totalAmount: BigDecimal,
 
-    @Column(name = "items_json", nullable = false)
+    @Column(nullable = false)
     val itemsJson: String,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     val status: OrderStatus,
 
-    @Column(name = "ynab_transaction_id")
     val ynabTransactionId: String? = null,
 
-    @Column(name = "ynab_category_id")
     val ynabCategoryId: String? = null,
 
-    @Column(name = "created_at", nullable = false)
+    @Column(nullable = false)
     val createdAt: Instant
 )

@@ -13,18 +13,17 @@ import java.time.Instant
 data class CategoryRule(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     val id: Long? = null,
 
-    @Column(name = "ynab_category_id", nullable = false)
+    @Column(nullable = false)
     val ynabCategoryId: String,
 
-    @Column(name = "ynab_category_name", nullable = false)
+    @Column(nullable = false)
     val ynabCategoryName: String,
 
-    @Column(name = "user_description", nullable = false)
+    @Column(nullable = false)
     val userDescription: String,
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     val updatedAt: Instant
 )

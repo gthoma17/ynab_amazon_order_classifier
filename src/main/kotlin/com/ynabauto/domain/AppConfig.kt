@@ -10,12 +10,11 @@ import java.time.Instant
 @Table(name = "app_config")
 data class AppConfig(
     @Id
-    @Column(name = "key")
     val key: String,
 
-    @Column(name = "value", nullable = false)
+    @Column(nullable = false)
     val value: String,
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     val updatedAt: Instant
 )
