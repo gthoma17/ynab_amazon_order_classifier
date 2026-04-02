@@ -29,7 +29,7 @@ class GeminiProviderTest {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
         val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        geminiProvider = GeminiProvider(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
+        geminiProvider = GeminiProvider(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper, "https://generativelanguage.googleapis.com/v1beta")
     }
 
     private val sampleRules = listOf(
@@ -51,7 +51,7 @@ class GeminiProviderTest {
 
     @Test
     fun `classify sends POST to Gemini and returns trimmed category ID from response`() {
-        mockServer.expect(requestTo("${GeminiProvider.BASE_URL}/models/${GeminiProvider.MODEL}:generateContent?key=gemini-api-key"))
+        mockServer.expect(requestTo("${"https://generativelanguage.googleapis.com/v1beta"}/models/${GeminiProvider.MODEL}:generateContent?key=gemini-api-key"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(
                 """{"candidates":[{"content":{"parts":[{"text":"cat-electronics\n"}]}}]}""",
@@ -70,7 +70,7 @@ class GeminiProviderTest {
 
     @Test
     fun `classify includes items and category rules in prompt`() {
-        mockServer.expect(requestTo("${GeminiProvider.BASE_URL}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
+        mockServer.expect(requestTo("${"https://generativelanguage.googleapis.com/v1beta"}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
             .andExpect(method(HttpMethod.POST))
             .andExpect { request ->
                 val body = (request as MockClientHttpRequest).bodyAsString
@@ -95,7 +95,7 @@ class GeminiProviderTest {
 
     @Test
     fun `classify throws RuntimeException when Gemini returns empty candidates`() {
-        mockServer.expect(requestTo("${GeminiProvider.BASE_URL}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
+        mockServer.expect(requestTo("${"https://generativelanguage.googleapis.com/v1beta"}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess("""{"candidates":[]}""", MediaType.APPLICATION_JSON))
 
@@ -111,7 +111,7 @@ class GeminiProviderTest {
 
     @Test
     fun `classify throws RuntimeException when Gemini returns no parts in content`() {
-        mockServer.expect(requestTo("${GeminiProvider.BASE_URL}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
+        mockServer.expect(requestTo("${"https://generativelanguage.googleapis.com/v1beta"}/models/${GeminiProvider.MODEL}:generateContent?key=my-key"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(
                 """{"candidates":[{"content":{"parts":[]}}]}""",

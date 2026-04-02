@@ -29,14 +29,14 @@ class YnabRestClientTest {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
         val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        ynabRestClient = YnabRestClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
+        ynabRestClient = YnabRestClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper, "https://api.ynab.com/v1")
     }
 
     // --- getTransactions ---
 
     @Test
     fun `getTransactions sends GET with Authorization header and parses response`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/transactions", "budget-123"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/transactions", "budget-123"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer token-xyz"))
             .andRespond(withSuccess(
@@ -61,7 +61,7 @@ class YnabRestClientTest {
     @Test
     fun `getTransactions includes since_date query param when provided`() {
         mockServer.expect(requestToUriTemplate(
-            "${YnabRestClient.BASE_URL}/budgets/{budgetId}/transactions?since_date={sinceDate}",
+            "${"https://api.ynab.com/v1"}/budgets/{budgetId}/transactions?since_date={sinceDate}",
             "budget-abc",
             "2024-03-01"
         ))
@@ -76,7 +76,7 @@ class YnabRestClientTest {
 
     @Test
     fun `getTransactions returns empty list when no transactions in response`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/transactions", "budget-empty"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/transactions", "budget-empty"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess("""{"data":{"transactions":[]}}""", MediaType.APPLICATION_JSON))
 
@@ -88,7 +88,7 @@ class YnabRestClientTest {
 
     @Test
     fun `getTransactions handles nullable fields gracefully`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/transactions", "budget-123"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/transactions", "budget-123"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(
                 """{"data":{"transactions":[
@@ -110,7 +110,7 @@ class YnabRestClientTest {
 
     @Test
     fun `getCategories sends GET with Authorization header and returns flattened category list`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/categories", "budget-123"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/categories", "budget-123"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer token-xyz"))
             .andRespond(withSuccess(
@@ -139,7 +139,7 @@ class YnabRestClientTest {
 
     @Test
     fun `getCategories excludes deleted category groups and deleted categories`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/categories", "budget-123"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/categories", "budget-123"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(
                 """{"data":{"category_groups":[
@@ -163,7 +163,7 @@ class YnabRestClientTest {
 
     @Test
     fun `getCategories returns empty list when no category groups`() {
-        mockServer.expect(requestToUriTemplate("${YnabRestClient.BASE_URL}/budgets/{budgetId}/categories", "budget-empty"))
+        mockServer.expect(requestToUriTemplate("${"https://api.ynab.com/v1"}/budgets/{budgetId}/categories", "budget-empty"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess("""{"data":{"category_groups":[]}}""", MediaType.APPLICATION_JSON))
 
@@ -178,7 +178,7 @@ class YnabRestClientTest {
     @Test
     fun `updateTransaction sends PUT with Authorization header and correct body`() {
         mockServer.expect(requestToUriTemplate(
-            "${YnabRestClient.BASE_URL}/budgets/{budgetId}/transactions/{transactionId}",
+            "${"https://api.ynab.com/v1"}/budgets/{budgetId}/transactions/{transactionId}",
             "budget-123",
             "txn-abc"
         ))

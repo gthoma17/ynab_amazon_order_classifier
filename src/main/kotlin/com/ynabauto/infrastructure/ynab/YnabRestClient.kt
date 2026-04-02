@@ -3,20 +3,24 @@ package com.ynabauto.infrastructure.ynab
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.time.LocalDate
 
 @Component
-class YnabRestClient(restClientBuilder: RestClient.Builder, private val objectMapper: ObjectMapper) : YnabClient {
+class YnabRestClient(
+    restClientBuilder: RestClient.Builder,
+    private val objectMapper: ObjectMapper,
+    @Value("\${app.ynab.base-url:https://api.ynab.com/v1}") baseUrl: String
+) : YnabClient {
 
     companion object {
-        const val BASE_URL = "https://api.ynab.com/v1"
         private val log = KotlinLogging.logger {}
     }
 
     private val client = restClientBuilder
-        .baseUrl(BASE_URL)
+        .baseUrl(baseUrl)
         .build()
 
     override fun getTransactions(budgetId: String, token: String, sinceDate: LocalDate?): List<YnabTransaction> {

@@ -27,12 +27,12 @@ class FastMailJmapClientTest {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
         val objectMapper = jacksonObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        fastMailClient = FastMailJmapClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper)
+        fastMailClient = FastMailJmapClient(RestClient.builder().requestFactory(restTemplate.requestFactory), objectMapper, "https://api.fastmail.com")
     }
 
     @Test
     fun `searchOrders returns empty list when Email query returns no ids`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer.expect(requestTo("${"https://api.fastmail.com"}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer test-token"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
@@ -52,7 +52,7 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders sends correct Authorization header on all requests`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer.expect(requestTo("${"https://api.fastmail.com"}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer my-token"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
@@ -72,7 +72,7 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders returns parsed EmailOrders when emails are found`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer.expect(requestTo("${"https://api.fastmail.com"}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
@@ -99,7 +99,7 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders uses Amazon filter in Email query`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer.expect(requestTo("${"https://api.fastmail.com"}/.well-known/jmap"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
         mockServer.expect(requestTo(JMAP_API_URL))
