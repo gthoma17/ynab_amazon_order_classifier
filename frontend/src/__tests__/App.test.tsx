@@ -1,6 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
 import App from '../App'
+
+const server = setupServer(
+  http.get('/api/config/keys', () => HttpResponse.json({ ynabToken: null, ynabBudgetId: null, fastmailUser: null, fastmailToken: null, geminiKey: null })),
+  http.get('/api/ynab/categories', () => HttpResponse.json([])),
+  http.get('/api/config/categories', () => HttpResponse.json([])),
+  http.get('/api/orders/pending', () => HttpResponse.json([])),
+  http.get('/api/logs', () => HttpResponse.json([]))
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 
 describe('App navigation', () => {
   it('renders navigation links for all four views', () => {
