@@ -252,11 +252,17 @@ The React app will be served statically by Spring. It requires 4 specific views:
 - [ ] Build Logs View.
 - [ ] Configure Spring to serve static React build.
 
-### Phase 5: Deployment
+### Phase 5: Devops
+- [ ] Setup e2e test to test the full workflow. (Use a wiremock server to mock external APIs)
+- [ ] Setup GitHub Actions for CI/CD. Run tests automatically on any push
+
+### Phase 6: Deployment
 - [ ] Create Multi-stage Dockerfile (Node build -> Gradle build -> JRE run).
-- [ ] Configure JVM flags for Pi 3 (`-Xmx512m`).
 - [ ] Test locally (x86) and on Target (ARM).
-- [ ] Setup GitHub Actions for CI/CD.
+- [ ] Setup automatic github release when merged to the prod branch
+
+### Phase 7: Scope Creep
+- [ ] TBD
 
 ---
 
