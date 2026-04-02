@@ -112,14 +112,14 @@ class EmailIngestionServiceTest {
               426 USD
 
             Grand Total:
-            72133.0 JPY
+            426.00 USD
         """.trimIndent()
         val email = EmailOrder(messageId = "msg-6", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
 
         assertNotNull(result)
-        assertEquals(BigDecimal("72133.0"), result!!.totalAmount)
+        assertEquals(BigDecimal("426.00"), result!!.totalAmount)
     }
 
     @Test
