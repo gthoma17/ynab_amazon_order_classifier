@@ -253,7 +253,7 @@ The React app will be served statically by Spring. It requires 4 specific views:
 - [ ] Configure Spring to serve static React build.
 
 ### Phase 5: Devops
-- [ ] Setup e2e test to test the full workflow. (Use a wiremock server to mock external APIs)
+- [ ] Setup e2e test to test the full workflow. Use a wiremock server to mock external APIs. Refer to the API references below.
 - [ ] Setup GitHub Actions for CI/CD. Run tests automatically on any push
 
 ### Phase 6: Deployment
@@ -303,3 +303,235 @@ docker run -v /opt/ynab-auto/data:/app/data ...
 | **AI Cost/Latency** | Only classify when match is found. Cache category rules. |
 | **YNAB Rate Limits** | Schedule syncs no faster than 5 minutes. Batch updates if possible (v1 uses single updates). |
 | **Email Parsing Failures** | Catch exceptions in ingestion loop, log to `sync_logs`, continue processing next email. |
+
+___
+
+## API REFERENCES
+
+Based on the YNAB v1 API OpenAPI specification, here are example responses for the requested endpoints:
+
+## GET /budgets/{budgetId}/transactions
+
+**Response Schema**: `TransactionsResponse`
+
+```json
+{
+  "data": {
+    "transactions": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "date": "2026-04-02",
+        "amount": -25000,
+        "memo": "Grocery shopping",
+        "cleared": "cleared",
+        "approved": true,
+        "flag_color": null,
+        "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "payee_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "category_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "transfer_account_id": null,
+        "transfer_transaction_id": null,
+        "matched_transaction_id": null,
+        "import_id": null,
+        "deleted": false
+      }
+    ],
+    "server_knowledge": 1234567890
+  }
+}
+```
+
+## GET /budgets/{budgetId}/categories
+
+**Response Schema**: `CategoriesResponse`
+
+```json
+{
+  "data": {
+    "category_groups": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "name": "Monthly Bills",
+        "hidden": false,
+        "deleted": false,
+        "categories": [
+          {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "category_group_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "name": "Rent/Mortgage",
+            "hidden": false,
+            "original_category_group_id": null,
+            "note": null,
+            "budgeted": 150000,
+            "activity": -150000,
+            "balance": 0,
+            "goal_type": null,
+            "goal_creation_month": null,
+            "goal_target": null,
+            "goal_target_month": null,
+            "goal_percentage_complete": null,
+            "goal_months_to_budget": null,
+            "goal_under_funded": null,
+            "goal_overall_funded": null,
+            "goal_overall_left": null,
+            "deleted": false
+          }
+        ]
+      }
+    ],
+    "server_knowledge": 1234567890
+  }
+}
+```
+
+## PUT /budgets/{budgetId}/transactions/{transactionId}
+
+**Request Body Schema**: `PutTransactionWrapper`
+**Response Schema**: `TransactionResponse`
+
+```json
+{
+  "data": {
+    "transaction": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "date": "2026-04-02",
+      "amount": -30000,
+      "memo": "Updated grocery shopping",
+      "cleared": "cleared",
+      "approved": true,
+      "flag_color": "red",
+      "account_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "payee_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "category_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "transfer_account_id": null,
+      "transfer_transaction_id": null,
+      "matched_transaction_id": null,
+      "import_id": null,
+      "deleted": false
+    },
+    "server_knowledge": 1234567891
+  }
+}
+```
+
+**Key Notes**:
+- Amounts are in milliunits (e.g., $250.00 = 250000)
+- All responses include `server_knowledge` for delta sync
+- Categories include current month amounts (budgeted, activity, balance)
+- Transactions can have various states: cleared, uncleared, reconciled
+- UUIDs are used for all entity IDs [^1]
+
+[^1]: [ynab-sdk-python/open_api_spec.yaml at main · ynab/ynab-sdk-python · GitHub](https://github.com/ynab/ynab-sdk-python/blob/main/open_api_spec.yaml) (100%)
+
+
+Based on the JMAP specifications, here are example responses for the Fastmail JMAP API endpoints you requested:
+
+## GET /.well-known/jmap
+
+This endpoint returns a JMAP Session resource. While I couldn't find a complete Fastmail-specific example, the response follows RFC 8620 format [^2]:
+
+```json
+{
+  "capabilities": {
+    "urn:ietf:params:jmap:core": {
+      "maxSizeUpload": 50000000,
+      "maxConcurrentRequests": 10,
+      "maxSizeRequest": 10000000,
+      "maxCallsInRequest": 16,
+      "maxObjectsInGet": 500,
+      "maxObjectsInSet": 500,
+      "collationAlgorithms": ["i;ascii-numeric", "i;ascii-casemap"]
+    },
+    "urn:ietf:params:jmap:mail": {},
+    "urn:ietf:params:jmap:submission": {}
+  },
+  "accounts": {
+    "ue150411c": {
+      "name": "user@fastmail.com",
+      "isPersonal": true,
+      "isReadOnly": false,
+      "accountCapabilities": {
+        "urn:ietf:params:jmap:mail": {},
+        "urn:ietf:params:jmap:submission": {}
+      }
+    }
+  },
+  "primaryAccounts": {
+    "urn:ietf:params:jmap:mail": "ue150411c",
+    "urn:ietf:params:jmap:submission": "ue150411c"
+  },
+  "username": "user@fastmail.com",
+  "apiUrl": "https://api.fastmail.com/jmap/api/",
+  "downloadUrl": "https://api.fastmail.com/jmap/download/{accountId}/{blobId}/{name}",
+  "uploadUrl": "https://api.fastmail.com/jmap/upload/{accountId}/",
+  "eventSourceUrl": "https://api.fastmail.com/jmap/eventsource/?types={types}&closeafter={closeafter}&ping={ping}"
+}
+```
+
+## POST Email/query Response
+
+For your Email/query request with filtering by from, subject, and date, the response would be [^1]:
+
+```json
+[[ "Email/query", {
+  "accountId": "ue150411c",
+  "queryState": "09aa9a075588-780599:0",
+  "canCalculateChanges": true,
+  "position": 0,
+  "total": 115,
+  "ids": [ 
+    "Ma783e5cdf5f2deffbc97930a",
+    "M9bd17497e2a99cb345fc1d0a",
+    "Mc2781d5e856a908d8a35a564"
+  ]
+}, "a" ]]
+```
+
+## POST Email/get Response
+
+For your Email/get request fetching email content, the response would be [^1]:
+
+```json
+[[ "Email/get", {
+  "accountId": "abc",
+  "state": "41234123231",
+  "list": [
+    {
+      "id": "f123u457",
+      "messageId": "<CAEeYn8h+Ld8=T4fP@mail.gmail.com>",
+      "receivedAt": "2013-10-13T14:12:00Z",
+      "bodyValues": {
+        "1": {
+          "isEncodingProblem": false,
+          "isTruncated": true,
+          "value": "<html><body><p>Hello world!</p></body></html>"
+        },
+        "2": {
+          "isEncodingProblem": false,
+          "isTruncated": false,
+          "value": "Hello world!\n\n-- Sent by your friendly mailing list"
+        }
+      },
+      "textBody": [
+        {
+          "partId": "2",
+          "blobId": "B319437193",
+          "size": 10343,
+          "type": "text/plain"
+        }
+      ]
+    }
+  ],
+  "notFound": []
+}, "a" ]]
+```
+
+**Key Points:**
+- All responses are wrapped in arrays with the method name, response object, and request ID
+- The `accountId` in responses matches your request
+- `bodyValues` contains the actual email content keyed by part ID
+- `textBody` references the plain text parts of the email
+- `notFound` array lists any requested IDs that couldn't be retrieved
+
+[^1]: [RFC 8621: The JSON Meta Application Protocol (JMAP) for Mail](https://datatracker.ietf.org/doc/html/rfc8621) (54%)
+[^2]: [RFC 8620: The JSON Meta Application Protocol (JMAP)](https://www.rfc-editor.org/rfc/rfc8620) (46%)
