@@ -29,39 +29,17 @@ describe('App navigation', () => {
     expect(screen.getByRole('link', { name: /logs/i })).toBeInTheDocument()
   })
 
-  it('renders Config view at /', () => {
+  it.each([
+    ['/', /api keys/i],
+    ['/categories', /category rules/i],
+    ['/orders', /pending orders/i],
+    ['/logs', /sync logs/i],
+  ])('renders correct view heading at %s', (path, headingRegex) => {
     render(
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={[path]}>
         <App />
       </MemoryRouter>
     )
-    expect(screen.getByRole('heading', { name: /api keys/i })).toBeInTheDocument()
-  })
-
-  it('renders Category Rules view at /categories', () => {
-    render(
-      <MemoryRouter initialEntries={['/categories']}>
-        <App />
-      </MemoryRouter>
-    )
-    expect(screen.getByRole('heading', { name: /category rules/i })).toBeInTheDocument()
-  })
-
-  it('renders Pending Orders view at /orders', () => {
-    render(
-      <MemoryRouter initialEntries={['/orders']}>
-        <App />
-      </MemoryRouter>
-    )
-    expect(screen.getByRole('heading', { name: /pending orders/i })).toBeInTheDocument()
-  })
-
-  it('renders Logs view at /logs', () => {
-    render(
-      <MemoryRouter initialEntries={['/logs']}>
-        <App />
-      </MemoryRouter>
-    )
-    expect(screen.getByRole('heading', { name: /sync logs/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: headingRegex as RegExp })).toBeInTheDocument()
   })
 })
