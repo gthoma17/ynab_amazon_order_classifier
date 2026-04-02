@@ -158,7 +158,7 @@ class FullWorkflowE2ETest {
                                     "id":"email-e2e-1",
                                     "messageId":["<order-e2e-001@amazon.com>"],
                                     "receivedAt":"2024-01-15T10:00:00Z",
-                                    "bodyValues":{"1":{"value":"1 of: USB Cable\n1 of: Phone Case\nOrder Total: ${'$'}49.99","isEncodingProblem":false,"isTruncated":false}},
+                                    "bodyValues":{"1":{"value":"* TOTO Bidet Toilet Seat\n  Quantity: 1\n  426 USD\n\nGrand Total:\n426.00 USD","isEncodingProblem":false,"isTruncated":false}},
                                     "textBody":[{"partId":"1","type":"text/plain"}]
                                 }],
                                 "notFound":[]
@@ -181,7 +181,7 @@ class FullWorkflowE2ETest {
                             {"data":{"transactions":[{
                                 "id":"txn-e2e-1",
                                 "date":"2024-01-15",
-                                "amount":-49990,
+                                "amount":-426000,
                                 "memo":null,
                                 "category_id":null,
                                 "payee_name":"Amazon.com"

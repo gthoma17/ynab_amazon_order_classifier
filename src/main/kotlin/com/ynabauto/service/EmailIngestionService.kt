@@ -28,8 +28,8 @@ class EmailIngestionService(
 
     companion object {
         private val log = KotlinLogging.logger {}
-        private val AMOUNT_PATTERN = Regex("""(?:Order Total|Grand Total|Total|Subtotal)\s*:?\s*\$?([\d,]+\.\d{2})""", RegexOption.IGNORE_CASE)
-        private val ITEM_PATTERN = Regex("""^\d+\s+of\s*:\s*(.+)$""", RegexOption.MULTILINE)
+        private val AMOUNT_PATTERN = Regex("""(?:Order Total|Grand Total|Total|Subtotal)\s*:?\s*\$?\s*([\d,]+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
+        private val ITEM_PATTERN = Regex("""^(?:\d+\s+of\s*:\s*|\*\s+)(.+)$""", RegexOption.MULTILINE)
         private val DEFAULT_LOOKBACK_DAYS = 30L
     }
 

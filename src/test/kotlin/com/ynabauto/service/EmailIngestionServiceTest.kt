@@ -104,6 +104,68 @@ class EmailIngestionServiceTest {
         assertEquals(BigDecimal("1234.56"), result!!.totalAmount)
     }
 
+    @Test
+    fun `parseOrderBody handles Grand Total on next line with currency suffix`() {
+        val body = """
+            * TOTO® WASHLET® C2 Electronic Bidet Toilet Seat
+              Quantity: 1
+              426 USD
+
+            Grand Total:
+            72133.0 JPY
+        """.trimIndent()
+        val email = EmailOrder(messageId = "msg-6", receivedAt = Instant.now(), bodyText = body)
+
+        val result = emailIngestionService.parseOrderBody(email)
+
+        assertNotNull(result)
+        assertEquals(BigDecimal("72133.0"), result!!.totalAmount)
+    }
+
+    @Test
+    fun `parseOrderBody extracts items from bullet-point format`() {
+        val body = """
+            * TOTO® WASHLET® C2 Electronic Bidet Toilet Seat
+              Quantity: 1
+              426 USD
+
+            Grand Total:
+            426.00 USD
+        """.trimIndent()
+        val email = EmailOrder(messageId = "msg-7", receivedAt = Instant.now(), bodyText = body)
+
+        val result = emailIngestionService.parseOrderBody(email)
+
+        assertNotNull(result)
+        assertEquals(listOf("TOTO® WASHLET® C2 Electronic Bidet Toilet Seat"), result!!.items)
+        assertEquals(BigDecimal("426.00"), result.totalAmount)
+    }
+
+    @Test
+    fun `parseOrderBody handles real Amazon email format with multiple items`() {
+        val body = """
+            Thanks for your order, Greg!
+
+            * USB Cable
+              Quantity: 2
+              19.99 USD
+
+            * Phone Case
+              Quantity: 1
+              14.99 USD
+
+            Grand Total:
+            54.97 USD
+        """.trimIndent()
+        val email = EmailOrder(messageId = "msg-8", receivedAt = Instant.now(), bodyText = body)
+
+        val result = emailIngestionService.parseOrderBody(email)
+
+        assertNotNull(result)
+        assertEquals(BigDecimal("54.97"), result!!.totalAmount)
+        assertEquals(listOf("USB Cable", "Phone Case"), result.items)
+    }
+
     // --- ingest ---
 
     @Test
