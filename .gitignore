@@ -1,6 +1,9 @@
 # Build output
 build/
 
+# React build output (copied by Gradle task at build time)
+src/main/resources/static/assets/
+
 # Gradle wrapper
 .gradle/
 
