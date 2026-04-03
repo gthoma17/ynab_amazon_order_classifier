@@ -195,8 +195,12 @@ test('first-time setup and first sync journey', async ({ page }) => {
   const issueBody = decodeURIComponent(parsedHelpUrl.searchParams.get('body') ?? '')
 
   expect(issueBody).toContain('The sync stopped working after the credential update.')
-  // Sync log rows from step 6 must appear in the body
-  expect(issueBody).toContain('Recent Sync Logs')
+  // Sync log rows from step 6 must appear in the body as actual table rows,
+  // not just the section header. The pipeline created EMAIL and YNAB rows with
+  // SUCCESS status; assert both sources and the status column are present.
+  expect(issueBody).toContain('| EMAIL |')
+  expect(issueBody).toContain('| YNAB |')
+  expect(issueBody).toContain('| SUCCESS |')
   // Credentials saved in step 2 must have been redacted by the sanitization service
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')
