@@ -16,12 +16,17 @@ const server = setupServer(
     HttpResponse.json({
       ynabToken: 'tok-123',
       ynabBudgetId: 'budget-abc',
-      fastmailUser: 'user@example.com',
-      fastmailToken: null,
+      fastmailApiToken: 'fmjt_test-token',
       geminiKey: null,
     })
   ),
   http.put('/api/config/keys', () => new HttpResponse(null, { status: 204 })),
+  http.get('/api/ynab/budgets', () =>
+    HttpResponse.json([
+      { id: 'budget-abc', name: 'My Main Budget' },
+      { id: 'budget-xyz', name: 'Savings Budget' },
+    ])
+  ),
   http.post('/api/config/probe/ynab', () =>
     HttpResponse.json({ success: true, message: 'Connected' })
   ),
@@ -49,12 +54,11 @@ describe('ConfigView', () => {
     expect(screen.getByRole('heading', { name: /api keys/i })).toBeInTheDocument()
   })
 
-  it('renders input fields for all five keys', () => {
+  it('renders input fields for all four keys', () => {
     render(<ConfigView />)
     expect(screen.getByLabelText(/ynab token/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/budget id/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/fastmail user/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/fastmail token/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^budget$/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/fastmail api token/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/gemini key/i)).toBeInTheDocument()
   })
 
@@ -63,9 +67,11 @@ describe('ConfigView', () => {
     await waitFor(() =>
       expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
     )
-    expect(screen.getByLabelText(/budget id/i)).toHaveValue('budget-abc')
-    expect(screen.getByLabelText(/fastmail user/i)).toHaveValue('user@example.com')
-    expect(screen.getByLabelText(/fastmail token/i)).toHaveValue('')
+    // budget select should show the saved budget once budgets are loaded
+    await waitFor(() =>
+      expect(screen.getByLabelText(/^budget$/i)).toHaveValue('budget-abc')
+    )
+    expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token')
     expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
   })
 
@@ -119,8 +125,7 @@ describe('ConfigView', () => {
         HttpResponse.json({
           ynabToken: null,
           ynabBudgetId: null,
-          fastmailUser: null,
-          fastmailToken: null,
+          fastmailApiToken: null,
           geminiKey: null,
         })
       )
@@ -132,21 +137,87 @@ describe('ConfigView', () => {
     expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
   })
 
-  it('disables FastMail test button when FastMail credentials are empty', async () => {
+  // --- Budget dropdown ---
+
+  it('budget select is disabled when YNAB token is empty', async () => {
     server.use(
       http.get('/api/config/keys', () =>
         HttpResponse.json({
           ynabToken: null,
           ynabBudgetId: null,
-          fastmailUser: null,
-          fastmailToken: null,
+          fastmailApiToken: null,
           geminiKey: null,
         })
       )
     )
     render(<ConfigView />)
     await waitFor(() =>
-      expect(screen.getByLabelText(/fastmail user/i)).toHaveValue('')
+      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('')
+    )
+    expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
+  })
+
+  it('budget select is enabled and shows budget names once loaded', async () => {
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/^budget$/i)).not.toBeDisabled()
+    )
+    expect(screen.getByRole('option', { name: 'My Main Budget' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Savings Budget' })).toBeInTheDocument()
+  })
+
+  it('budget select shows loading indicator while budgets are being fetched', async () => {
+    let resolveBudgets!: () => void
+    server.use(
+      http.get('/api/ynab/budgets', async () => {
+        await new Promise<void>((res) => { resolveBudgets = res })
+        return HttpResponse.json([{ id: 'budget-abc', name: 'My Main Budget' }])
+      })
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText('budgets loading')).toBeInTheDocument()
+    )
+    resolveBudgets()
+  })
+
+  it('budget select shows an error when budget fetch fails', async () => {
+    server.use(
+      http.get('/api/ynab/budgets', () =>
+        new HttpResponse(null, { status: 401 })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    )
+  })
+
+  it('budget select shows empty state when no budgets returned', async () => {
+    server.use(
+      http.get('/api/ynab/budgets', () => HttpResponse.json([]))
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: /no budgets found/i })).toBeInTheDocument()
+    )
+    expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
+  })
+
+  it('disables FastMail test button when FastMail API token is empty', async () => {
+    server.use(
+      http.get('/api/config/keys', () =>
+        HttpResponse.json({
+          ynabToken: null,
+          ynabBudgetId: null,
+          fastmailApiToken: null,
+          geminiKey: null,
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('')
     )
     expect(screen.getByRole('button', { name: /test fastmail/i })).toBeDisabled()
   })

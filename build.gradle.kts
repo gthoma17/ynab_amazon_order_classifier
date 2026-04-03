@@ -6,7 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
-group = "com.ynabauto"
+group = "com.budgetsortbot"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -49,5 +49,5 @@ tasks.register<JavaExec>("runE2EServer") {
     group = "application"
     description = "Start the Spring Boot app with WireMock stubs for Playwright E2E tests"
     classpath = sourceSets["test"].runtimeClasspath
-    mainClass.set("com.ynabauto.e2e.E2EServerKt")
+    mainClass.set("com.budgetsortbot.e2e.E2EServerKt")
 }

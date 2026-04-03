@@ -4,16 +4,14 @@ import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 interface ApiKeysResponse {
   ynabToken: string | null
   ynabBudgetId: string | null
-  fastmailUser: string | null
-  fastmailToken: string | null
+  fastmailApiToken: string | null
   geminiKey: string | null
 }
 
 interface ApiKeyValues {
   ynabToken: string
   ynabBudgetId: string
-  fastmailUser: string
-  fastmailToken: string
+  fastmailApiToken: string
   geminiKey: string
 }
 
@@ -34,10 +32,18 @@ const idleProbe: ProbeState = { status: 'idle', message: '' }
 const emptyKeys: ApiKeyValues = {
   ynabToken: '',
   ynabBudgetId: '',
-  fastmailUser: '',
-  fastmailToken: '',
+  fastmailApiToken: '',
   geminiKey: '',
 }
+
+// ── Budget selection ───────────────────────────────────────────────────────────
+
+interface Budget {
+  id: string
+  name: string
+}
+
+type BudgetsStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
 // ── Processing guardrails ──────────────────────────────────────────────────────
 
@@ -86,6 +92,11 @@ export default function ConfigView() {
   const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
 
+  // Budget selection
+  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [budgetsStatus, setBudgetsStatus] = useState<BudgetsStatus>('idle')
+  const [budgetsError, setBudgetsError] = useState('')
+
   // Processing config
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
@@ -115,8 +126,7 @@ export default function ConfigView() {
       setKeys((current) => ({
         ynabToken: current.ynabToken || (data.ynabToken ?? ''),
         ynabBudgetId: current.ynabBudgetId || (data.ynabBudgetId ?? ''),
-        fastmailUser: current.fastmailUser || (data.fastmailUser ?? ''),
-        fastmailToken: current.fastmailToken || (data.fastmailToken ?? ''),
+        fastmailApiToken: current.fastmailApiToken || (data.fastmailApiToken ?? ''),
         geminiKey: current.geminiKey || (data.geminiKey ?? ''),
       }))
     })
@@ -149,6 +159,36 @@ export default function ConfigView() {
 
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!keys.ynabToken) {
+      setBudgets([])
+      setBudgetsStatus('idle')
+      setBudgetsError('')
+      return
+    }
+
+    let cancelled = false
+    setBudgetsStatus('loading')
+    setBudgetsError('')
+
+    const params = new URLSearchParams({ token: keys.ynabToken })
+    apiGet<Budget[]>(`/api/ynab/budgets?${params.toString()}`)
+      .then((data) => {
+        if (!cancelled) {
+          setBudgets(data)
+          setBudgetsStatus('loaded')
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setBudgetsError(err instanceof Error ? err.message : 'Failed to load budgets')
+          setBudgetsStatus('error')
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [keys.ynabToken])
 
   function handleSave() {
     apiPut('/api/config/keys', keys).then(() => {
@@ -235,12 +275,32 @@ export default function ConfigView() {
           />
         </div>
         <div>
-          <label htmlFor="ynabBudgetId">Budget ID</label>
-          <input
+          <label htmlFor="ynabBudgetId">Budget</label>
+          {budgetsStatus === 'loading' && (
+            <span aria-label="budgets loading">Loading budgets…</span>
+          )}
+          {budgetsStatus === 'error' && (
+            <span role="alert">{budgetsError}</span>
+          )}
+          <select
             id="ynabBudgetId"
             value={keys.ynabBudgetId}
             onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-          />
+            disabled={!keys.ynabToken || budgetsStatus !== 'loaded' || budgets.length === 0}
+          >
+            {!keys.ynabToken ? (
+              <option value="">Enter a YNAB token first</option>
+            ) : budgetsStatus === 'loaded' && budgets.length === 0 ? (
+              <option value="">No budgets found</option>
+            ) : (
+              <>
+                <option value="">Select a budget…</option>
+                {budgets.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </>
+            )}
+          </select>
         </div>
         <button
           onClick={() => handleTest('ynab', setYnabProbe)}
@@ -259,30 +319,20 @@ export default function ConfigView() {
       <section>
         <h2>FastMail</h2>
         <div>
-          <label htmlFor="fastmailUser">FastMail User</label>
+          <label htmlFor="fastmailApiToken">FastMail API Token</label>
           <input
-            id="fastmailUser"
-            value={keys.fastmailUser}
+            id="fastmailApiToken"
+            type="password"
+            value={keys.fastmailApiToken}
             onChange={(e) =>
-              setKeys({ ...keys, fastmailUser: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label htmlFor="fastmailToken">FastMail Token</label>
-          <input
-            id="fastmailToken"
-            value={keys.fastmailToken}
-            onChange={(e) =>
-              setKeys({ ...keys, fastmailToken: e.target.value })
+              setKeys({ ...keys, fastmailApiToken: e.target.value })
             }
           />
         </div>
         <button
           onClick={() => handleTest('fastmail', setFastmailProbe)}
           disabled={
-            !keys.fastmailUser ||
-            !keys.fastmailToken ||
+            !keys.fastmailApiToken ||
             fastmailProbe.status === 'testing'
           }
         >
