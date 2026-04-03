@@ -4,7 +4,6 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-    branches: [prod]
 
 # ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
 
@@ -20,8 +19,8 @@ concurrency:
 
 jobs:
   release:
-    # Only run when CI passed — this gates the release on the test suite.
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only run when CI passed on prod — this gates the release on the test suite.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod'
     runs-on: ubuntu-latest
 
     steps:
