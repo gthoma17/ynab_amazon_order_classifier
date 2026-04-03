@@ -145,7 +145,7 @@ If you run into a problem, start with the **Get Help** page in the UI (navigate 
 
 If you prefer to open an issue manually:
 
-1. Open an issue at **https://github.com/gthoma17/budget-sortbot/issues/new***
+1. Open an issue at **https://github.com/gthoma17/budget-sortbot/issues/new**
 2. Include the following in your report:
    - The relevant output from the **System Logs** page in the UI
    - A snippet from `docker logs budget-sortbot` covering the failed run
