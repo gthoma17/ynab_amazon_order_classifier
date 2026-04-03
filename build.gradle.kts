@@ -30,6 +30,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
+    testImplementation("org.wiremock:wiremock-standalone:3.13.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -42,4 +43,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.register<JavaExec>("runE2EServer") {
+    group = "application"
+    description = "Start the Spring Boot app with WireMock stubs for Playwright E2E tests"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.ynabauto.e2e.E2EServerKt")
 }

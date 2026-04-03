@@ -3,11 +3,16 @@ package com.ynabauto.infrastructure.ai
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ynabauto.domain.CategoryRule
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 
 @Component
-class GeminiProvider(restClientBuilder: RestClient.Builder, private val objectMapper: ObjectMapper) : ClassificationProvider {
+class GeminiProvider(
+    restClientBuilder: RestClient.Builder,
+    private val objectMapper: ObjectMapper,
+    @Value("\${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}") baseUrl: String = BASE_URL
+) : ClassificationProvider {
 
     companion object {
         const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
@@ -16,7 +21,7 @@ class GeminiProvider(restClientBuilder: RestClient.Builder, private val objectMa
     }
 
     private val client = restClientBuilder
-        .baseUrl(BASE_URL)
+        .baseUrl(baseUrl)
         .build()
 
     override fun classify(items: List<String>, rules: List<CategoryRule>, apiKey: String): String {

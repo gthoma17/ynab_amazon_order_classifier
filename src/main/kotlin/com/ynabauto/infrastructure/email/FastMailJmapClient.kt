@@ -3,12 +3,17 @@ package com.ynabauto.infrastructure.email
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.time.Instant
 
 @Component
-class FastMailJmapClient(restClientBuilder: RestClient.Builder, private val objectMapper: ObjectMapper) : EmailProviderClient {
+class FastMailJmapClient(
+    restClientBuilder: RestClient.Builder,
+    private val objectMapper: ObjectMapper,
+    @Value("\${app.fastmail.base-url:https://api.fastmail.com}") private val fastmailBaseUrl: String = FASTMAIL_BASE_URL
+) : EmailProviderClient {
 
     companion object {
         const val FASTMAIL_BASE_URL = "https://api.fastmail.com"
@@ -38,7 +43,7 @@ class FastMailJmapClient(restClientBuilder: RestClient.Builder, private val obje
 
     private fun getSession(token: String): JmapSession {
         val rawBody = client.get()
-            .uri("$FASTMAIL_BASE_URL/.well-known/jmap")
+            .uri("$fastmailBaseUrl/.well-known/jmap")
             .header("Authorization", "Bearer $token")
             .retrieve()
             .body(String::class.java)

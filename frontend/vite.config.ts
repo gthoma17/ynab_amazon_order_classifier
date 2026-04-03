@@ -9,9 +9,15 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '../src/main/resources/static'),
     emptyOutDir: true,
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })
