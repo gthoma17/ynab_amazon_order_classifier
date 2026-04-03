@@ -6,6 +6,14 @@ export async function apiGet<T>(path: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
+export async function apiPost<T>(path: string): Promise<T> {
+  const response = await fetch(path, { method: 'POST' })
+  if (!response.ok) {
+    throw new Error(`POST ${path} failed with status ${response.status}`)
+  }
+  return response.json() as Promise<T>
+}
+
 export async function apiPut(path: string, body: unknown): Promise<void> {
   const response = await fetch(path, {
     method: 'PUT',

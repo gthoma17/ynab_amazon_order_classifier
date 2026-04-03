@@ -4,7 +4,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import com.ynabauto.domain.CategoryRule
 import com.ynabauto.service.ConfigService
+import com.ynabauto.service.ConnectionProbeService
 import com.ynabauto.web.dto.ApiKeysRequest
+import com.ynabauto.web.dto.ProbeResult
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.slot
@@ -16,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -29,6 +32,9 @@ class ConfigControllerTest {
 
     @MockkBean
     private lateinit var configService: ConfigService
+
+    @MockkBean
+    private lateinit var connectionProbeService: ConnectionProbeService
 
     private val objectMapper = jacksonObjectMapper()
 
@@ -103,5 +109,47 @@ class ConfigControllerTest {
         assertEquals(2, capturedRules.captured.size)
         assertEquals("cat-1", capturedRules.captured[0].ynabCategoryId)
         assertEquals("cat-2", capturedRules.captured[1].ynabCategoryId)
+    }
+
+    // --- probe endpoints ---
+
+    @Test
+    fun `POST api config probe fastmail returns probe result`() {
+        every { connectionProbeService.probeFastMail() } returns ProbeResult(success = true, message = "Connected")
+
+        mockMvc.perform(post("/api/config/probe/fastmail"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Connected"))
+    }
+
+    @Test
+    fun `POST api config probe fastmail returns failure result`() {
+        every { connectionProbeService.probeFastMail() } returns ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
+
+        mockMvc.perform(post("/api/config/probe/fastmail"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.message").value("401 Unauthorized — check your credentials"))
+    }
+
+    @Test
+    fun `POST api config probe ynab returns probe result`() {
+        every { connectionProbeService.probeYnab() } returns ProbeResult(success = true, message = "Connected")
+
+        mockMvc.perform(post("/api/config/probe/ynab"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Connected"))
+    }
+
+    @Test
+    fun `POST api config probe gemini returns probe result`() {
+        every { connectionProbeService.probeGemini() } returns ProbeResult(success = true, message = "Connected")
+
+        mockMvc.perform(post("/api/config/probe/gemini"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Connected"))
     }
 }

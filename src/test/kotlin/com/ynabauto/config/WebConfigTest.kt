@@ -5,6 +5,7 @@ import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.service.ConfigService
+import com.ynabauto.service.ConnectionProbeService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -22,6 +23,9 @@ class WebConfigTest {
 
     @MockkBean
     private lateinit var configService: ConfigService
+
+    @MockkBean
+    private lateinit var connectionProbeService: ConnectionProbeService
 
     @MockkBean
     private lateinit var amazonOrderRepository: AmazonOrderRepository

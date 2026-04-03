@@ -125,6 +125,17 @@ private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
 }
 
 private fun stubYnab(wireMock: WireMockServer) {
+    // GET budgets — used by the YNAB "Test Connection" probe
+    wireMock.stubFor(
+        get(urlEqualTo("/v1/budgets"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("""{"data":{"budgets":[],"default_budget":null}}""")
+            )
+    )
+
     // GET categories — used by the Category Rules view
     wireMock.stubFor(
         get(urlPathMatching("/v1/budgets/.*/categories"))
@@ -182,6 +193,17 @@ private fun stubYnab(wireMock: WireMockServer) {
 }
 
 private fun stubGemini(wireMock: WireMockServer) {
+    // GET models — used by the Gemini "Test Connection" probe
+    wireMock.stubFor(
+        get(urlPathMatching("/v1beta/models"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("""{"models":[]}""")
+            )
+    )
+
     wireMock.stubFor(
         post(urlPathMatching("/v1beta/models/.*:generateContent"))
             .willReturn(
