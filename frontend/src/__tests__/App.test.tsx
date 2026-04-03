@@ -6,8 +6,11 @@ import App from '../App'
 
 const server = setupServer(
   http.get('/api/config/keys', () => HttpResponse.json({ ynabToken: null, ynabBudgetId: null, fastmailApiToken: null, geminiKey: null })),
+  http.get('/api/ynab/budgets', () => HttpResponse.json([])),
   http.get('/api/ynab/categories', () => HttpResponse.json([])),
   http.get('/api/config/categories', () => HttpResponse.json([])),
+  http.get('/api/config/processing', () => HttpResponse.json({ orderCap: 0, startFromDate: null, installedAt: null, scheduleConfig: null })),
+  http.get('/api/config/dry-run/results', () => HttpResponse.json([])),
   http.get('/api/orders/pending', () => HttpResponse.json([])),
   http.get('/api/logs', () => HttpResponse.json([]))
 )
