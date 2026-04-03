@@ -54,13 +54,13 @@ test('first-time setup and first sync journey', async ({ page }) => {
   //   browser → real Spring Boot backend → WireMock stubs.
 
   await page.getByRole('button', { name: 'Test YNAB' }).click()
-  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected', { timeout: 15_000 })
+  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
 
   await page.getByRole('button', { name: 'Test FastMail' }).click()
-  await expect(page.getByLabel('FastMail probe result')).toContainText('Connected', { timeout: 15_000 })
+  await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
 
   await page.getByRole('button', { name: 'Test Gemini' }).click()
-  await expect(page.getByLabel('Gemini probe result')).toContainText('Connected', { timeout: 15_000 })
+  await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
