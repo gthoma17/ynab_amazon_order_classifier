@@ -7,6 +7,8 @@ import com.ynabauto.domain.DryRunResult
 import com.ynabauto.service.ConfigService
 import com.ynabauto.service.ConnectionProbeService
 import com.ynabauto.service.DryRunService
+import com.ynabauto.service.ScheduleConfig
+import com.ynabauto.service.ScheduleType
 import com.ynabauto.service.SyncScheduler
 import com.ynabauto.web.dto.ApiKeysRequest
 import com.ynabauto.web.dto.ProcessingConfigRequest
@@ -202,6 +204,30 @@ class ConfigControllerTest {
         verify { configService.setValue(ConfigService.ORDER_CAP, "10") }
         verify { configService.setValue(ConfigService.START_FROM_DATE, "2024-06-01") }
         verify { syncScheduler.reschedule() }
+    }
+
+    @Test
+    fun `PUT api config processing preserves secondInterval so EVERY_N_SECONDS cron is valid`() {
+        val savedJson = slot<String>()
+        justRun { configService.setValue(any(), capture(savedJson)) }
+        justRun { syncScheduler.reschedule() }
+
+        val request = ProcessingConfigRequest(
+            scheduleConfig = ScheduleConfigDto(type = "EVERY_N_SECONDS", secondInterval = 3)
+        )
+
+        mockMvc.perform(
+            put("/api/config/processing")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isNoContent)
+
+        // The JSON stored in the DB must carry secondInterval so that
+        // ScheduleConfig.toCron() can produce a valid "*/3 * * * * *" expression.
+        val stored = objectMapper.readValue(savedJson.captured, ScheduleConfig::class.java)
+        assertEquals(ScheduleType.EVERY_N_SECONDS, stored.type)
+        assertEquals(3, stored.secondInterval)
     }
 
     // --- dry run ---

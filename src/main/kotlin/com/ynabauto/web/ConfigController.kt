@@ -144,6 +144,8 @@ class ConfigController(
 
     private fun ScheduleConfig.toDto() = ScheduleConfigDto(
         type = type.name,
+        secondInterval = secondInterval,
+        minuteInterval = minuteInterval,
         hourInterval = hourInterval,
         hour = hour,
         minute = minute,
@@ -152,6 +154,8 @@ class ConfigController(
 
     private fun ScheduleConfigDto.toDomain() = ScheduleConfig(
         type = runCatching { ScheduleType.valueOf(type) }.getOrDefault(ScheduleType.EVERY_N_HOURS),
+        secondInterval = secondInterval,
+        minuteInterval = minuteInterval,
         hourInterval = hourInterval,
         hour = hour,
         minute = minute,

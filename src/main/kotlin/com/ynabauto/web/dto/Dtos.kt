@@ -77,6 +77,8 @@ data class ProcessingConfigRequest(
 
 data class ScheduleConfigDto(
     val type: String,
+    val secondInterval: Int? = null,
+    val minuteInterval: Int? = null,
     val hourInterval: Int? = null,
     val hour: Int? = null,
     val minute: Int = 0,

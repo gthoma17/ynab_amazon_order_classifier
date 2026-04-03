@@ -105,17 +105,24 @@ export default function ConfigView() {
   const [dryRunError, setDryRunError] = useState('')
 
   useEffect(() => {
+    let cancelled = false
+
     apiGet<ApiKeysResponse>('/api/config/keys').then((data) => {
-      setKeys({
-        ynabToken: data.ynabToken ?? '',
-        ynabBudgetId: data.ynabBudgetId ?? '',
-        fastmailUser: data.fastmailUser ?? '',
-        fastmailToken: data.fastmailToken ?? '',
-        geminiKey: data.geminiKey ?? '',
-      })
+      if (cancelled) return
+      // Use functional form: only populate a field if it is currently empty so
+      // that a slow response (e.g. during JVM warm-up in CI) never overwrites
+      // values the user has already typed into the form.
+      setKeys((current) => ({
+        ynabToken: current.ynabToken || (data.ynabToken ?? ''),
+        ynabBudgetId: current.ynabBudgetId || (data.ynabBudgetId ?? ''),
+        fastmailUser: current.fastmailUser || (data.fastmailUser ?? ''),
+        fastmailToken: current.fastmailToken || (data.fastmailToken ?? ''),
+        geminiKey: current.geminiKey || (data.geminiKey ?? ''),
+      }))
     })
 
     apiGet<ProcessingConfigResponse>('/api/config/processing').then((data) => {
+      if (cancelled) return
       setOrderCap(data.orderCap ?? 0)
       setStartFromDate(data.startFromDate ?? '')
       const sc = data.scheduleConfig
@@ -136,7 +143,11 @@ export default function ConfigView() {
     setDryRunStartFrom(oneMonthAgo.toISOString().split('T')[0])
 
     // Load any previous dry-run results
-    apiGet<DryRunResult[]>('/api/config/dry-run/results').then(setDryRunResults).catch(() => {})
+    apiGet<DryRunResult[]>('/api/config/dry-run/results')
+      .then((results) => { if (!cancelled) setDryRunResults(results) })
+      .catch(() => {})
+
+    return () => { cancelled = true }
   }, [])
 
   function handleSave() {
