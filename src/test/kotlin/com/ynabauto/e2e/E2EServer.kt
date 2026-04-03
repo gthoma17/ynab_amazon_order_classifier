@@ -43,10 +43,6 @@ fun main() {
     System.setProperty("app.fastmail.base-url", "http://localhost:$port")
     System.setProperty("app.ynab.base-url", "http://localhost:$port/v1")
     System.setProperty("app.gemini.base-url", "http://localhost:$port/v1beta")
-    // Poll emails every 3 seconds so the order appears quickly after credentials are saved
-    System.setProperty("app.email.poll-interval-ms", "3000")
-    // Keep YNAB sync interval long so orders stay PENDING during the test
-    System.setProperty("app.ynab.poll-interval-ms", "3600000")
     System.setProperty("server.port", "8080")
     System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}")
 

@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * User journey: first-time app setup and first sync cycle.
+ * User journey: first-time app setup and first sync cycle, including the new
+ * onboarding safety controls (processing settings + dry run).
  *
  * This test exercises the complete stack:
  *   Browser → Vite proxy → real Spring Boot API → WireMock stubs for FastMail, YNAB, Gemini
@@ -10,19 +11,28 @@ import { test, expect } from '@playwright/test'
  *  1. Open the app — API Keys page shows empty fields (fresh installation).
  *  2. Enter all five API credentials and save.
  *  3. Test Connection for each integration — YNAB, FastMail, and Gemini all show "Connected".
- *  4. Navigate to Category Rules — YNAB categories are fetched from the real backend
+ *  4. Configure Processing Settings — set start-from date, order cap, and change the
+ *     schedule to "Every N seconds / 3" so the full pipeline fires quickly during the test.
+ *     The production warning for EVERY_N_SECONDS is asserted.
+ *  5. Navigate to Category Rules — YNAB categories are fetched from the real backend
  *     (which calls the WireMock YNAB stub). Fill descriptions and save.
- *  5. Navigate to Pending Orders — wait for the email ingestion scheduler to run
- *     and populate the order, then assert it is visible.
- *  6. Navigate to Logs — assert the EMAIL sync log shows SUCCESS.
+ *  6. Navigate to Logs — poll until both an EMAIL/SUCCESS row and a YNAB/SUCCESS row are
+ *     visible. This proves the full pipeline (email ingest → YNAB match → Gemini classify →
+ *     YNAB update) ran end-to-end against the WireMock stubs with no race condition.
+ *  7. Run a Dry Run — navigate back to Configuration, trigger a dry run from a historical
+ *     start date, and verify the predicted YNAB update is shown without any live write.
  *
  * The Spring Boot E2E server (started by Playwright's webServer config via
- * `./gradlew runE2EServer`) runs the real application with:
- *  - app.email.poll-interval-ms=3000  (scheduler fires every 3 s)
- *  - app.ynab.poll-interval-ms=3600000 (YNAB sync disabled during the test)
- * This ensures the PENDING order appears within seconds of credentials being saved.
+ * `./gradlew runE2EServer`) starts with the default 5-hour schedule. Step 4 saves an
+ * EVERY_N_SECONDS/3 schedule which calls reschedule() so both services start cycling
+ * immediately with no app restart.
  */
 test('first-time setup and first sync journey', async ({ page }) => {
+  // This journey spans several network round-trips plus two 30-second polls
+  // (step 6 logs, step 7 dry-run results). The default 30s test timeout is far
+  // too short; give the whole test 2 minutes.
+  test.setTimeout(120_000)
+
   // ── Step 1: Open the app — API Keys page ──────────────────────────────────
 
   await page.goto('/')
@@ -35,7 +45,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.locator('#fastmailUser').fill('me@fastmail.com')
   await page.locator('#fastmailToken').fill('my-fastmail-token')
   await page.locator('#geminiKey').fill('my-gemini-key')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('Saved')).toBeVisible()
 
   // ── Step 3: Test Connection for each integration ────────────────────────────
@@ -52,8 +62,29 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('button', { name: 'Test Gemini' }).click()
   await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
 
-  // ── Step 4: Navigate to Category Rules, fill descriptions, save ─────────────
+  // ── Step 4: Configure Processing Settings ──────────────────────────────────
+  // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
+  // passes the date filter. Cap to 10 orders per run.
+  //
+  // Change the schedule to "Every N seconds" with interval 3. This triggers
+  // reschedule() on the backend so both EmailIngestionService and YnabSyncService
+  // start cycling every 3 s immediately — no restart needed.
+  //
+  // Selecting "Every N seconds" shows a production warning; assert it is visible
+  // so the user is aware this is a dev/test-only setting.
+
+  await page.locator('#startFromDate').fill('2024-01-01')
+  await page.locator('#orderCap').fill('10')
+  await page.locator('#scheduleType').selectOption('EVERY_N_SECONDS')
+  await expect(page.getByRole('alert')).toContainText(/not recommended for production/i)
+  await page.locator('#secondInterval').fill('3')
+  await page.getByRole('button', { name: 'Save processing settings' }).click()
+  await expect(page.getByText('Processing settings saved')).toBeVisible()
+
+  // ── Step 5: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
+  // While this step runs, the scheduler starts firing every 3 s: email ingestion
+  // creates the order; the next tick's YNAB sync processes it end-to-end.
 
   await page.getByRole('link', { name: 'Category Rules' }).click()
   await expect(page.getByRole('heading', { name: 'Category Rules' })).toBeVisible()
@@ -69,34 +100,53 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Saved')).toBeVisible()
 
-  // ── Step 5: Navigate to Pending Orders ─────────────────────────────────────
-  // The email ingestion scheduler runs every 3 s. After credentials were saved
-  // it will ingest the stubbed Amazon order email and persist a PENDING order.
-  // PendingOrdersView fetches data on mount only, so we reload the page until
-  // the order becomes visible (up to 20 s).
+  // ── Step 6: Navigate to Logs — poll for full pipeline completion ────────────
+  // Assert that both an EMAIL/SUCCESS row and a YNAB/SUCCESS row are present.
+  // This proves: email ingestion ran (found the stubbed order email), and
+  // YnabSyncService ran (matched the order, called Gemini, updated the YNAB
+  // transaction via WireMock). No race condition: log rows accumulate and never
+  // disappear regardless of the scheduler firing again.
 
-  await page.getByRole('link', { name: 'Pending Orders' }).click()
-  await expect(page.getByRole('heading', { name: 'Pending Orders' })).toBeVisible()
+  await page.getByRole('link', { name: 'Logs' }).click()
+  await expect(page.getByRole('heading', { name: 'Sync Logs' })).toBeVisible()
 
   await expect
     .poll(
       async () => {
         await page.reload()
-        return page.getByText('TOTO Bidet Toilet Seat').count()
+        return await page.getByRole('cell', { name: 'YNAB' }).count()
       },
-      { timeout: 20_000, intervals: [1000, 2000, 3000] },
+      { timeout: 30_000, intervals: [2000, 3000, 4000] },
     )
     .toBeGreaterThan(0)
 
-  await expect(page.getByText('426.00')).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'PENDING' })).toBeVisible()
-
-  // ── Step 6: Navigate to Logs — EMAIL sync shows SUCCESS ────────────────────
-  // The scheduler may produce multiple log entries; assert that at least one
-  // EMAIL/SUCCESS row is present.
-
-  await page.getByRole('link', { name: 'Logs' }).click()
-  await expect(page.getByRole('heading', { name: 'Sync Logs' })).toBeVisible()
+  // Both EMAIL and YNAB sync succeeded — the full pipeline ran against WireMock
   await expect(page.getByRole('cell', { name: 'EMAIL' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'YNAB' }).first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'SUCCESS' }).first()).toBeVisible()
+
+  // ── Step 7: Dry Run ────────────────────────────────────────────────────────
+  // Navigate back to Configuration, set the dry-run start date to 2024-01-01
+  // so the test order (from 2024-01-15) is included in the preview, then
+  // trigger a dry run.
+  //
+  // The dry run calls the full pipeline (FastMail → YNAB match → Gemini classify)
+  // via WireMock stubs. It must NOT call the YNAB write endpoint.
+  // Results show the predicted category for the TOTO Bidet order.
+
+  await page.getByRole('link', { name: 'Configuration' }).click()
+  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+
+  // Override the dry-run start date so the historical test order is included
+  await page.locator('#dryRunStartFrom').fill('2024-01-01')
+
+  await page.getByRole('button', { name: 'Run Dry Run' }).click()
+
+  // Wait for results — the dry run calls FastMail, matches the YNAB transaction,
+  // and classifies via Gemini (all served by WireMock stubs).
+  await expect(page.getByText(/dry run results/i)).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('TOTO Bidet Toilet Seat')).toBeVisible()
+  await expect(page.getByText('Electronics')).toBeVisible()
+  await expect(page.getByText('txn-e2e-1')).toBeVisible()
 })
+

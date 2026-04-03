@@ -61,6 +61,39 @@ class FlywayMigrationTest {
     }
 
     @Test
+    fun `V2 migration creates dry_run_results table with correct columns`() {
+        val columns = getColumnNames("dry_run_results")
+
+        assertTrue(columns.contains("id"), "Expected column 'id'")
+        assertTrue(columns.contains("order_id"), "Expected column 'order_id'")
+        assertTrue(columns.contains("order_date"), "Expected column 'order_date'")
+        assertTrue(columns.contains("total_amount"), "Expected column 'total_amount'")
+        assertTrue(columns.contains("items_json"), "Expected column 'items_json'")
+        assertTrue(columns.contains("ynab_transaction_id"), "Expected column 'ynab_transaction_id'")
+        assertTrue(columns.contains("proposed_category_id"), "Expected column 'proposed_category_id'")
+        assertTrue(columns.contains("proposed_category_name"), "Expected column 'proposed_category_name'")
+        assertTrue(columns.contains("error_message"), "Expected column 'error_message'")
+        assertTrue(columns.contains("run_at"), "Expected column 'run_at'")
+    }
+
+    @Test
+    fun `V2 migration inserts default app_config rows`() {
+        val keys = jdbcTemplate.queryForList("SELECT key FROM app_config", String::class.java)
+        assertTrue(keys.contains("INSTALLED_AT"), "Expected INSTALLED_AT in app_config")
+        assertTrue(keys.contains("START_FROM_DATE"), "Expected START_FROM_DATE in app_config")
+        assertTrue(keys.contains("ORDER_CAP"), "Expected ORDER_CAP in app_config")
+        assertTrue(keys.contains("SCHEDULE_CONFIG"), "Expected SCHEDULE_CONFIG in app_config")
+    }
+
+    @Test
+    fun `V2 migration ORDER_CAP default is 0`() {
+        val cap = jdbcTemplate.queryForObject(
+            "SELECT value FROM app_config WHERE key = 'ORDER_CAP'", String::class.java
+        )
+        assertEquals("0", cap)
+    }
+
+    @Test
     fun `amazon_orders email_message_id has a unique constraint`() {
         jdbcTemplate.execute(
             "INSERT INTO amazon_orders (email_message_id, order_date, total_amount, items_json, status, created_at) " +

@@ -83,6 +83,8 @@ class FullWorkflowE2ETest {
         configService.setValue(ConfigService.FASTMAIL_USER, "user@fastmail.com")
         configService.setValue(ConfigService.FASTMAIL_TOKEN, "test-fastmail-token")
         configService.setValue(ConfigService.GEMINI_KEY, "test-gemini-key")
+        // Ensure test emails (dated 2024-01-15) are not filtered out by the start-from guard
+        configService.setValue(ConfigService.START_FROM_DATE, "2024-01-01")
 
         categoryRuleRepository.save(
             CategoryRule(

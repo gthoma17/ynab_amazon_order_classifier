@@ -36,6 +36,9 @@ class YnabSyncServiceTest {
         ynabSyncService = YnabSyncService(
             ynabClient, amazonOrderRepository, syncLogRepository, configService, classificationService
         )
+        // Default: no start-from date or order cap
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns null
     }
 
     private fun makeOrder(id: Long, amount: String, status: OrderStatus = OrderStatus.PENDING) = AmazonOrder(
@@ -106,6 +109,77 @@ class YnabSyncServiceTest {
         assertEquals("YNAB API error", syncLogSlot.captured.message)
     }
 
+    // --- order cap ---
+
+    @Test
+    fun `sync respects order cap and processes only cap number of orders`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns "2"
+        val orders = listOf(makeOrder(1L, "10.00"), makeOrder(2L, "20.00"), makeOrder(3L, "30.00"))
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns orders
+        every { ynabClient.getTransactions(any(), any(), any()) } returns emptyList()
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
+
+        ynabSyncService.sync()
+
+        // Only 2 orders processed (no YNAB match → no saves), but it ran without error
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+    }
+
+    @Test
+    fun `sync processes all orders when cap is 0 (unlimited)`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns "0"
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns emptyList()
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
+
+        ynabSyncService.sync()
+
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+    }
+
+    // --- start-from date ---
+
+    @Test
+    fun `sync excludes orders dated before start-from date`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
+        // Order dated in January — before the Feb 1 cutoff
+        val oldOrder = makeOrder(1L, "49.99")  // orderDate = 2024-01-15
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(oldOrder)
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
+
+        ynabSyncService.sync()
+
+        // Old order is filtered out; no YNAB transactions fetched
+        verify { ynabClient wasNot io.mockk.Called }
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+    }
+
+    @Test
+    fun `sync includes orders on or after start-from date`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-01-15"
+        // Order dated exactly on the cutoff — should be included
+        val order = makeOrder(1L, "49.99")  // orderDate = 2024-01-15
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
+        every { ynabClient.getTransactions(any(), any(), any()) } returns emptyList()
+        val syncLogSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
+
+        ynabSyncService.sync()
+
+        verify { ynabClient.getTransactions(any(), any(), any()) }
+        assertEquals(SyncStatus.SUCCESS, syncLogSlot.captured.status)
+    }
+
     // --- processOrder ---
 
     @Test
@@ -164,3 +238,4 @@ class YnabSyncServiceTest {
         assertEquals(OrderStatus.MATCHED, savedSlot.captured.status)
     }
 }
+

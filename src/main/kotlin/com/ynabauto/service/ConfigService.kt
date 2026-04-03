@@ -19,6 +19,10 @@ class ConfigService(
         const val FASTMAIL_USER = "FASTMAIL_USER"
         const val FASTMAIL_TOKEN = "FASTMAIL_TOKEN"
         const val GEMINI_KEY = "GEMINI_KEY"
+        const val ORDER_CAP = "ORDER_CAP"
+        const val SCHEDULE_CONFIG = "SCHEDULE_CONFIG"
+        const val START_FROM_DATE = "START_FROM_DATE"
+        const val INSTALLED_AT = "INSTALLED_AT"
     }
 
     fun getValue(key: String): String? =

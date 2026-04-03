@@ -9,7 +9,6 @@ import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import com.ynabauto.infrastructure.ynab.YnabClient
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDate
@@ -28,7 +27,6 @@ class YnabSyncService(
         private val log = KotlinLogging.logger {}
     }
 
-    @Scheduled(fixedDelayString = "\${app.ynab.poll-interval-ms:300000}")
     fun sync() {
         val token = configService.getValue(ConfigService.YNAB_TOKEN)
         val budgetId = configService.getValue(ConfigService.YNAB_BUDGET_ID)
@@ -37,11 +35,30 @@ class YnabSyncService(
             return
         }
 
+        val startFromDate = configService.getValue(ConfigService.START_FROM_DATE)
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val startFromInstant = startFromDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()
+
+        val orderCap = configService.getValue(ConfigService.ORDER_CAP)
+            ?.toIntOrNull()
+            ?.takeIf { it > 0 }
+
         var status = SyncStatus.SUCCESS
         var message: String? = null
 
         try {
-            val pendingOrders = amazonOrderRepository.findByStatus(OrderStatus.PENDING)
+            var pendingOrders = amazonOrderRepository.findByStatus(OrderStatus.PENDING)
+
+            // Exclude orders dated before the start-from cutoff
+            if (startFromInstant != null) {
+                pendingOrders = pendingOrders.filter { !it.orderDate.isBefore(startFromInstant) }
+            }
+
+            // Apply per-run order cap
+            if (orderCap != null) {
+                pendingOrders = pendingOrders.take(orderCap)
+            }
+
             log.info { "YNAB sync: processing ${pendingOrders.size} pending order(s)" }
 
             if (pendingOrders.isNotEmpty()) {
@@ -103,3 +120,4 @@ class YnabSyncService(
         return "Amazon order (id=${order.id})"
     }
 }
+
