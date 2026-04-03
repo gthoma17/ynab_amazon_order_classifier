@@ -4,6 +4,7 @@ import { apiPostWithBody } from '../api'
 const GITHUB_ISSUES_URL =
   'https://github.com/gthoma17/ynab_amazon_order_classifier/issues/new'
 const MAX_GITHUB_URL_LENGTH = 8000
+const GITHUB_BASE_URL_LEN = `${GITHUB_ISSUES_URL}?body=`.length
 
 interface HelpReportResponse {
   body: string

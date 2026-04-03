@@ -17,6 +17,7 @@ class ReportSanitizationService(
         val sensitiveValues = appConfigRepository.findAll()
             .map { it.value }
             .filter { it.isNotBlank() }
+            .sortedByDescending { it.length }
 
         if (sensitiveValues.isEmpty()) return text to false
 
