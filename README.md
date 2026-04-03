@@ -72,16 +72,16 @@ The SQLite database (`/app/data/database.sqlite`) is stored in the mounted volum
 
 All settings are managed through the **Configuration** page in the UI.
 
-| Key | Description | Where to find it |
-|---|---|---|
-| `YNAB_TOKEN` | Personal Access Token used to authenticate with the YNAB API | [YNAB → My Account → Developer Settings](https://app.youneedabudget.com/settings/developer) |
-| `YNAB_BUDGET_ID` | The UUID of the YNAB budget to update | Visible in the URL when you open a budget: `https://app.youneedabudget.com/<budget-id>/…` |
-| `FASTMAIL_USER` | Your FastMail email address (e.g. `you@fastmail.com`) | Your FastMail login |
-| `FASTMAIL_TOKEN` | A FastMail JMAP App Password (not your account password) | FastMail → Settings → Security → Passwords → New App Password |
-| `GEMINI_KEY` | Google Gemini API key used to classify order descriptions | [Google AI Studio → API Keys](https://aistudio.google.com/app/apikey) |
-| `ORDER_CAP` | Maximum number of orders processed per sync run (safety limit; `0` disables syncing) | Set to a small value during initial testing |
-| `SCHEDULE_CONFIG` | JSON object controlling how often the sync runs (e.g. `{"type":"EVERY_N_HOURS","hourInterval":5}`) | Managed via the Schedule section of the Configuration page |
-| `START_FROM_DATE` | Earliest order date to import (`YYYY-MM-DD`); orders before this date are ignored | Set once during first-run setup |
+| Setting (UI label) | Section | Description | Where to find it |
+|---|---|---|---|
+| **YNAB Token** | YNAB | Personal Access Token used to authenticate with the YNAB API | [YNAB → My Account → Developer Settings](https://app.youneedabudget.com/settings/developer) |
+| **Budget ID** | YNAB | The UUID of the YNAB budget to update | Visible in the URL when you open a budget: `https://app.youneedabudget.com/<budget-id>/…` |
+| **FastMail User** | FastMail | Your FastMail email address (e.g. `you@fastmail.com`) | Your FastMail login |
+| **FastMail Token** | FastMail | A FastMail JMAP App Password (not your account password) | FastMail → Settings → Security → Passwords → New App Password |
+| **Gemini Key** | Gemini | Google Gemini API key used to classify order descriptions | [Google AI Studio → API Keys](https://aistudio.google.com/app/apikey) |
+| **Max orders per run** | Processing Settings | Maximum number of orders processed per sync run (`0` = unlimited) | Start with a small value (e.g. `5`) during initial testing |
+| **Sync schedule** | Processing Settings | How often the sync runs; choose a frequency from the dropdown | Configured via the Sync schedule section on the Configuration page |
+| **Start from date** | Processing Settings | Earliest order date to import; orders before this date are ignored | Set once during first-run setup |
 
 ---
 
