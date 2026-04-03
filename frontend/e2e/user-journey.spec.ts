@@ -21,6 +21,9 @@ import { test, expect } from '@playwright/test'
  *     YNAB update) ran end-to-end against the WireMock stubs with no race condition.
  *  7. Run a Dry Run — navigate back to Configuration, trigger a dry run from a historical
  *     start date, and verify the predicted YNAB update is shown without any live write.
+ *  8. Get Help — navigate to the Get Help page, describe a problem with sync logs
+ *     included, capture the GitHub new-issue URL, and assert it is valid, contains
+ *     log rows from step 6, and has all credentials redacted.
  *
  * The Spring Boot E2E server (started by Playwright's webServer config via
  * `./gradlew runE2EServer`) starts with the default 5-hour schedule. Step 4 saves an
@@ -147,5 +150,60 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(page.getByText('TOTO Bidet Toilet Seat')).toBeVisible()
   await expect(page.getByText('Electronics')).toBeVisible()
   await expect(page.getByText('txn-e2e-1')).toBeVisible()
+
+  // ── Step 8: Get Help — open a pre-filled GitHub issue ──────────────────────
+  // Navigate to Get Help. Enter a description and leave sync logs checked
+  // (default). Capture the window.open URL to verify it is a valid, pre-filled
+  // GitHub new-issue URL whose body contains the description, sync log rows
+  // from step 6, and no raw credentials from step 2.
+
+  await page.getByRole('link', { name: 'Get Help' }).click()
+  await expect(page.getByRole('heading', { name: 'Get Help' })).toBeVisible()
+
+  await page
+    .getByLabel(/describe the problem/i)
+    .fill('The sync stopped working after the credential update.')
+
+  // Sync log checkbox is on by default — leave it checked
+  await expect(
+    page.getByRole('checkbox', { name: /include recent sync log entries/i }),
+  ).toBeChecked()
+
+  // Intercept window.open so we can inspect the GitHub URL without opening a real tab
+  let capturedHelpUrl = ''
+  await page.exposeFunction('__captureHelpUrl__', (url: string) => {
+    capturedHelpUrl = url
+  })
+  await page.evaluate(() => {
+    window.open = (url?: string | URL) => {
+      ;(window as unknown as Record<string, unknown>).__captureHelpUrl__(
+        url?.toString() ?? '',
+      )
+      return null
+    }
+  })
+
+  await page.getByRole('button', { name: 'Get Help' }).click()
+
+  // Wait for the API call to complete and window.open to be invoked
+  await expect
+    .poll(() => capturedHelpUrl, { timeout: 10_000 })
+    .toContain('github.com/gthoma17/ynab_amazon_order_classifier/issues/new')
+
+  // Decode and validate the issue body is cromulent
+  const parsedHelpUrl = new URL(capturedHelpUrl)
+  const issueBody = decodeURIComponent(parsedHelpUrl.searchParams.get('body') ?? '')
+
+  expect(issueBody).toContain('The sync stopped working after the credential update.')
+  // Sync log rows from step 6 must appear in the body as actual table rows,
+  // not just the section header. The pipeline created EMAIL and YNAB rows with
+  // SUCCESS status; assert both sources and the status column are present.
+  expect(issueBody).toContain('| EMAIL |')
+  expect(issueBody).toContain('| YNAB |')
+  expect(issueBody).toContain('| SUCCESS |')
+  // Credentials saved in step 2 must have been redacted by the sanitization service
+  expect(issueBody).not.toContain('my-ynab-token')
+  expect(issueBody).not.toContain('my-fastmail-token')
+  expect(issueBody).not.toContain('my-gemini-key')
 })
 

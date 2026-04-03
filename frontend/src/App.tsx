@@ -3,6 +3,7 @@ import ConfigView from './views/ConfigView'
 import CategoryRulesView from './views/CategoryRulesView'
 import PendingOrdersView from './views/PendingOrdersView'
 import LogsView from './views/LogsView'
+import GetHelpView from './views/GetHelpView'
 import './App.css'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <NavLink to="/categories">Category Rules</NavLink>
         <NavLink to="/orders">Pending Orders</NavLink>
         <NavLink to="/logs">Logs</NavLink>
+        <NavLink to="/help">Get Help</NavLink>
       </nav>
       <main>
         <Routes>
@@ -20,6 +22,7 @@ function App() {
           <Route path="/categories" element={<CategoryRulesView />} />
           <Route path="/orders" element={<PendingOrdersView />} />
           <Route path="/logs" element={<LogsView />} />
+          <Route path="/help" element={<GetHelpView />} />
         </Routes>
       </main>
     </>
