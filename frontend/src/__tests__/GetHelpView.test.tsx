@@ -62,7 +62,7 @@ describe('GetHelpView', () => {
     await waitFor(() => {
       expect(openSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          'github.com/gthoma17/ynab_amazon_order_classifier/issues/new'
+          'github.com/gthoma17/budget-sortbot/issues/new'
         ),
         '_blank',
         'noopener,noreferrer'
