@@ -190,7 +190,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Wait for the API call to complete and window.open to be invoked
   await expect
     .poll(() => capturedHelpUrl, { timeout: 10_000 })
-    .toContain('github.com/gthoma17/ynab_amazon_order_classifier/issues/new')
+    .toContain('github.com/gthoma17/budget-sortbot/issues/new')
 
   // Decode and validate the issue body is cromulent
   const parsedHelpUrl = new URL(capturedHelpUrl)
