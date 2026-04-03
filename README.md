@@ -1,6 +1,6 @@
-# YNAB Amazon Order Classifier
+# Budget Sortbot
 
-Automatically categorize Amazon order transactions in [YNAB](https://www.youneedabudget.com/) by parsing Amazon order-confirmation emails via FastMail and classifying them with Google Gemini.
+*Automatically classify your Amazon orders into YNAB budget categories*
 
 > **Security notice:** The management UI has no authentication. Do **not** expose port 8080 to the public internet.
 
@@ -35,18 +35,18 @@ Create a directory on your host to persist the database, then start the containe
 
 ```bash
 # Linux / macOS
-mkdir -p /opt/ynab-auto/data
+mkdir -p /opt/budget-sortbot/data
 docker run -d \
-  --name ynab-automator \
+  --name budget-sortbot \
   --restart unless-stopped \
   -p 8080:8080 \
-  -v /opt/ynab-auto/data:/app/data \
-  ghcr.io/gthoma17/ynab-automator:latest
+  -v /opt/budget-sortbot/data:/app/data \
+  ghcr.io/gthoma17/budget-sortbot:latest
 ```
 
 > **Windows (Command Prompt):** Use a Windows-style host path, for example:
 > ```
-> docker run -d --name ynab-automator --restart unless-stopped -p 8080:8080 -v C:\ynab-auto\data:/app/data ghcr.io/gthoma17/ynab-automator:latest
+> docker run -d --name budget-sortbot --restart unless-stopped -p 8080:8080 -v C:\budget-sortbot\data:/app/data ghcr.io/gthoma17/budget-sortbot:latest
 > ```
 >
 > **Windows (PowerShell):** Replace backslashes with forward slashes or wrap the path in quotes.
@@ -93,40 +93,40 @@ Before diving into container logs, check the **System Logs** page in the UI. It 
 ### View container logs
 
 ```bash
-docker logs ynab-automator
+docker logs budget-sortbot
 ```
 
 To follow the log output in real time:
 
 ```bash
-docker logs -f ynab-automator
+docker logs -f budget-sortbot
 ```
 
 To see only the last 200 lines:
 
 ```bash
-docker logs --tail 200 ynab-automator
+docker logs --tail 200 budget-sortbot
 ```
 
 ### Enable DEBUG-level logging (no rebuild required)
 
-Spring Boot reads logging levels from environment variables at startup. Stop and recreate the container with the `LOGGING_LEVEL_COM_YNABAUTO=DEBUG` variable to enable verbose logging for the application:
+Spring Boot reads logging levels from environment variables at startup. Stop and recreate the container with the `LOGGING_LEVEL_COM_BUDGETSORTBOT=DEBUG` variable to enable verbose logging for the application:
 
 ```bash
-docker stop ynab-automator
-docker rm ynab-automator
+docker stop budget-sortbot
+docker rm budget-sortbot
 
 # Linux / macOS
 docker run -d \
-  --name ynab-automator \
+  --name budget-sortbot \
   --restart unless-stopped \
   -p 8080:8080 \
-  -v /opt/ynab-auto/data:/app/data \
-  -e LOGGING_LEVEL_COM_YNABAUTO=DEBUG \
-  ghcr.io/gthoma17/ynab-automator:latest
+  -v /opt/budget-sortbot/data:/app/data \
+  -e LOGGING_LEVEL_COM_BUDGETSORTBOT=DEBUG \
+  ghcr.io/gthoma17/budget-sortbot:latest
 ```
 
-No image rebuild is needed. Remove the `-e LOGGING_LEVEL_COM_YNABAUTO=DEBUG` flag and recreate the container to return to the default `INFO` level.
+No image rebuild is needed. Remove the `-e LOGGING_LEVEL_COM_BUDGETSORTBOT=DEBUG` flag and recreate the container to return to the default `INFO` level.
 
 ### What to look for in the logs
 
@@ -148,7 +148,7 @@ If you prefer to open an issue manually:
 1. Open an issue at **https://github.com/gthoma17/ynab_amazon_order_classifier/issues**
 2. Include the following in your report:
    - The relevant output from the **System Logs** page in the UI
-   - A snippet from `docker logs ynab-automator` covering the failed run
+   - A snippet from `docker logs budget-sortbot` covering the failed run
    - The steps you took and what you expected vs. what happened
    - Your host OS and Docker version (`docker version`)
 
