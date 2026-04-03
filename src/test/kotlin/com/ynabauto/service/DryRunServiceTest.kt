@@ -52,8 +52,7 @@ class DryRunServiceTest {
         // Common defaults
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns null
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns null
         every { configService.getValue(ConfigService.ORDER_CAP) } returns null
         every { configService.getAllCategoryRules() } returns emptyList()
         justRun { dryRunResultRepository.deleteAll() }

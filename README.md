@@ -23,7 +23,7 @@ Automatically categorize Amazon order transactions in [YNAB](https://www.youneed
 |---|---|
 | [Docker](https://docs.docker.com/get-docker/) | Any recent version; multi-arch image supports `linux/amd64`, `linux/arm64`, `linux/arm/v7` (Raspberry Pi 3+) |
 | YNAB account | A Personal Access Token and your Budget ID — see [YNAB API docs](https://api.youneedabudget.com/#personal-access-tokens) |
-| FastMail account | Your FastMail email address and a dedicated [JMAP App Password](https://www.fastmail.com/settings/security/passwords) |
+| FastMail account | A FastMail API token with email read access — see [FastMail API tokens](https://www.fastmail.com/settings/privacy-security/tokens) |
 | Google Gemini API key | Available from [Google AI Studio](https://aistudio.google.com/app/apikey) |
 | A host directory for data | The container stores its SQLite database here so config survives restarts |
 
@@ -76,8 +76,7 @@ All settings are managed through the **Configuration** page in the UI.
 |---|---|---|---|
 | **YNAB Token** | YNAB | Personal Access Token used to authenticate with the YNAB API | [YNAB → My Account → Developer Settings](https://app.youneedabudget.com/settings/developer) |
 | **Budget ID** | YNAB | The UUID of the YNAB budget to update | Visible in the URL when you open a budget: `https://app.youneedabudget.com/<budget-id>/…` |
-| **FastMail User** | FastMail | Your FastMail email address (e.g. `you@fastmail.com`) | Your FastMail login |
-| **FastMail Token** | FastMail | A FastMail JMAP App Password (not your account password) | FastMail → Settings → Security → Passwords → New App Password |
+| **FastMail API Token** | FastMail | A FastMail API token with email read access | FastMail → Settings → Privacy & Security → API tokens → New token (select **Email** read scope) |
 | **Gemini Key** | Gemini | Google Gemini API key used to classify order descriptions | [Google AI Studio → API Keys](https://aistudio.google.com/app/apikey) |
 | **Max orders per run** | Processing Settings | Maximum number of orders processed per sync run (`0` = unlimited) | Start with a small value (e.g. `5`) during initial testing |
 | **Sync schedule** | Processing Settings | How often the sync runs; choose a frequency from the dropdown | Configured via the Sync schedule section on the Configuration page |

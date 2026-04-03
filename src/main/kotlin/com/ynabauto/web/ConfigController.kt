@@ -44,8 +44,7 @@ class ConfigController(
         return ApiKeysResponse(
             ynabToken = configService.getValue(ConfigService.YNAB_TOKEN),
             ynabBudgetId = configService.getValue(ConfigService.YNAB_BUDGET_ID),
-            fastmailUser = configService.getValue(ConfigService.FASTMAIL_USER),
-            fastmailToken = configService.getValue(ConfigService.FASTMAIL_TOKEN),
+            fastmailApiToken = configService.getValue(ConfigService.FASTMAIL_API_TOKEN),
             geminiKey = configService.getValue(ConfigService.GEMINI_KEY)
         )
     }
@@ -54,8 +53,7 @@ class ConfigController(
     fun updateKeys(@RequestBody request: ApiKeysRequest): ResponseEntity<Void> {
         request.ynabToken?.let { configService.setValue(ConfigService.YNAB_TOKEN, it) }
         request.ynabBudgetId?.let { configService.setValue(ConfigService.YNAB_BUDGET_ID, it) }
-        request.fastmailUser?.let { configService.setValue(ConfigService.FASTMAIL_USER, it) }
-        request.fastmailToken?.let { configService.setValue(ConfigService.FASTMAIL_TOKEN, it) }
+        request.fastmailApiToken?.let { configService.setValue(ConfigService.FASTMAIL_API_TOKEN, it) }
         request.geminiKey?.let { configService.setValue(ConfigService.GEMINI_KEY, it) }
         return ResponseEntity.noContent().build()
     }

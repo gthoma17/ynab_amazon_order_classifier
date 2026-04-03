@@ -4,16 +4,14 @@ import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 interface ApiKeysResponse {
   ynabToken: string | null
   ynabBudgetId: string | null
-  fastmailUser: string | null
-  fastmailToken: string | null
+  fastmailApiToken: string | null
   geminiKey: string | null
 }
 
 interface ApiKeyValues {
   ynabToken: string
   ynabBudgetId: string
-  fastmailUser: string
-  fastmailToken: string
+  fastmailApiToken: string
   geminiKey: string
 }
 
@@ -34,8 +32,7 @@ const idleProbe: ProbeState = { status: 'idle', message: '' }
 const emptyKeys: ApiKeyValues = {
   ynabToken: '',
   ynabBudgetId: '',
-  fastmailUser: '',
-  fastmailToken: '',
+  fastmailApiToken: '',
   geminiKey: '',
 }
 
@@ -115,8 +112,7 @@ export default function ConfigView() {
       setKeys((current) => ({
         ynabToken: current.ynabToken || (data.ynabToken ?? ''),
         ynabBudgetId: current.ynabBudgetId || (data.ynabBudgetId ?? ''),
-        fastmailUser: current.fastmailUser || (data.fastmailUser ?? ''),
-        fastmailToken: current.fastmailToken || (data.fastmailToken ?? ''),
+        fastmailApiToken: current.fastmailApiToken || (data.fastmailApiToken ?? ''),
         geminiKey: current.geminiKey || (data.geminiKey ?? ''),
       }))
     })
@@ -259,30 +255,20 @@ export default function ConfigView() {
       <section>
         <h2>FastMail</h2>
         <div>
-          <label htmlFor="fastmailUser">FastMail User</label>
+          <label htmlFor="fastmailApiToken">FastMail API Token</label>
           <input
-            id="fastmailUser"
-            value={keys.fastmailUser}
+            id="fastmailApiToken"
+            type="password"
+            value={keys.fastmailApiToken}
             onChange={(e) =>
-              setKeys({ ...keys, fastmailUser: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label htmlFor="fastmailToken">FastMail Token</label>
-          <input
-            id="fastmailToken"
-            value={keys.fastmailToken}
-            onChange={(e) =>
-              setKeys({ ...keys, fastmailToken: e.target.value })
+              setKeys({ ...keys, fastmailApiToken: e.target.value })
             }
           />
         </div>
         <button
           onClick={() => handleTest('fastmail', setFastmailProbe)}
           disabled={
-            !keys.fastmailUser ||
-            !keys.fastmailToken ||
+            !keys.fastmailApiToken ||
             fastmailProbe.status === 'testing'
           }
         >

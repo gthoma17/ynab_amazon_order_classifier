@@ -6,16 +6,14 @@ import java.time.Instant
 data class ApiKeysRequest(
     val ynabToken: String? = null,
     val ynabBudgetId: String? = null,
-    val fastmailUser: String? = null,
-    val fastmailToken: String? = null,
+    val fastmailApiToken: String? = null,
     val geminiKey: String? = null
 )
 
 data class ApiKeysResponse(
     val ynabToken: String?,
     val ynabBudgetId: String?,
-    val fastmailUser: String?,
-    val fastmailToken: String?,
+    val fastmailApiToken: String?,
     val geminiKey: String?
 )
 

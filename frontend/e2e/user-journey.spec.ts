@@ -42,8 +42,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#ynabToken').fill('my-ynab-token')
   await page.locator('#ynabBudgetId').fill('my-budget-id')
-  await page.locator('#fastmailUser').fill('me@fastmail.com')
-  await page.locator('#fastmailToken').fill('my-fastmail-token')
+  await page.locator('#fastmailApiToken').fill('my-fastmail-token')
   await page.locator('#geminiKey').fill('my-gemini-key')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('Saved')).toBeVisible()

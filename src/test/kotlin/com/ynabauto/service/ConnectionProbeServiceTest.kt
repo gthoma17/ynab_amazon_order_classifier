@@ -41,8 +41,7 @@ class ConnectionProbeServiceTest {
 
     @Test
     fun `probeFastMail returns success when 200 response`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "test-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "test-token"
 
         mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
@@ -58,8 +57,7 @@ class ConnectionProbeServiceTest {
 
     @Test
     fun `probeFastMail returns auth error on 401`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "bad-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "bad-token"
 
         mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andRespond(withStatus(HttpStatus.UNAUTHORIZED))
@@ -74,8 +72,7 @@ class ConnectionProbeServiceTest {
 
     @Test
     fun `probeFastMail returns network error on IO failure`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "test-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "test-token"
 
         mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andRespond { _ -> throw IOException("Connection timed out") }
@@ -90,8 +87,7 @@ class ConnectionProbeServiceTest {
 
     @Test
     fun `probeFastMail returns failure without making HTTP call when credentials are empty`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns null
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns null
 
         val result = probeService.probeFastMail()
 

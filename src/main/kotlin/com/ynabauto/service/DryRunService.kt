@@ -184,12 +184,11 @@ class DryRunService(
     }
 
     private fun fetchFreshEmailOrders(sinceInstant: Instant, alreadyKnownIds: Set<String>): List<AmazonOrder> {
-        val user = configService.getValue(ConfigService.FASTMAIL_USER)
-        val token = configService.getValue(ConfigService.FASTMAIL_TOKEN)
-        if (user == null || token == null) return emptyList()
+        val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+        if (token == null) return emptyList()
 
         return try {
-            val emails = emailProviderClient.searchOrders(user, token, sinceInstant)
+            val emails = emailProviderClient.searchOrders(token, sinceInstant)
             emails
                 .filter { it.messageId !in alreadyKnownIds }
                 .mapNotNull { email -> parseEmail(email) }

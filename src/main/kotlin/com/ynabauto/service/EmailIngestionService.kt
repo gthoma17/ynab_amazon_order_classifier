@@ -35,10 +35,9 @@ class EmailIngestionService(
     }
 
     fun ingest() {
-        val user = configService.getValue(ConfigService.FASTMAIL_USER)
-        val token = configService.getValue(ConfigService.FASTMAIL_TOKEN)
-        if (user == null || token == null) {
-            log.warn { "FastMail credentials not configured, skipping email ingestion" }
+        val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+        if (token == null) {
+            log.warn { "FastMail API token not configured, skipping email ingestion" }
             return
         }
 
@@ -63,7 +62,7 @@ class EmailIngestionService(
                 lastSyncInstant
             }
 
-            val emails = emailProviderClient.searchOrders(user, token, sinceDate)
+            val emails = emailProviderClient.searchOrders(token, sinceDate)
             log.info { "Email ingestion: found ${emails.size} order email(s) since $sinceDate" }
 
             for (email in emails) {

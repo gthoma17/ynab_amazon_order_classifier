@@ -174,8 +174,7 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `ingest skips when FastMail credentials are not configured`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns null
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns null
 
         emailIngestionService.ingest()
 
@@ -185,10 +184,9 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `ingest saves SUCCESS sync log after processing emails`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "my-token"
         every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns null
-        every { emailProviderClient.searchOrders(any(), any(), any()) } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), any()) } returns emptyList()
         val syncLogSlot = slot<SyncLog>()
         every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
@@ -201,10 +199,9 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `ingest saves FAIL sync log when email provider throws`() {
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "my-token"
         every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns null
-        every { emailProviderClient.searchOrders(any(), any(), any()) } throws RuntimeException("Connection failed")
+        every { emailProviderClient.searchOrders(any(), any()) } throws RuntimeException("Connection failed")
         val syncLogSlot = slot<SyncLog>()
         every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
 
@@ -218,11 +215,10 @@ class EmailIngestionServiceTest {
     fun `ingest uses last successful sync time as since date`() {
         val lastRun = Instant.parse("2024-01-10T00:00:00Z")
         val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "my-token"
         every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
         val sinceDateSlot = slot<Instant>()
-        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), capture(sinceDateSlot)) } returns emptyList()
         every { syncLogRepository.save(any()) } answers { firstArg() }
 
         emailIngestionService.ingest()
@@ -234,12 +230,11 @@ class EmailIngestionServiceTest {
     fun `ingest uses start-from date when it is later than last sync time`() {
         val lastRun = Instant.parse("2024-01-10T00:00:00Z")
         val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "my-token"
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
         every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
         val sinceDateSlot = slot<Instant>()
-        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), capture(sinceDateSlot)) } returns emptyList()
         every { syncLogRepository.save(any()) } answers { firstArg() }
 
         emailIngestionService.ingest()
@@ -254,12 +249,11 @@ class EmailIngestionServiceTest {
     fun `ingest uses last sync time when it is later than start-from date`() {
         val lastRun = Instant.parse("2024-03-15T00:00:00Z")
         val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "my-token"
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
         every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
         val sinceDateSlot = slot<Instant>()
-        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), capture(sinceDateSlot)) } returns emptyList()
         every { syncLogRepository.save(any()) } answers { firstArg() }
 
         emailIngestionService.ingest()

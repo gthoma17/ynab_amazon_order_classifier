@@ -16,8 +16,7 @@ const server = setupServer(
     HttpResponse.json({
       ynabToken: 'tok-123',
       ynabBudgetId: 'budget-abc',
-      fastmailUser: 'user@example.com',
-      fastmailToken: null,
+      fastmailApiToken: 'fmjt_test-token',
       geminiKey: null,
     })
   ),
@@ -49,12 +48,11 @@ describe('ConfigView', () => {
     expect(screen.getByRole('heading', { name: /api keys/i })).toBeInTheDocument()
   })
 
-  it('renders input fields for all five keys', () => {
+  it('renders input fields for all four keys', () => {
     render(<ConfigView />)
     expect(screen.getByLabelText(/ynab token/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/budget id/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/fastmail user/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/fastmail token/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/fastmail api token/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/gemini key/i)).toBeInTheDocument()
   })
 
@@ -64,8 +62,7 @@ describe('ConfigView', () => {
       expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
     )
     expect(screen.getByLabelText(/budget id/i)).toHaveValue('budget-abc')
-    expect(screen.getByLabelText(/fastmail user/i)).toHaveValue('user@example.com')
-    expect(screen.getByLabelText(/fastmail token/i)).toHaveValue('')
+    expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token')
     expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
   })
 
@@ -119,8 +116,7 @@ describe('ConfigView', () => {
         HttpResponse.json({
           ynabToken: null,
           ynabBudgetId: null,
-          fastmailUser: null,
-          fastmailToken: null,
+          fastmailApiToken: null,
           geminiKey: null,
         })
       )
@@ -132,21 +128,20 @@ describe('ConfigView', () => {
     expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
   })
 
-  it('disables FastMail test button when FastMail credentials are empty', async () => {
+  it('disables FastMail test button when FastMail API token is empty', async () => {
     server.use(
       http.get('/api/config/keys', () =>
         HttpResponse.json({
           ynabToken: null,
           ynabBudgetId: null,
-          fastmailUser: null,
-          fastmailToken: null,
+          fastmailApiToken: null,
           geminiKey: null,
         })
       )
     )
     render(<ConfigView />)
     await waitFor(() =>
-      expect(screen.getByLabelText(/fastmail user/i)).toHaveValue('')
+      expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('')
     )
     expect(screen.getByRole('button', { name: /test fastmail/i })).toBeDisabled()
   })

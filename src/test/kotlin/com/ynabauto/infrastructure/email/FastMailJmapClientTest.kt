@@ -44,7 +44,7 @@ class FastMailJmapClientTest {
                 MediaType.APPLICATION_JSON
             ))
 
-        val result = fastMailClient.searchOrders("user@fastmail.com", "test-token", Instant.parse("2024-01-01T00:00:00Z"))
+        val result = fastMailClient.searchOrders("test-token", Instant.parse("2024-01-01T00:00:00Z"))
 
         assertEquals(0, result.size)
         mockServer.verify()
@@ -65,7 +65,7 @@ class FastMailJmapClientTest {
                 MediaType.APPLICATION_JSON
             ))
 
-        fastMailClient.searchOrders("user@fastmail.com", "my-token", Instant.parse("2024-01-01T00:00:00Z"))
+        fastMailClient.searchOrders("my-token", Instant.parse("2024-01-01T00:00:00Z"))
 
         mockServer.verify()
     }
@@ -87,7 +87,7 @@ class FastMailJmapClientTest {
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(EMAIL_GET_RESPONSE_JSON, MediaType.APPLICATION_JSON))
 
-        val result = fastMailClient.searchOrders("user@fastmail.com", "test-token", Instant.parse("2024-01-01T00:00:00Z"))
+        val result = fastMailClient.searchOrders("test-token", Instant.parse("2024-01-01T00:00:00Z"))
 
         assertEquals(2, result.size)
         assertEquals("<order-123@amazon.com>", result[0].messageId)
@@ -118,7 +118,7 @@ class FastMailJmapClientTest {
                 MediaType.APPLICATION_JSON
             ))
 
-        fastMailClient.searchOrders("user@fastmail.com", "token", Instant.parse("2024-01-01T00:00:00Z"))
+        fastMailClient.searchOrders("token", Instant.parse("2024-01-01T00:00:00Z"))
 
         mockServer.verify()
     }

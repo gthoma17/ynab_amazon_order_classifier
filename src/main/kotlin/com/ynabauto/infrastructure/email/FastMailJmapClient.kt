@@ -26,10 +26,10 @@ class FastMailJmapClient(
 
     private val client = restClientBuilder.build()
 
-    override fun searchOrders(user: String, token: String, sinceDate: Instant): List<EmailOrder> {
+    override fun searchOrders(token: String, sinceDate: Instant): List<EmailOrder> {
         val session = getSession(token)
         val accountId = session.primaryAccounts[JMAP_MAIL_URN]
-            ?: throw RuntimeException("No JMAP mail account found for user: $user")
+            ?: throw RuntimeException("No JMAP mail account found in session")
 
         val emailIds = queryOrderEmails(session.apiUrl, accountId, token, sinceDate)
         log.debug { "Email/query returned ${emailIds.size} email IDs" }

@@ -37,12 +37,11 @@ class ConnectionProbeService(
     private val client = restClientBuilder.build()
 
     fun probeFastMail(): ProbeResult {
-        val token = configService.getValue(ConfigService.FASTMAIL_TOKEN)
-        val user = configService.getValue(ConfigService.FASTMAIL_USER)
-        if (token.isNullOrBlank() || user.isNullOrBlank()) {
-            return ProbeResult(success = false, message = "FastMail credentials not configured")
+        val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+        if (token.isNullOrBlank()) {
+            return ProbeResult(success = false, message = "FastMail API token not configured")
         }
-        log.debug { "Probing FastMail for user=$user" }
+        log.debug { "Probing FastMail" }
         return probe {
             client.get()
                 .uri("$fastmailBaseUrl/.well-known/jmap")

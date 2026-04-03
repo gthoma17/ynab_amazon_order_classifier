@@ -16,8 +16,7 @@ class ConfigService(
     companion object {
         const val YNAB_TOKEN = "YNAB_TOKEN"
         const val YNAB_BUDGET_ID = "YNAB_BUDGET_ID"
-        const val FASTMAIL_USER = "FASTMAIL_USER"
-        const val FASTMAIL_TOKEN = "FASTMAIL_TOKEN"
+        const val FASTMAIL_API_TOKEN = "FASTMAIL_API_TOKEN"
         const val GEMINI_KEY = "GEMINI_KEY"
         const val ORDER_CAP = "ORDER_CAP"
         const val SCHEDULE_CONFIG = "SCHEDULE_CONFIG"
