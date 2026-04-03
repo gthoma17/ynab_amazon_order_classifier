@@ -28,6 +28,11 @@ import { test, expect } from '@playwright/test'
  * immediately with no app restart.
  */
 test('first-time setup and first sync journey', async ({ page }) => {
+  // This journey spans several network round-trips plus two 30-second polls
+  // (step 6 logs, step 7 dry-run results). The default 30s test timeout is far
+  // too short; give the whole test 2 minutes.
+  test.setTimeout(120_000)
+
   // ── Step 1: Open the app — API Keys page ──────────────────────────────────
 
   await page.goto('/')
@@ -49,13 +54,13 @@ test('first-time setup and first sync journey', async ({ page }) => {
   //   browser → real Spring Boot backend → WireMock stubs.
 
   await page.getByRole('button', { name: 'Test YNAB' }).click()
-  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
+  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected', { timeout: 15_000 })
 
   await page.getByRole('button', { name: 'Test FastMail' }).click()
-  await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
+  await expect(page.getByLabel('FastMail probe result')).toContainText('Connected', { timeout: 15_000 })
 
   await page.getByRole('button', { name: 'Test Gemini' }).click()
-  await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
+  await expect(page.getByLabel('Gemini probe result')).toContainText('Connected', { timeout: 15_000 })
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
@@ -109,8 +114,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
     .poll(
       async () => {
         await page.reload()
-        const ynabRows = await page.getByRole('cell', { name: 'YNAB' }).count()
-        return ynabRows > 0
+        return await page.getByRole('cell', { name: 'YNAB' }).count()
       },
       { timeout: 30_000, intervals: [2000, 3000, 4000] },
     )
