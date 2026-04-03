@@ -4,6 +4,15 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
+    # Only fire when CI was triggered by a direct push (not a pull_request review
+    # run). The head_branch job condition below further narrows this to prod.
+    branches-ignore: []
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA on prod to release (defaults to HEAD of prod)"
+        required: false
+        default: ""
 
 # ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
 
