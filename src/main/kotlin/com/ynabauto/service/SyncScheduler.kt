@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.DisposableBean
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.support.CronTrigger
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
@@ -17,20 +16,13 @@ import java.util.concurrent.ScheduledFuture
  *
  * Uses a single-thread [ThreadPoolTaskScheduler] to keep memory overhead minimal
  * on Pi 3 hardware (512 MB JVM heap constraint).
- *
- * For E2E / integration test environments, two opt-in properties are available:
- * - `app.scheduler.cron-override`   — when non-blank, overrides the DB schedule entirely
- * - `app.scheduler.email-only-mode` — when true, the scheduled task only runs email
- *   ingestion and skips the YNAB sync (keeps orders PENDING during Playwright tests)
  */
 @Component
 class SyncScheduler(
     private val emailIngestionService: EmailIngestionService,
     private val ynabSyncService: YnabSyncService,
     private val configService: ConfigService,
-    private val objectMapper: ObjectMapper,
-    @Value("\${app.scheduler.cron-override:}") private val cronOverride: String = "",
-    @Value("\${app.scheduler.email-only-mode:false}") private val emailOnlyMode: Boolean = false
+    private val objectMapper: ObjectMapper
 ) : DisposableBean {
 
     companion object {
@@ -67,7 +59,7 @@ class SyncScheduler(
 
         val cronExpression = buildCronFromConfig()
         if (cronExpression != null) {
-            log.info { "Scheduling sync with cron: $cronExpression${if (emailOnlyMode) " (email-only mode)" else ""}" }
+            log.info { "Scheduling sync with cron: $cronExpression" }
             scheduledFuture = taskScheduler.schedule({ runSync() }, CronTrigger(cronExpression))
         } else {
             log.warn { "No valid schedule configuration found; sync will not run automatically" }
@@ -81,9 +73,7 @@ class SyncScheduler(
 
     private fun runSync() {
         emailIngestionService.ingest()
-        if (!emailOnlyMode) {
-            ynabSyncService.sync()
-        }
+        ynabSyncService.sync()
     }
 
     /**
@@ -91,15 +81,8 @@ class SyncScheduler(
      * string. Returns the default cron when the key is absent and null when the
      * stored value cannot be parsed (so the caller can fall back to no schedule
      * rather than crashing the app).
-     *
-     * When [cronOverride] is set (e.g. via `app.scheduler.cron-override` in tests),
-     * it takes precedence over everything else.
      */
     internal fun buildCronFromConfig(): String? {
-        if (cronOverride.isNotBlank()) {
-            log.info { "Using cron override: $cronOverride" }
-            return cronOverride
-        }
         return try {
             val json = configService.getValue(ConfigService.SCHEDULE_CONFIG)
                 ?: return DEFAULT_CRON

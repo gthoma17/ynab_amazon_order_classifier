@@ -43,11 +43,6 @@ fun main() {
     System.setProperty("app.fastmail.base-url", "http://localhost:$port")
     System.setProperty("app.ynab.base-url", "http://localhost:$port/v1")
     System.setProperty("app.gemini.base-url", "http://localhost:$port/v1beta")
-    // Fire the scheduler every 3 seconds so the order appears quickly after credentials are saved
-    System.setProperty("app.scheduler.cron-override", "*/3 * * * * *")
-    // Only run email ingestion automatically; YNAB sync runs via the dry-run flow in the test
-    // so orders stay PENDING long enough for the Pending Orders step to verify them.
-    System.setProperty("app.scheduler.email-only-mode", "true")
     System.setProperty("server.port", "8080")
     System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}")
 

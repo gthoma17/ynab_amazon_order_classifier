@@ -3,7 +3,6 @@ package com.ynabauto.service
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -29,40 +28,30 @@ class SyncSchedulerTest {
     }
 
     @Test
-    fun `buildCronFromConfig returns override cron when property is set`() {
-        val schedulerWithOverride = SyncScheduler(
-            emailIngestionService, ynabSyncService, configService, objectMapper,
-            cronOverride = "*/3 * * * * *"
-        )
-
-        val cron = schedulerWithOverride.buildCronFromConfig()
-
-        assertEquals("*/3 * * * * *", cron)
-        schedulerWithOverride.destroy()
-    }
-
-    @Test
-    fun `buildCronFromConfig ignores DB config when override is set`() {
-        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"HOURLY"}"""
-        val schedulerWithOverride = SyncScheduler(
-            emailIngestionService, ynabSyncService, configService, objectMapper,
-            cronOverride = "*/5 * * * * *"
-        )
-
-        val cron = schedulerWithOverride.buildCronFromConfig()
-
-        assertEquals("*/5 * * * * *", cron)
-        verify(exactly = 0) { configService.getValue(any()) }
-        schedulerWithOverride.destroy()
-    }
-
-    @Test
     fun `buildCronFromConfig returns default cron when no schedule configured`() {
         every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns null
 
         val cron = syncScheduler.buildCronFromConfig()
 
         assertEquals(SyncScheduler.DEFAULT_CRON, cron)
+    }
+
+    @Test
+    fun `buildCronFromConfig parses EVERY_N_SECONDS schedule correctly`() {
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"EVERY_N_SECONDS","secondInterval":3}"""
+
+        val cron = syncScheduler.buildCronFromConfig()
+
+        assertEquals("*/3 * * * * *", cron)
+    }
+
+    @Test
+    fun `buildCronFromConfig parses EVERY_N_MINUTES schedule correctly`() {
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"EVERY_N_MINUTES","minuteInterval":15}"""
+
+        val cron = syncScheduler.buildCronFromConfig()
+
+        assertEquals("0 */15 * * * *", cron)
     }
 
     @Test

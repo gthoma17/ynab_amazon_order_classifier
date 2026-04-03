@@ -7,6 +7,36 @@ import org.junit.jupiter.api.Test
 class ScheduleConfigTest {
 
     @Test
+    fun `EVERY_N_SECONDS with interval 3 produces correct cron`() {
+        val config = ScheduleConfig(type = ScheduleType.EVERY_N_SECONDS, secondInterval = 3)
+        assertEquals("*/3 * * * * *", config.toCron())
+    }
+
+    @Test
+    fun `EVERY_N_SECONDS with null interval returns null`() {
+        val config = ScheduleConfig(type = ScheduleType.EVERY_N_SECONDS, secondInterval = null)
+        assertNull(config.toCron())
+    }
+
+    @Test
+    fun `EVERY_N_MINUTES with interval 15 produces correct cron`() {
+        val config = ScheduleConfig(type = ScheduleType.EVERY_N_MINUTES, minuteInterval = 15)
+        assertEquals("0 */15 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `EVERY_N_MINUTES with interval 1 produces correct cron`() {
+        val config = ScheduleConfig(type = ScheduleType.EVERY_N_MINUTES, minuteInterval = 1)
+        assertEquals("0 */1 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `EVERY_N_MINUTES with null interval returns null`() {
+        val config = ScheduleConfig(type = ScheduleType.EVERY_N_MINUTES, minuteInterval = null)
+        assertNull(config.toCron())
+    }
+
+    @Test
     fun `HOURLY produces correct cron expression`() {
         val config = ScheduleConfig(type = ScheduleType.HOURLY)
         assertEquals("0 0 * * * *", config.toCron())

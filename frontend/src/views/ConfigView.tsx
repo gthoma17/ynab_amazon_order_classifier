@@ -41,10 +41,12 @@ const emptyKeys: ApiKeyValues = {
 
 // ── Processing guardrails ──────────────────────────────────────────────────────
 
-type ScheduleType = 'HOURLY' | 'EVERY_N_HOURS' | 'DAILY' | 'WEEKLY'
+type ScheduleType = 'EVERY_N_SECONDS' | 'EVERY_N_MINUTES' | 'HOURLY' | 'EVERY_N_HOURS' | 'DAILY' | 'WEEKLY'
 
 interface ScheduleConfig {
   type: ScheduleType
+  secondInterval?: number | null
+  minuteInterval?: number | null
   hourInterval?: number | null
   hour?: number | null
   minute?: number
@@ -88,6 +90,8 @@ export default function ConfigView() {
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
   const [scheduleType, setScheduleType] = useState<ScheduleType>('EVERY_N_HOURS')
+  const [secondInterval, setSecondInterval] = useState(10)
+  const [minuteInterval, setMinuteInterval] = useState(30)
   const [hourInterval, setHourInterval] = useState(5)
   const [scheduleHour, setScheduleHour] = useState(0)
   const [scheduleMinute, setScheduleMinute] = useState(0)
@@ -117,6 +121,8 @@ export default function ConfigView() {
       const sc = data.scheduleConfig
       if (sc) {
         setScheduleType(sc.type)
+        setSecondInterval(sc.secondInterval ?? 10)
+        setMinuteInterval(sc.minuteInterval ?? 30)
         setHourInterval(sc.hourInterval ?? 5)
         setScheduleHour(sc.hour ?? 0)
         setScheduleMinute(sc.minute ?? 0)
@@ -145,6 +151,8 @@ export default function ConfigView() {
   function handleSaveProcessingConfig() {
     const scheduleConfig: ScheduleConfig = {
       type: scheduleType,
+      secondInterval: scheduleType === 'EVERY_N_SECONDS' ? secondInterval : null,
+      minuteInterval: scheduleType === 'EVERY_N_MINUTES' ? minuteInterval : null,
       hourInterval: scheduleType === 'EVERY_N_HOURS' ? hourInterval : null,
       hour: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleHour : null,
       minute: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleMinute : 0,
@@ -346,9 +354,47 @@ export default function ConfigView() {
           >
             <option value="HOURLY">Every hour</option>
             <option value="EVERY_N_HOURS">Every N hours</option>
+            <option value="EVERY_N_MINUTES">Every N minutes</option>
+            <option value="EVERY_N_SECONDS">Every N seconds</option>
             <option value="DAILY">Daily</option>
             <option value="WEEKLY">Weekly</option>
           </select>
+
+          {scheduleType === 'EVERY_N_SECONDS' && (
+            <div>
+              <label htmlFor="secondInterval">Every N seconds</label>
+              <input
+                id="secondInterval"
+                type="number"
+                min={1}
+                max={59}
+                value={secondInterval}
+                onChange={(e) =>
+                  setSecondInterval(parseInt(e.target.value, 10) || 1)
+                }
+              />
+              <p role="alert">
+                ⚠ Not recommended for production — intended for development and
+                testing only.
+              </p>
+            </div>
+          )}
+
+          {scheduleType === 'EVERY_N_MINUTES' && (
+            <div>
+              <label htmlFor="minuteInterval">Every N minutes</label>
+              <input
+                id="minuteInterval"
+                type="number"
+                min={1}
+                max={59}
+                value={minuteInterval}
+                onChange={(e) =>
+                  setMinuteInterval(parseInt(e.target.value, 10) || 1)
+                }
+              />
+            </div>
+          )}
 
           {scheduleType === 'EVERY_N_HOURS' && (
             <div>
