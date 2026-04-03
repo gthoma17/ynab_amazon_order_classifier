@@ -34,16 +34,16 @@ class AppConfigEntityTest {
     @Test
     fun `can find AppConfig by key`() {
         val config = AppConfig(
-            key = "FASTMAIL_USER",
-            value = "user@fastmail.com",
+            key = "FASTMAIL_API_TOKEN",
+            value = "fmjt_test-token",
             updatedAt = Instant.now()
         )
         appConfigRepository.save(config)
 
-        val found = appConfigRepository.findById("FASTMAIL_USER")
+        val found = appConfigRepository.findById("FASTMAIL_API_TOKEN")
 
         assertTrue(found.isPresent)
-        assertEquals("user@fastmail.com", found.get().value)
+        assertEquals("fmjt_test-token", found.get().value)
     }
 
     @Test

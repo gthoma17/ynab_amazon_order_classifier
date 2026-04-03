@@ -50,10 +50,10 @@ class ConfigServiceTest {
         val savedSlot = slot<AppConfig>()
         every { appConfigRepository.save(capture(savedSlot)) } answers { firstArg() }
 
-        configService.setValue(ConfigService.FASTMAIL_USER, "user@fastmail.com")
+        configService.setValue(ConfigService.FASTMAIL_API_TOKEN, "fmjt_test-token")
 
-        assertEquals(ConfigService.FASTMAIL_USER, savedSlot.captured.key)
-        assertEquals("user@fastmail.com", savedSlot.captured.value)
+        assertEquals(ConfigService.FASTMAIL_API_TOKEN, savedSlot.captured.key)
+        assertEquals("fmjt_test-token", savedSlot.captured.value)
     }
 
     @Test
@@ -86,8 +86,7 @@ class ConfigServiceTest {
     fun `key constants have expected values`() {
         assertEquals("YNAB_TOKEN", ConfigService.YNAB_TOKEN)
         assertEquals("YNAB_BUDGET_ID", ConfigService.YNAB_BUDGET_ID)
-        assertEquals("FASTMAIL_USER", ConfigService.FASTMAIL_USER)
-        assertEquals("FASTMAIL_TOKEN", ConfigService.FASTMAIL_TOKEN)
+        assertEquals("FASTMAIL_API_TOKEN", ConfigService.FASTMAIL_API_TOKEN)
         assertEquals("GEMINI_KEY", ConfigService.GEMINI_KEY)
     }
 }

@@ -56,16 +56,14 @@ class ConfigControllerTest {
     fun `GET api config keys returns all key values`() {
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "my-ynab-token"
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-123"
-        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
-        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "fmjt_test-token"
         every { configService.getValue(ConfigService.GEMINI_KEY) } returns null
 
         mockMvc.perform(get("/api/config/keys"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.ynabToken").value("my-ynab-token"))
             .andExpect(jsonPath("$.ynabBudgetId").value("budget-123"))
-            .andExpect(jsonPath("$.fastmailUser").value("user@fastmail.com"))
-            .andExpect(jsonPath("$.fastmailToken").doesNotExist())
+            .andExpect(jsonPath("$.fastmailApiToken").value("fmjt_test-token"))
             .andExpect(jsonPath("$.geminiKey").doesNotExist())
     }
 

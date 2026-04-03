@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node'
 import App from '../App'
 
 const server = setupServer(
-  http.get('/api/config/keys', () => HttpResponse.json({ ynabToken: null, ynabBudgetId: null, fastmailUser: null, fastmailToken: null, geminiKey: null })),
+  http.get('/api/config/keys', () => HttpResponse.json({ ynabToken: null, ynabBudgetId: null, fastmailApiToken: null, geminiKey: null })),
   http.get('/api/ynab/categories', () => HttpResponse.json([])),
   http.get('/api/config/categories', () => HttpResponse.json([])),
   http.get('/api/orders/pending', () => HttpResponse.json([])),
