@@ -70,7 +70,7 @@ The SQLite database (`/app/data/database.sqlite`) is stored in the mounted volum
 
 ## Configuration Reference
 
-All settings are stored in the `app_config` table and managed through the **Configuration** page in the UI.
+All settings are managed through the **Configuration** page in the UI.
 
 | Key | Description | Where to find it |
 |---|---|---|
