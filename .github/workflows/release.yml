@@ -88,8 +88,8 @@ jobs:
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ynab-automator:${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/ynab-automator:latest
+            ghcr.io/${{ github.repository_owner }}/budget-sortbot:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/budget-sortbot:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -102,17 +102,17 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          IMAGE_REF="ghcr.io/${OWNER}/ynab-automator:${VERSION}"
+          IMAGE_REF="ghcr.io/${OWNER}/budget-sortbot:${VERSION}"
           BODY="## Docker Image
 
 Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):
 
 \`\`\`bash
 docker pull ${IMAGE_REF}
-docker run -v /opt/ynab-auto/data:/app/data ${IMAGE_REF}
+docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}
 \`\`\`
 
-> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → ynab-automator → Package Settings* so that unauthenticated users can pull the image."
+> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
 
           # If the release already exists (idempotent re-run), skip creation.
           if gh release view "$VERSION" > /dev/null 2>&1; then

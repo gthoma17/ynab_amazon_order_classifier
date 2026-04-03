@@ -1,1 +1,1 @@
-rootProject.name = "ynab-amazon-order-classifier"
+rootProject.name = "budget-sortbot"
