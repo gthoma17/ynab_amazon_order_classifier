@@ -245,8 +245,8 @@ class EmailIngestionServiceTest {
         emailIngestionService.ingest()
 
         // Feb 1 is after Jan 10, so start-from date wins
-        val expected = java.time.LocalDate.parse("2024-02-01")
-            .atStartOfDay(java.time.ZoneOffset.UTC).toInstant()
+        val expected = LocalDate.parse("2024-02-01")
+            .atStartOfDay(ZoneOffset.UTC).toInstant()
         assertEquals(expected, sinceDateSlot.captured)
     }
 

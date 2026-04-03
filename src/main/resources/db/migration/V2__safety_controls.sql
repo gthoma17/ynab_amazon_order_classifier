@@ -1,7 +1,7 @@
 -- Safety controls: order cap, schedule config, start-from date, installation timestamp
 
 INSERT OR IGNORE INTO app_config (key, value, updated_at)
-VALUES ('INSTALLED_AT', strftime('%Y-%m-%d', 'now'), datetime('now'));
+VALUES ('INSTALLED_AT', datetime('now'), datetime('now'));
 
 INSERT OR IGNORE INTO app_config (key, value, updated_at)
 VALUES ('START_FROM_DATE', strftime('%Y-%m-%d', 'now'), datetime('now'));

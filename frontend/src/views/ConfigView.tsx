@@ -459,7 +459,7 @@ export default function ConfigView() {
         )}
 
         {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
-          <div>
+          <div aria-live="polite">
             <h3>Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})</h3>
             {dryRunResults.length === 0 ? (
               <p>No orders matched.</p>
