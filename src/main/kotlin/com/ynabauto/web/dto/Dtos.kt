@@ -47,6 +47,11 @@ data class SyncLogResponse(
     val message: String?
 )
 
+data class YnabBudgetResponse(
+    val id: String,
+    val name: String
+)
+
 data class YnabCategoryResponse(
     val id: String,
     val name: String,

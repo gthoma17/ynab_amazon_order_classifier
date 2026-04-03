@@ -36,6 +36,15 @@ const emptyKeys: ApiKeyValues = {
   geminiKey: '',
 }
 
+// ── Budget selection ───────────────────────────────────────────────────────────
+
+interface Budget {
+  id: string
+  name: string
+}
+
+type BudgetsStatus = 'idle' | 'loading' | 'loaded' | 'error'
+
 // ── Processing guardrails ──────────────────────────────────────────────────────
 
 type ScheduleType = 'EVERY_N_SECONDS' | 'EVERY_N_MINUTES' | 'HOURLY' | 'EVERY_N_HOURS' | 'DAILY' | 'WEEKLY'
@@ -82,6 +91,11 @@ export default function ConfigView() {
   const [ynabProbe, setYnabProbe] = useState<ProbeState>(idleProbe)
   const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
+
+  // Budget selection
+  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [budgetsStatus, setBudgetsStatus] = useState<BudgetsStatus>('idle')
+  const [budgetsError, setBudgetsError] = useState('')
 
   // Processing config
   const [orderCap, setOrderCap] = useState(0)
@@ -145,6 +159,36 @@ export default function ConfigView() {
 
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!keys.ynabToken) {
+      setBudgets([])
+      setBudgetsStatus('idle')
+      setBudgetsError('')
+      return
+    }
+
+    let cancelled = false
+    setBudgetsStatus('loading')
+    setBudgetsError('')
+
+    const params = new URLSearchParams({ token: keys.ynabToken })
+    apiGet<Budget[]>(`/api/ynab/budgets?${params.toString()}`)
+      .then((data) => {
+        if (!cancelled) {
+          setBudgets(data)
+          setBudgetsStatus('loaded')
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setBudgetsError(err instanceof Error ? err.message : 'Failed to load budgets')
+          setBudgetsStatus('error')
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [keys.ynabToken])
 
   function handleSave() {
     apiPut('/api/config/keys', keys).then(() => {
@@ -231,12 +275,32 @@ export default function ConfigView() {
           />
         </div>
         <div>
-          <label htmlFor="ynabBudgetId">Budget ID</label>
-          <input
+          <label htmlFor="ynabBudgetId">Budget</label>
+          {budgetsStatus === 'loading' && (
+            <span aria-label="budgets loading">Loading budgets…</span>
+          )}
+          {budgetsStatus === 'error' && (
+            <span role="alert">{budgetsError}</span>
+          )}
+          <select
             id="ynabBudgetId"
             value={keys.ynabBudgetId}
             onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-          />
+            disabled={!keys.ynabToken || budgetsStatus !== 'loaded' || budgets.length === 0}
+          >
+            {!keys.ynabToken ? (
+              <option value="">Enter a YNAB token first</option>
+            ) : budgetsStatus === 'loaded' && budgets.length === 0 ? (
+              <option value="">No budgets found</option>
+            ) : (
+              <>
+                <option value="">Select a budget…</option>
+                {budgets.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </>
+            )}
+          </select>
         </div>
         <button
           onClick={() => handleTest('ynab', setYnabProbe)}

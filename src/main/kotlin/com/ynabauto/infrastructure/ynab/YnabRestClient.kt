@@ -41,6 +41,19 @@ class YnabRestClient(
         return transactions
     }
 
+    override fun getBudgets(token: String): List<YnabBudget> {
+        val rawBody = client.get()
+            .uri("/budgets")
+            .header("Authorization", "Bearer $token")
+            .retrieve()
+            .body(String::class.java)
+        log.debug { "getBudgets response: $rawBody" }
+        val response = rawBody?.let { objectMapper.readValue(it, YnabBudgetsResponse::class.java) }
+        val budgets = response?.data?.budgets?.map { YnabBudget(it.id, it.name) } ?: emptyList()
+        log.debug { "getBudgets returned ${budgets.size} budgets" }
+        return budgets
+    }
+
     override fun getCategories(budgetId: String, token: String): List<YnabCategory> {
         val rawBody = client.get()
             .uri("/budgets/{budgetId}/categories", budgetId)
@@ -81,6 +94,12 @@ private fun YnabTransactionDto.toYnabTransaction() = YnabTransaction(
     categoryId = categoryId,
     payeeName = payeeName
 )
+
+private data class YnabBudgetsResponse(val data: YnabBudgetsData)
+
+private data class YnabBudgetsData(val budgets: List<YnabBudgetDto>)
+
+private data class YnabBudgetDto(val id: String, val name: String)
 
 private data class YnabTransactionsResponse(val data: YnabTransactionsData)
 
