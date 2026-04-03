@@ -103,16 +103,18 @@ jobs:
           OWNER: ${{ github.repository_owner }}
         run: |
           IMAGE_REF="ghcr.io/${OWNER}/budget-sortbot:${VERSION}"
-          BODY="## Docker Image
-
-Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):
-
-\`\`\`bash
-docker pull ${IMAGE_REF}
-docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}
-\`\`\`
-
-> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
+          BODY=$(
+            echo "## Docker Image"
+            echo ""
+            echo "Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):"
+            echo ""
+            echo '```bash'
+            echo "docker pull ${IMAGE_REF}"
+            echo "docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}"
+            echo '```'
+            echo ""
+            echo "> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
+          )
 
           # If the release already exists (idempotent re-run), skip creation.
           if gh release view "$VERSION" > /dev/null 2>&1; then
