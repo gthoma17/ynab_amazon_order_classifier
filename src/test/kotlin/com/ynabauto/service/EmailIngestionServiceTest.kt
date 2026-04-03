@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 class EmailIngestionServiceTest {
 
@@ -36,6 +38,8 @@ class EmailIngestionServiceTest {
         emailIngestionService = EmailIngestionService(
             emailProviderClient, amazonOrderRepository, syncLogRepository, configService, jacksonObjectMapper()
         )
+        // Default: no start-from date
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
     }
 
     // --- parseOrderBody ---
@@ -223,6 +227,44 @@ class EmailIngestionServiceTest {
 
         emailIngestionService.ingest()
 
+        assertEquals(lastRun, sinceDateSlot.captured)
+    }
+
+    @Test
+    fun `ingest uses start-from date when it is later than last sync time`() {
+        val lastRun = Instant.parse("2024-01-10T00:00:00Z")
+        val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
+        every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
+        val sinceDateSlot = slot<Instant>()
+        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { syncLogRepository.save(any()) } answers { firstArg() }
+
+        emailIngestionService.ingest()
+
+        // Feb 1 is after Jan 10, so start-from date wins
+        val expected = java.time.LocalDate.parse("2024-02-01")
+            .atStartOfDay(java.time.ZoneOffset.UTC).toInstant()
+        assertEquals(expected, sinceDateSlot.captured)
+    }
+
+    @Test
+    fun `ingest uses last sync time when it is later than start-from date`() {
+        val lastRun = Instant.parse("2024-03-15T00:00:00Z")
+        val lastLog = SyncLog(id = 1L, source = SyncSource.EMAIL, lastRun = lastRun, status = SyncStatus.SUCCESS)
+        every { configService.getValue(ConfigService.FASTMAIL_USER) } returns "user@fastmail.com"
+        every { configService.getValue(ConfigService.FASTMAIL_TOKEN) } returns "my-token"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
+        every { syncLogRepository.findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL) } returns lastLog
+        val sinceDateSlot = slot<Instant>()
+        every { emailProviderClient.searchOrders(any(), any(), capture(sinceDateSlot)) } returns emptyList()
+        every { syncLogRepository.save(any()) } answers { firstArg() }
+
+        emailIngestionService.ingest()
+
+        // March 15 is after Feb 1, so last sync time wins
         assertEquals(lastRun, sinceDateSlot.captured)
     }
 

@@ -6,6 +6,8 @@ import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.service.ConfigService
 import com.ynabauto.service.ConnectionProbeService
+import com.ynabauto.service.DryRunService
+import com.ynabauto.service.SyncScheduler
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -35,6 +37,12 @@ class WebConfigTest {
 
     @MockkBean
     private lateinit var ynabClient: YnabClient
+
+    @MockkBean
+    private lateinit var syncScheduler: SyncScheduler
+
+    @MockkBean
+    private lateinit var dryRunService: DryRunService
 
     @Test
     fun `non-API path forwards to index html`() {

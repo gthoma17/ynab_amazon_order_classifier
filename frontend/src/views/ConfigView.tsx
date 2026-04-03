@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGet, apiPost, apiPut } from '../api'
+import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -39,12 +39,66 @@ const emptyKeys: ApiKeyValues = {
   geminiKey: '',
 }
 
+// ── Processing guardrails ──────────────────────────────────────────────────────
+
+type ScheduleType = 'HOURLY' | 'EVERY_N_HOURS' | 'DAILY' | 'WEEKLY'
+
+interface ScheduleConfig {
+  type: ScheduleType
+  hourInterval?: number | null
+  hour?: number | null
+  minute?: number
+  dayOfWeek?: string | null
+}
+
+interface ProcessingConfigResponse {
+  orderCap: number
+  startFromDate: string | null
+  installedAt: string | null
+  scheduleConfig: ScheduleConfig | null
+}
+
+// ── Dry run ───────────────────────────────────────────────────────────────────
+
+interface DryRunResult {
+  id: number
+  orderId: number | null
+  orderDate: string
+  totalAmount: string
+  items: string[]
+  ynabTransactionId: string | null
+  proposedCategoryId: string | null
+  proposedCategoryName: string | null
+  errorMessage: string | null
+  runAt: string
+}
+
+const DAYS_OF_WEEK = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+const HOURS = Array.from({ length: 24 }, (_, i) => i)
+const MINUTES = [0, 15, 30, 45]
+
 export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
   const [saved, setSaved] = useState(false)
   const [ynabProbe, setYnabProbe] = useState<ProbeState>(idleProbe)
   const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
+
+  // Processing config
+  const [orderCap, setOrderCap] = useState(0)
+  const [startFromDate, setStartFromDate] = useState('')
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('EVERY_N_HOURS')
+  const [hourInterval, setHourInterval] = useState(5)
+  const [scheduleHour, setScheduleHour] = useState(0)
+  const [scheduleMinute, setScheduleMinute] = useState(0)
+  const [scheduleDow, setScheduleDow] = useState('MON')
+  const [processingConfigSaved, setProcessingConfigSaved] = useState(false)
+
+  // Dry run
+  const [dryRunStartFrom, setDryRunStartFrom] = useState('')
+  const [dryRunStatus, setDryRunStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [dryRunResults, setDryRunResults] = useState<DryRunResult[]>([])
+  const [dryRunError, setDryRunError] = useState('')
 
   useEffect(() => {
     apiGet<ApiKeysResponse>('/api/config/keys').then((data) => {
@@ -56,6 +110,27 @@ export default function ConfigView() {
         geminiKey: data.geminiKey ?? '',
       })
     })
+
+    apiGet<ProcessingConfigResponse>('/api/config/processing').then((data) => {
+      setOrderCap(data.orderCap ?? 0)
+      setStartFromDate(data.startFromDate ?? '')
+      const sc = data.scheduleConfig
+      if (sc) {
+        setScheduleType(sc.type)
+        setHourInterval(sc.hourInterval ?? 5)
+        setScheduleHour(sc.hour ?? 0)
+        setScheduleMinute(sc.minute ?? 0)
+        setScheduleDow(sc.dayOfWeek ?? 'MON')
+      }
+    })
+
+    // Default dry-run start to 1 month ago
+    const oneMonthAgo = new Date()
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+    setDryRunStartFrom(oneMonthAgo.toISOString().split('T')[0])
+
+    // Load any previous dry-run results
+    apiGet<DryRunResult[]>('/api/config/dry-run/results').then(setDryRunResults).catch(() => {})
   }, [])
 
   function handleSave() {
@@ -64,6 +139,23 @@ export default function ConfigView() {
       setYnabProbe(idleProbe)
       setFastmailProbe(idleProbe)
       setGeminiProbe(idleProbe)
+    })
+  }
+
+  function handleSaveProcessingConfig() {
+    const scheduleConfig: ScheduleConfig = {
+      type: scheduleType,
+      hourInterval: scheduleType === 'EVERY_N_HOURS' ? hourInterval : null,
+      hour: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleHour : null,
+      minute: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleMinute : 0,
+      dayOfWeek: scheduleType === 'WEEKLY' ? scheduleDow : null,
+    }
+    apiPut('/api/config/processing', {
+      orderCap,
+      startFromDate: startFromDate || null,
+      scheduleConfig,
+    }).then(() => {
+      setProcessingConfigSaved(true)
     })
   }
 
@@ -85,6 +177,22 @@ export default function ConfigView() {
           message: err instanceof Error ? err.message : 'Unexpected error',
         })
       )
+  }
+
+  function handleDryRun() {
+    setDryRunStatus('running')
+    setDryRunError('')
+    apiPostWithBody<DryRunResult[]>('/api/config/dry-run', {
+      startFromDate: dryRunStartFrom || null,
+    })
+      .then((results) => {
+        setDryRunResults(results)
+        setDryRunStatus('done')
+      })
+      .catch((err: unknown) => {
+        setDryRunStatus('error')
+        setDryRunError(err instanceof Error ? err.message : 'Dry run failed')
+      })
   }
 
   return (
@@ -199,6 +307,191 @@ export default function ConfigView() {
 
       <button onClick={handleSave}>Save</button>
       {saved && <p>Saved</p>}
+
+      {/* ── Processing guardrails ──────────────────────────────────────────── */}
+      <section>
+        <h2>Processing Settings</h2>
+
+        <div>
+          <label htmlFor="orderCap">
+            Max orders per run (0 = unlimited)
+          </label>
+          <input
+            id="orderCap"
+            type="number"
+            min={0}
+            value={orderCap}
+            onChange={(e) => setOrderCap(parseInt(e.target.value, 10) || 0)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="startFromDate">Start from date</label>
+          <input
+            id="startFromDate"
+            type="date"
+            value={startFromDate}
+            onChange={(e) => setStartFromDate(e.target.value)}
+          />
+        </div>
+
+        <fieldset>
+          <legend>Sync schedule</legend>
+
+          <label htmlFor="scheduleType">Frequency</label>
+          <select
+            id="scheduleType"
+            value={scheduleType}
+            onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
+          >
+            <option value="HOURLY">Every hour</option>
+            <option value="EVERY_N_HOURS">Every N hours</option>
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+          </select>
+
+          {scheduleType === 'EVERY_N_HOURS' && (
+            <div>
+              <label htmlFor="hourInterval">Every N hours</label>
+              <input
+                id="hourInterval"
+                type="number"
+                min={1}
+                max={23}
+                value={hourInterval}
+                onChange={(e) =>
+                  setHourInterval(parseInt(e.target.value, 10) || 1)
+                }
+              />
+            </div>
+          )}
+
+          {(scheduleType === 'DAILY' || scheduleType === 'WEEKLY') && (
+            <>
+              <div>
+                <label htmlFor="scheduleHour">Hour</label>
+                <select
+                  id="scheduleHour"
+                  value={scheduleHour}
+                  onChange={(e) =>
+                    setScheduleHour(parseInt(e.target.value, 10))
+                  }
+                >
+                  {HOURS.map((h) => (
+                    <option key={h} value={h}>
+                      {String(h).padStart(2, '0')}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="scheduleMinute">Minute</label>
+                <select
+                  id="scheduleMinute"
+                  value={scheduleMinute}
+                  onChange={(e) =>
+                    setScheduleMinute(parseInt(e.target.value, 10))
+                  }
+                >
+                  {MINUTES.map((m) => (
+                    <option key={m} value={m}>
+                      :{String(m).padStart(2, '0')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {scheduleType === 'WEEKLY' && (
+            <div>
+              <label htmlFor="scheduleDow">Day of week</label>
+              <select
+                id="scheduleDow"
+                value={scheduleDow}
+                onChange={(e) => setScheduleDow(e.target.value)}
+              >
+                {DAYS_OF_WEEK.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </fieldset>
+
+        <button onClick={handleSaveProcessingConfig}>
+          Save processing settings
+        </button>
+        {processingConfigSaved && <p>Processing settings saved</p>}
+      </section>
+
+      {/* ── Dry run ────────────────────────────────────────────────────────── */}
+      <section>
+        <h2>Dry Run</h2>
+        <p>
+          <em>
+            Preview what would be written to YNAB — no live changes are made.
+            Order cap applies. Gemini is called for classification.
+          </em>
+        </p>
+
+        <div>
+          <label htmlFor="dryRunStartFrom">Dry-run start from</label>
+          <input
+            id="dryRunStartFrom"
+            type="date"
+            value={dryRunStartFrom}
+            onChange={(e) => setDryRunStartFrom(e.target.value)}
+          />
+        </div>
+
+        <button
+          onClick={handleDryRun}
+          disabled={dryRunStatus === 'running'}
+        >
+          {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
+        </button>
+
+        {dryRunStatus === 'error' && (
+          <p role="alert">{dryRunError}</p>
+        )}
+
+        {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
+          <div>
+            <h3>Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})</h3>
+            {dryRunResults.length === 0 ? (
+              <p>No orders matched.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order date</th>
+                    <th>Amount</th>
+                    <th>Items</th>
+                    <th>Matched transaction</th>
+                    <th>Proposed category</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dryRunResults.map((r) => (
+                    <tr key={r.id} aria-label={`dry-run-row-${r.id}`}>
+                      <td>{new Date(r.orderDate).toLocaleDateString()}</td>
+                      <td>${r.totalAmount}</td>
+                      <td>{r.items.join(', ')}</td>
+                      <td>{r.ynabTransactionId ?? '—'}</td>
+                      <td>{r.proposedCategoryName ?? r.proposedCategoryId ?? '—'}</td>
+                      <td>{r.errorMessage ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

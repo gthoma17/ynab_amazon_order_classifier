@@ -11,10 +11,11 @@ import com.ynabauto.infrastructure.email.EmailProviderClient
 import com.ynabauto.infrastructure.persistence.AmazonOrderRepository
 import com.ynabauto.infrastructure.persistence.SyncLogRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 @Service
@@ -33,7 +34,6 @@ class EmailIngestionService(
         private val DEFAULT_LOOKBACK_DAYS = 30L
     }
 
-    @Scheduled(fixedDelayString = "\${app.email.poll-interval-ms:43200000}")
     fun ingest() {
         val user = configService.getValue(ConfigService.FASTMAIL_USER)
         val token = configService.getValue(ConfigService.FASTMAIL_TOKEN)
@@ -42,14 +42,26 @@ class EmailIngestionService(
             return
         }
 
+        val startFromDate = configService.getValue(ConfigService.START_FROM_DATE)
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val startFromInstant = startFromDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()
+
         var status = SyncStatus.SUCCESS
         var message: String? = null
 
         try {
-            val sinceDate = syncLogRepository
+            val lastSyncInstant = syncLogRepository
                 .findTopBySourceOrderByLastRunDesc(SyncSource.EMAIL)
                 ?.lastRun
                 ?: Instant.now().minus(DEFAULT_LOOKBACK_DAYS, ChronoUnit.DAYS)
+
+            // Use the later of (last sync time) and (start-from date) so we never
+            // re-ingest emails that predate the user's chosen cutoff.
+            val sinceDate = if (startFromInstant != null && startFromInstant.isAfter(lastSyncInstant)) {
+                startFromInstant
+            } else {
+                lastSyncInstant
+            }
 
             val emails = emailProviderClient.searchOrders(user, token, sinceDate)
             log.info { "Email ingestion: found ${emails.size} order email(s) since $sinceDate" }
@@ -107,3 +119,4 @@ class EmailIngestionService(
 }
 
 data class ParsedOrder(val totalAmount: BigDecimal, val items: List<String>)
+

@@ -4,6 +4,13 @@ import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import ConfigView from '../views/ConfigView'
 
+const defaultProcessingConfig = {
+  orderCap: 0,
+  startFromDate: '2024-01-01',
+  installedAt: '2024-01-01',
+  scheduleConfig: { type: 'EVERY_N_HOURS', hourInterval: 5 },
+}
+
 const server = setupServer(
   http.get('/api/config/keys', () =>
     HttpResponse.json({
@@ -23,7 +30,13 @@ const server = setupServer(
   ),
   http.post('/api/config/probe/gemini', () =>
     HttpResponse.json({ success: true, message: 'Connected' })
-  )
+  ),
+  http.get('/api/config/processing', () =>
+    HttpResponse.json(defaultProcessingConfig)
+  ),
+  http.put('/api/config/processing', () => new HttpResponse(null, { status: 204 })),
+  http.get('/api/config/dry-run/results', () => HttpResponse.json([])),
+  http.post('/api/config/dry-run', () => HttpResponse.json([]))
 )
 
 beforeAll(() => server.listen())
@@ -75,7 +88,7 @@ describe('ConfigView', () => {
     await user.clear(tokenInput)
     await user.type(tokenInput, 'new-token')
 
-    await user.click(screen.getByRole('button', { name: /save/i }))
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
     expect((capturedBody as Record<string, string>).ynabToken).toBe('new-token')
@@ -87,7 +100,7 @@ describe('ConfigView', () => {
     await waitFor(() =>
       expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
     )
-    await user.click(screen.getByRole('button', { name: /save/i }))
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
     await screen.findByText('Saved')
   })
 
@@ -197,8 +210,168 @@ describe('ConfigView', () => {
     )
 
     // Save should clear it
-    await user.click(screen.getByRole('button', { name: /save/i }))
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
     await screen.findByText('Saved')
     expect(screen.queryByLabelText('YNAB probe result')).not.toBeInTheDocument()
   })
+
+  // --- Processing settings ---
+
+  it('renders the Processing Settings section', () => {
+    render(<ConfigView />)
+    expect(screen.getByRole('heading', { name: /processing settings/i })).toBeInTheDocument()
+  })
+
+  it('renders order cap input', () => {
+    render(<ConfigView />)
+    expect(screen.getByLabelText(/max orders per run/i)).toBeInTheDocument()
+  })
+
+  it('renders start from date input', () => {
+    render(<ConfigView />)
+    expect(screen.getByLabelText(/start from date/i)).toBeInTheDocument()
+  })
+
+  it('renders schedule frequency selector', () => {
+    render(<ConfigView />)
+    expect(screen.getByLabelText(/frequency/i)).toBeInTheDocument()
+  })
+
+  it('loads processing config values from the API', async () => {
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 5,
+          startFromDate: '2024-06-01',
+          installedAt: '2024-01-01',
+          scheduleConfig: { type: 'DAILY', hour: 14, minute: 0 },
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/max orders per run/i)).toHaveValue(5)
+    )
+    expect(screen.getByLabelText(/start from date/i)).toHaveValue('2024-06-01')
+  })
+
+  it('shows hour and minute selectors for DAILY schedule', async () => {
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'DAILY', hour: 9, minute: 30 },
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/frequency/i)).toHaveValue('DAILY')
+    )
+    expect(screen.getByLabelText(/^hour$/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^minute$/i)).toBeInTheDocument()
+  })
+
+  it('shows day-of-week selector for WEEKLY schedule', async () => {
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'WEEKLY', hour: 8, minute: 0, dayOfWeek: 'MON' },
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/frequency/i)).toHaveValue('WEEKLY')
+    )
+    expect(screen.getByLabelText(/day of week/i)).toBeInTheDocument()
+  })
+
+  it('saves processing settings via PUT', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.put('/api/config/processing', async ({ request }) => {
+        capturedBody = await request.json()
+        return new HttpResponse(null, { status: 204 })
+      })
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByLabelText(/max orders per run/i))
+
+    await user.click(screen.getByRole('button', { name: /save processing settings/i }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    expect(screen.getByText(/processing settings saved/i)).toBeInTheDocument()
+  })
+
+  // --- Dry run ---
+
+  it('renders the Dry Run section', () => {
+    render(<ConfigView />)
+    expect(screen.getByRole('heading', { name: /dry run/i })).toBeInTheDocument()
+  })
+
+  it('renders Run Dry Run button', () => {
+    render(<ConfigView />)
+    expect(screen.getByRole('button', { name: /run dry run/i })).toBeInTheDocument()
+  })
+
+  it('renders dry-run start from date input', () => {
+    render(<ConfigView />)
+    expect(screen.getByLabelText(/dry-run start from/i)).toBeInTheDocument()
+  })
+
+  it('shows loading state while dry run is in progress', async () => {
+    const user = userEvent.setup()
+    let resolveRun!: () => void
+    server.use(
+      http.post('/api/config/dry-run', async () => {
+        await new Promise<void>((res) => { resolveRun = res })
+        return HttpResponse.json([])
+      })
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByRole('button', { name: /run dry run/i }))
+
+    await user.click(screen.getByRole('button', { name: /run dry run/i }))
+
+    expect(screen.getByRole('button', { name: /running…/i })).toBeDisabled()
+    resolveRun()
+  })
+
+  it('shows results after dry run completes', async () => {
+    const user = userEvent.setup()
+    const mockResult = {
+      id: 1,
+      orderId: 10,
+      orderDate: '2024-01-15T10:00:00Z',
+      totalAmount: '49.99',
+      items: ['Keyboard'],
+      ynabTransactionId: 'txn-abc',
+      proposedCategoryId: 'cat-tech',
+      proposedCategoryName: 'Technology',
+      errorMessage: null,
+      runAt: '2024-01-20T00:00:00Z',
+    }
+    server.use(
+      http.post('/api/config/dry-run', () => HttpResponse.json([mockResult]))
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByRole('button', { name: /run dry run/i }))
+
+    await user.click(screen.getByRole('button', { name: /run dry run/i }))
+
+    await waitFor(() =>
+      expect(screen.getByText(/dry run results/i)).toBeInTheDocument()
+    )
+    expect(screen.getByText('txn-abc')).toBeInTheDocument()
+    expect(screen.getByText('Technology')).toBeInTheDocument()
+  })
 })
+
