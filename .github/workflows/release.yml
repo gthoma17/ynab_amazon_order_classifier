@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+# ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
+
+permissions:
+  contents: write
+  packages: write
+
+# Prevent concurrent releases; do not cancel in-progress runs so a release
+# already mid-flight is never abandoned.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Only run when CI passed — this gates the release on the test suite.
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout commit that CI tested
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ------------------------------------------------------------------ #
+      # Phase 1: Versioning                                                  #
+      # ------------------------------------------------------------------ #
+      - name: Compute next patch version
+        id: version
+        run: |
+          git fetch --tags
+          LATEST=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            NEXT="v1.0.0"
+          else
+            MAJOR=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f1)
+            MINOR=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f2)
+            PATCH=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f3)
+            NEXT="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Computed next version: $NEXT (previous: ${LATEST:-none})"
+
+      - name: Create and push version tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists — reusing it (idempotent re-run)"
+          else
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
+
+      # ------------------------------------------------------------------ #
+      # Phase 2: Multi-arch Docker image build and publish                  #
+      # ------------------------------------------------------------------ #
+      - name: Set up QEMU (required for ARM emulation)
+        uses: docker/setup-qemu-action@29109295f81a9208d4ae3a371e4d697fa12c6bb9 # v3.6.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6e95ac3339ca5b20c6a77ed3c95d # v3.10.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          # linux/arm/v7 and linux/arm64 are built via QEMU emulation — expect
+          # these platforms to take significantly longer than linux/amd64.
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/ynab-automator:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/ynab-automator:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------ #
+      # Phase 3: GitHub Release                                              #
+      # ------------------------------------------------------------------ #
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          IMAGE_REF="ghcr.io/${OWNER}/ynab-automator:${VERSION}"
+          BODY="## Docker Image
+
+Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):
+
+\`\`\`bash
+docker pull ${IMAGE_REF}
+docker run -v /opt/ynab-auto/data:/app/data ${IMAGE_REF}
+\`\`\`
+
+> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → ynab-automator → Package Settings* so that unauthenticated users can pull the image."
+
+          # If the release already exists (idempotent re-run), skip creation.
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping creation (idempotent re-run)"
+          else
+            gh release create "$VERSION" \
+              --title "$VERSION" \
+              --generate-notes \
+              --notes "$BODY"
+          fi
