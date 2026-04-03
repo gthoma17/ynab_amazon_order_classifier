@@ -5,8 +5,6 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [prod]
-  push:
-    branches: [copilot/fix-release-build-error]
 
 # ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
 
@@ -23,15 +21,14 @@ concurrency:
 jobs:
   release:
     # Only run when CI passed — this gates the release on the test suite.
-    # For push events (PR branch testing) there is no workflow_run conclusion, so allow those through.
-    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout commit that CI tested
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ github.event_name == 'push' && github.sha || github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -89,7 +86,7 @@ jobs:
           # linux/arm/v7 and linux/arm64 are built via QEMU emulation — expect
           # these platforms to take significantly longer than linux/amd64.
           platforms: linux/amd64,linux/arm/v7,linux/arm64
-          push: false # push temporarily disabled for PR branch testing — re-enable for production
+          push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/budget-sortbot:${{ steps.version.outputs.version }}
             ghcr.io/${{ github.repository_owner }}/budget-sortbot:latest
