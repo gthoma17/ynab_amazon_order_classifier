@@ -44,3 +44,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("runE2EServer") {
+    group = "application"
+    description = "Start the Spring Boot app with WireMock stubs for Playwright E2E tests"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.ynabauto.e2e.E2EServerKt")
+}
