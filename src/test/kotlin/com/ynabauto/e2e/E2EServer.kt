@@ -121,14 +121,14 @@ private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
 }
 
 private fun stubYnab(wireMock: WireMockServer) {
-    // GET budgets — used by the YNAB "Test Connection" probe
+    // GET budgets — used by the YNAB "Test Connection" probe and the budget dropdown
     wireMock.stubFor(
         get(urlEqualTo("/v1/budgets"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("""{"data":{"budgets":[],"default_budget":null}}""")
+                    .withBody("""{"data":{"budgets":[{"id":"my-budget-id","name":"My Test Budget"}],"default_budget":null}}""")
             )
     )
 

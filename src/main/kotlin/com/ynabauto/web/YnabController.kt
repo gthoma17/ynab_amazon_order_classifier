@@ -2,10 +2,12 @@ package com.ynabauto.web
 
 import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.service.ConfigService
+import com.ynabauto.web.dto.YnabBudgetResponse
 import com.ynabauto.web.dto.YnabCategoryResponse
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
@@ -15,6 +17,14 @@ class YnabController(
     private val ynabClient: YnabClient,
     private val configService: ConfigService
 ) {
+
+    @GetMapping("/budgets")
+    fun getBudgets(@RequestParam(required = false) token: String?): List<YnabBudgetResponse> {
+        val effectiveToken = token?.takeIf { it.isNotBlank() }
+            ?: configService.getValue(ConfigService.YNAB_TOKEN)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "YNAB token not configured")
+        return ynabClient.getBudgets(effectiveToken).map { YnabBudgetResponse(it.id, it.name) }
+    }
 
     @GetMapping("/categories")
     fun getCategories(): List<YnabCategoryResponse> {
