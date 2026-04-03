@@ -292,6 +292,56 @@ describe('ConfigView', () => {
     expect(screen.getByLabelText(/day of week/i)).toBeInTheDocument()
   })
 
+  it('shows second-interval input and production warning for EVERY_N_SECONDS schedule', async () => {
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'EVERY_N_SECONDS', secondInterval: 3 },
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS')
+    )
+    expect(screen.getByLabelText(/every n seconds/i)).toHaveValue(3)
+    expect(screen.getByRole('alert')).toHaveTextContent(/not recommended for production/i)
+  })
+
+  it('sends secondInterval in PUT body when EVERY_N_SECONDS is selected', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'EVERY_N_SECONDS', secondInterval: 5 },
+        })
+      ),
+      http.put('/api/config/processing', async ({ request }) => {
+        capturedBody = await request.json()
+        return new HttpResponse(null, { status: 204 })
+      })
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS')
+    )
+
+    await user.click(screen.getByRole('button', { name: /save processing settings/i }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    const body = capturedBody as Record<string, unknown>
+    const sc = body.scheduleConfig as Record<string, unknown>
+    expect(sc.type).toBe('EVERY_N_SECONDS')
+    expect(sc.secondInterval).toBe(5)
+  })
+
   it('saves processing settings via PUT', async () => {
     const user = userEvent.setup()
     let capturedBody: unknown = null

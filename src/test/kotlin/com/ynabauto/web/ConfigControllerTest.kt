@@ -184,6 +184,34 @@ class ConfigControllerTest {
     }
 
     @Test
+    fun `GET api config processing returns secondInterval for EVERY_N_SECONDS schedule`() {
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns "0"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
+        every { configService.getValue(ConfigService.INSTALLED_AT) } returns null
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns
+            """{"type":"EVERY_N_SECONDS","secondInterval":3}"""
+
+        mockMvc.perform(get("/api/config/processing"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.scheduleConfig.type").value("EVERY_N_SECONDS"))
+            .andExpect(jsonPath("$.scheduleConfig.secondInterval").value(3))
+    }
+
+    @Test
+    fun `GET api config processing returns minuteInterval for EVERY_N_MINUTES schedule`() {
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns "0"
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
+        every { configService.getValue(ConfigService.INSTALLED_AT) } returns null
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns
+            """{"type":"EVERY_N_MINUTES","minuteInterval":15}"""
+
+        mockMvc.perform(get("/api/config/processing"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.scheduleConfig.type").value("EVERY_N_MINUTES"))
+            .andExpect(jsonPath("$.scheduleConfig.minuteInterval").value(15))
+    }
+
+    @Test
     fun `PUT api config processing saves order cap and triggers reschedule when schedule changes`() {
         justRun { configService.setValue(any(), any()) }
         justRun { syncScheduler.reschedule() }
