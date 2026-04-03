@@ -7,6 +7,7 @@ import com.ynabauto.infrastructure.ynab.YnabClient
 import com.ynabauto.service.ConfigService
 import com.ynabauto.service.ConnectionProbeService
 import com.ynabauto.service.DryRunService
+import com.ynabauto.service.ReportSanitizationService
 import com.ynabauto.service.SyncScheduler
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +44,9 @@ class WebConfigTest {
 
     @MockkBean
     private lateinit var dryRunService: DryRunService
+
+    @MockkBean
+    private lateinit var reportSanitizationService: ReportSanitizationService
 
     @Test
     fun `non-API path forwards to index html`() {

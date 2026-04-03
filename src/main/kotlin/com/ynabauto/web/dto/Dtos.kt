@@ -83,6 +83,18 @@ data class ScheduleConfigDto(
     val dayOfWeek: String? = null
 )
 
+// ── Help report ───────────────────────────────────────────────────────────────
+
+data class HelpReportRequest(
+    val description: String,
+    val includeSyncLogs: Boolean = true
+)
+
+data class HelpReportResponse(
+    val body: String,
+    val sanitized: Boolean
+)
+
 // ── Dry run ───────────────────────────────────────────────────────────────────
 
 data class DryRunRequest(
