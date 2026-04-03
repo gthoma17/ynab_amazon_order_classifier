@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-    branches: [main]
+    branches: [prod]
 
 # ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
 
