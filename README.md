@@ -75,8 +75,8 @@ All settings are managed through the **Configuration** page in the UI.
 | Setting (UI label) | Section | Description | Where to find it |
 |---|---|---|---|
 | **YNAB Token** | YNAB | Personal Access Token used to authenticate with the YNAB API | [YNAB → My Account → Developer Settings](https://app.youneedabudget.com/settings/developer) |
-| **Budget ID** | YNAB | The UUID of the YNAB budget to update | Visible in the URL when you open a budget: `https://app.youneedabudget.com/<budget-id>/…` |
-| **FastMail API Token** | FastMail | A FastMail API token with email read access | FastMail → Settings → Privacy & Security → API tokens → New token (select **Email** read scope) |
+| **Budget ID** | YNAB | The UUID of the YNAB budget to update | Selected from the **Budget** dropdown on the Configuration page — populated automatically after you enter a valid YNAB token |
+| **FastMail API Token** | FastMail | A FastMail API token with email read access | FastMail → Settings → Privacy & Security → API tokens → New token — enable the **Email** scope checkbox and set the toggle to **Read only** |
 | **Gemini Key** | Gemini | Google Gemini API key used to classify order descriptions | [Google AI Studio → API Keys](https://aistudio.google.com/app/apikey) |
 | **Max orders per run** | Processing Settings | Maximum number of orders processed per sync run (`0` = unlimited) | Start with a small value (e.g. `5`) during initial testing |
 | **Sync schedule** | Processing Settings | How often the sync runs; choose a frequency from the dropdown | Configured via the Sync schedule section on the Configuration page |
@@ -85,6 +85,10 @@ All settings are managed through the **Configuration** page in the UI.
 ---
 
 ## Debugging & Log Retrieval
+
+### Sync Logs view (first stop)
+
+Before diving into container logs, check the **System Logs** page in the UI. It shows a summary of every sync run including status, timestamp, and a short description of what happened — this is usually enough to diagnose common issues.
 
 ### View container logs
 
@@ -133,15 +137,13 @@ No image rebuild is needed. Remove the `-e LOGGING_LEVEL_COM_YNABAUTO=DEBUG` fla
 | **AI classification** | Messages referencing `ClassificationService` or `GeminiClient` — look for category assignments and any quota/rate-limit errors |
 | **Scheduler** | Messages referencing `SyncScheduler` — show each scheduled trigger and whether the run completed successfully |
 
-### Sync Logs view (first stop)
-
-Before diving into container logs, check the **System Logs** page in the UI. It shows a summary of every sync run including status, timestamp, and a short description of what happened — this is usually enough to diagnose common issues.
-
 ---
 
 ## Getting Help
 
-If you run into a problem that you cannot resolve from the logs:
+If you run into a problem, start with the **Get Help** page in the UI (navigate to **http://localhost:8080/help**). It lets you describe the problem, automatically attaches relevant sync logs with sensitive values redacted, and opens a pre-filled GitHub issue in your browser.
+
+If you prefer to open an issue manually:
 
 1. Open an issue at **https://github.com/gthoma17/ynab_amazon_order_classifier/issues**
 2. Include the following in your report:
