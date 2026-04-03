@@ -257,9 +257,9 @@ The React app will be served statically by Spring. It requires 4 specific views:
 - [ ] Setup GitHub Actions for CI/CD. Run tests automatically on any push
 
 ### Phase 6: Deployment
-- [ ] Create Multi-stage Dockerfile (Node build -> Gradle build -> JRE run).
+- [x] Create Multi-stage Dockerfile (Node build -> Gradle build -> JRE run).
 - [ ] Test locally (x86) and on Target (ARM).
-- [ ] Setup automatic github release when merged to the prod branch
+- [x] Setup automatic github release when merged to the prod branch
 
 ### Phase 7: Scope Creep
 - [ ] TBD
