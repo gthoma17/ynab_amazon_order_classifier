@@ -14,7 +14,16 @@ const server = setupServer(
       geminiKey: null,
     })
   ),
-  http.put('/api/config/keys', () => new HttpResponse(null, { status: 204 }))
+  http.put('/api/config/keys', () => new HttpResponse(null, { status: 204 })),
+  http.post('/api/config/probe/ynab', () =>
+    HttpResponse.json({ success: true, message: 'Connected' })
+  ),
+  http.post('/api/config/probe/fastmail', () =>
+    HttpResponse.json({ success: true, message: 'Connected' })
+  ),
+  http.post('/api/config/probe/gemini', () =>
+    HttpResponse.json({ success: true, message: 'Connected' })
+  )
 )
 
 beforeAll(() => server.listen())
@@ -79,6 +88,117 @@ describe('ConfigView', () => {
       expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
     )
     await user.click(screen.getByRole('button', { name: /save/i }))
-    await screen.findByText(/saved/i)
+    await screen.findByText('Saved')
+  })
+
+  // --- Test Connection buttons ---
+
+  it('renders Test Connection buttons for each integration', () => {
+    render(<ConfigView />)
+    expect(screen.getByRole('button', { name: /test ynab/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /test fastmail/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /test gemini/i })).toBeInTheDocument()
+  })
+
+  it('disables YNAB test button when YNAB token is empty', async () => {
+    server.use(
+      http.get('/api/config/keys', () =>
+        HttpResponse.json({
+          ynabToken: null,
+          ynabBudgetId: null,
+          fastmailUser: null,
+          fastmailToken: null,
+          geminiKey: null,
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('')
+    )
+    expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
+  })
+
+  it('disables FastMail test button when FastMail credentials are empty', async () => {
+    server.use(
+      http.get('/api/config/keys', () =>
+        HttpResponse.json({
+          ynabToken: null,
+          ynabBudgetId: null,
+          fastmailUser: null,
+          fastmailToken: null,
+          geminiKey: null,
+        })
+      )
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/fastmail user/i)).toHaveValue('')
+    )
+    expect(screen.getByRole('button', { name: /test fastmail/i })).toBeDisabled()
+  })
+
+  it('disables Gemini test button when Gemini key is empty', async () => {
+    render(<ConfigView />)
+    // geminiKey is null from default server handler
+    await waitFor(() =>
+      expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
+    )
+    expect(screen.getByRole('button', { name: /test gemini/i })).toBeDisabled()
+  })
+
+  it('shows success result after YNAB test connection succeeds', async () => {
+    const user = userEvent.setup()
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
+    )
+
+    await user.click(screen.getByRole('button', { name: /test ynab/i }))
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
+    )
+    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected')
+  })
+
+  it('shows error result when YNAB test connection fails', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/config/probe/ynab', () =>
+        HttpResponse.json({ success: false, message: '401 Unauthorized — check your credentials' })
+      )
+    )
+
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
+    )
+
+    await user.click(screen.getByRole('button', { name: /test ynab/i }))
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
+    )
+    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('401 Unauthorized')
+  })
+
+  it('clears probe results after save', async () => {
+    const user = userEvent.setup()
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
+    )
+
+    // First run a probe to get a result
+    await user.click(screen.getByRole('button', { name: /test ynab/i }))
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
+    )
+
+    // Save should clear it
+    await user.click(screen.getByRole('button', { name: /save/i }))
+    await screen.findByText('Saved')
+    expect(screen.queryByLabelText('YNAB probe result')).not.toBeInTheDocument()
   })
 })

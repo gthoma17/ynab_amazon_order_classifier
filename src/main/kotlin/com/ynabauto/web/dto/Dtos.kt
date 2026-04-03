@@ -54,3 +54,8 @@ data class YnabCategoryResponse(
     val name: String,
     val categoryGroupName: String
 )
+
+data class ProbeResult(
+    val success: Boolean,
+    val message: String
+)

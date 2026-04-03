@@ -9,11 +9,12 @@ import { test, expect } from '@playwright/test'
  * Steps:
  *  1. Open the app — API Keys page shows empty fields (fresh installation).
  *  2. Enter all five API credentials and save.
- *  3. Navigate to Category Rules — YNAB categories are fetched from the real backend
+ *  3. Test Connection for each integration — YNAB, FastMail, and Gemini all show "Connected".
+ *  4. Navigate to Category Rules — YNAB categories are fetched from the real backend
  *     (which calls the WireMock YNAB stub). Fill descriptions and save.
- *  4. Navigate to Pending Orders — wait for the email ingestion scheduler to run
+ *  5. Navigate to Pending Orders — wait for the email ingestion scheduler to run
  *     and populate the order, then assert it is visible.
- *  5. Navigate to Logs — assert the EMAIL sync log shows SUCCESS.
+ *  6. Navigate to Logs — assert the EMAIL sync log shows SUCCESS.
  *
  * The Spring Boot E2E server (started by Playwright's webServer config via
  * `./gradlew runE2EServer`) runs the real application with:
@@ -37,7 +38,21 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Saved')).toBeVisible()
 
-  // ── Step 3: Navigate to Category Rules, fill descriptions, save ─────────────
+  // ── Step 3: Test Connection for each integration ────────────────────────────
+  // Credentials are now saved. Click each "Test" button and assert the inline
+  // "Connected" confirmation appears. This exercises the full probe path:
+  //   browser → real Spring Boot backend → WireMock stubs.
+
+  await page.getByRole('button', { name: 'Test YNAB' }).click()
+  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
+
+  await page.getByRole('button', { name: 'Test FastMail' }).click()
+  await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
+
+  await page.getByRole('button', { name: 'Test Gemini' }).click()
+  await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
+
+  // ── Step 4: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
 
   await page.getByRole('link', { name: 'Category Rules' }).click()
@@ -54,7 +69,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Saved')).toBeVisible()
 
-  // ── Step 4: Navigate to Pending Orders ─────────────────────────────────────
+  // ── Step 5: Navigate to Pending Orders ─────────────────────────────────────
   // The email ingestion scheduler runs every 3 s. After credentials were saved
   // it will ingest the stubbed Amazon order email and persist a PENDING order.
   // PendingOrdersView fetches data on mount only, so we reload the page until
@@ -76,7 +91,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(page.getByText('426.00')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'PENDING' })).toBeVisible()
 
-  // ── Step 5: Navigate to Logs — EMAIL sync shows SUCCESS ────────────────────
+  // ── Step 6: Navigate to Logs — EMAIL sync shows SUCCESS ────────────────────
   // The scheduler may produce multiple log entries; assert that at least one
   // EMAIL/SUCCESS row is present.
 

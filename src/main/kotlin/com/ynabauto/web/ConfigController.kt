@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ynabauto.domain.CategoryRule
 import com.ynabauto.service.ConfigService
+import com.ynabauto.service.ConnectionProbeService
 import com.ynabauto.web.dto.ApiKeysRequest
 import com.ynabauto.web.dto.ApiKeysResponse
 import com.ynabauto.web.dto.CategoryRuleRequest
 import com.ynabauto.web.dto.CategoryRuleResponse
+import com.ynabauto.web.dto.ProbeResult
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -19,7 +22,8 @@ import java.time.Instant
 @RestController
 @RequestMapping("/api/config")
 class ConfigController(
-    private val configService: ConfigService
+    private val configService: ConfigService,
+    private val connectionProbeService: ConnectionProbeService
 ) {
 
     @GetMapping("/keys")
@@ -68,4 +72,13 @@ class ConfigController(
         ynabCategoryName = ynabCategoryName,
         userDescription = userDescription
     )
+
+    @PostMapping("/probe/fastmail")
+    fun probeFastMail(): ProbeResult = connectionProbeService.probeFastMail()
+
+    @PostMapping("/probe/ynab")
+    fun probeYnab(): ProbeResult = connectionProbeService.probeYnab()
+
+    @PostMapping("/probe/gemini")
+    fun probeGemini(): ProbeResult = connectionProbeService.probeGemini()
 }
