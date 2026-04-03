@@ -67,10 +67,10 @@ jobs:
       # Phase 2: Multi-arch Docker image build and publish                  #
       # ------------------------------------------------------------------ #
       - name: Set up QEMU (required for ARM emulation)
-        uses: docker/setup-qemu-action@29109295f81a9208d4ae3a371e4d697fa12c6bb9 # v3.6.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6e95ac3339ca5b20c6a77ed3c95d # v3.10.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
@@ -103,16 +103,18 @@ jobs:
           OWNER: ${{ github.repository_owner }}
         run: |
           IMAGE_REF="ghcr.io/${OWNER}/budget-sortbot:${VERSION}"
-          BODY="## Docker Image
-
-Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):
-
-\`\`\`bash
-docker pull ${IMAGE_REF}
-docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}
-\`\`\`
-
-> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
+          BODY=$(
+            echo "## Docker Image"
+            echo ""
+            echo "Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):"
+            echo ""
+            echo '```bash'
+            echo "docker pull ${IMAGE_REF}"
+            echo "docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}"
+            echo '```'
+            echo ""
+            echo "> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
+          )
 
           # If the release already exists (idempotent re-run), skip creation.
           if gh release view "$VERSION" > /dev/null 2>&1; then
