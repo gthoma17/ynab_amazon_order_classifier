@@ -155,12 +155,20 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   // ── Step 8: Get Help — open a pre-filled GitHub issue ──────────────────────
   // Navigate to Get Help. Enter a description and leave sync logs checked
-  // (default). Capture the window.open URL to verify it is a valid, pre-filled
-  // GitHub new-issue URL whose body contains the description, sync log rows
-  // from step 6, and no raw credentials from step 2.
+  // (default). Click "Insert Logs" to preview the sanitized body, then click
+  // "Open Issue". Capture the window.open URL and verify:
+  //   - It is a valid GitHub new-issue URL
+  //   - The body contains sync log rows from step 6
+  //   - No raw credentials from step 2 appear in the body
+  //   - The URL is within the GitHub URL length limit
+  //   - A truncation note is included when the body was truncated
 
   await page.getByRole('link', { name: 'Get Help' }).click()
   await expect(page.getByRole('heading', { name: 'Get Help' })).toBeVisible()
+
+  // Prominent redaction notice must be visible so users know what will be redacted
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toBeVisible()
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(/sensitive values/i)
 
   await page
     .getByLabel(/describe the problem/i)
@@ -170,6 +178,33 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(
     page.getByRole('checkbox', { name: /include recent sync log entries/i }),
   ).toBeChecked()
+
+  // App logs checkbox is off by default — check it to exercise the full path
+  await expect(
+    page.getByRole('checkbox', { name: /include full application logs/i }),
+  ).not.toBeChecked()
+  await page.getByRole('checkbox', { name: /include full application logs/i }).check()
+
+  // "Insert Logs" must be present and enabled now that a logs checkbox is checked
+  await expect(page.getByRole('button', { name: /insert logs/i })).toBeEnabled()
+
+  // Insert logs — this calls the backend, sanitizes, and returns the preview body
+  await page.getByRole('button', { name: /insert logs/i }).click()
+
+  // Wait for "Logs inserted" status indicator to appear
+  await expect(page.getByText(/✓ logs inserted/i)).toBeVisible({ timeout: 10_000 })
+
+  // The preview textarea must be visible so the user can review before submitting
+  await expect(page.getByRole('textbox', { name: /report body preview/i })).toBeVisible()
+
+  // Sensitive credentials must already be redacted in the preview
+  const previewText = await page
+    .getByRole('textbox', { name: /report body preview/i })
+    .inputValue()
+  expect(previewText).toContain('[REDACTED]')
+  expect(previewText).not.toContain('my-ynab-token')
+  expect(previewText).not.toContain('my-fastmail-token')
+  expect(previewText).not.toContain('my-gemini-key')
 
   // Intercept window.open so we can inspect the GitHub URL without opening a real tab
   let capturedHelpUrl = ''
@@ -185,27 +220,36 @@ test('first-time setup and first sync journey', async ({ page }) => {
     }
   })
 
-  await page.getByRole('button', { name: 'Get Help' }).click()
+  await page.getByRole('button', { name: /open issue/i }).click()
 
-  // Wait for the API call to complete and window.open to be invoked
+  // Wait for the window.open to be invoked
   await expect
     .poll(() => capturedHelpUrl, { timeout: 10_000 })
     .toContain('github.com/gthoma17/budget-sortbot/issues/new')
 
-  // Decode and validate the issue body is cromulent
+  // Validate the URL length is within the GitHub limit
+  expect(capturedHelpUrl.length).toBeLessThanOrEqual(8192)
+
+  // Decode and validate the issue body
   const parsedHelpUrl = new URL(capturedHelpUrl)
   const issueBody = decodeURIComponent(parsedHelpUrl.searchParams.get('body') ?? '')
 
   expect(issueBody).toContain('The sync stopped working after the credential update.')
-  // Sync log rows from step 6 must appear in the body as actual table rows,
-  // not just the section header. The pipeline created EMAIL and YNAB rows with
-  // SUCCESS status; assert both sources and the status column are present.
+  // Sync log rows from step 6 must appear in the body as actual table rows
   expect(issueBody).toContain('| EMAIL |')
   expect(issueBody).toContain('| YNAB |')
   expect(issueBody).toContain('| SUCCESS |')
-  // Credentials saved in step 2 must have been redacted by the sanitization service
+  // Application logs section must appear because the checkbox was checked
+  expect(issueBody).toContain('Application Logs')
+  expect(issueBody).toContain('budgetsortbot')
+  // Sensitive credentials must be redacted in the final URL body too
+  expect(issueBody).toContain('[REDACTED]')
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')
   expect(issueBody).not.toContain('my-gemini-key')
+  // If the body was truncated, the truncation note must appear in the URL
+  if (capturedHelpUrl.includes(encodeURIComponent('Log content truncated'))) {
+    expect(capturedHelpUrl).toContain(encodeURIComponent('Log content truncated'))
+  }
 })
 

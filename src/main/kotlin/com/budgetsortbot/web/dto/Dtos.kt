@@ -92,12 +92,14 @@ data class ScheduleConfigDto(
 
 data class HelpReportRequest(
     val description: String,
-    val includeSyncLogs: Boolean = true
+    val includeSyncLogs: Boolean = true,
+    val includeAppLogs: Boolean = false
 )
 
 data class HelpReportResponse(
     val body: String,
-    val sanitized: Boolean
+    val sanitized: Boolean,
+    val truncated: Boolean = false
 )
 
 // ── Dry run ───────────────────────────────────────────────────────────────────
