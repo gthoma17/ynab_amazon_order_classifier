@@ -210,9 +210,11 @@ test('first-time setup and first sync journey', async ({ page }) => {
   expect(issueBody).toContain('| YNAB |')
   expect(issueBody).toContain('| SUCCESS |')
   // Application logs section must appear because the checkbox was checked.
-  // The server has been running and logging at DEBUG level, so either actual
-  // log lines or the empty/unavailable fallback message must be present.
+  // The server has been running and logging at DEBUG level through steps 1–7,
+  // so actual log lines must be present. Every application log line contains
+  // the logger package name in the Blacklite pattern.
   expect(issueBody).toContain('Application Logs')
+  expect(issueBody).toContain('com.budgetsortbot')
   // Credentials saved in step 2 must have been redacted by the sanitization service
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')
