@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Import Spring Boot's default converters (pid, clr, wex, etc.) -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Ensure buffered log entries are flushed before the JVM exits -->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
+        <delay>1000</delay>
+    </shutdownHook>
+
+    <!-- Resolve the SQLite file path from Spring's environment -->
+    <springProperty name="blacklite.path" source="app.blacklite.path" defaultValue="./data/database.sqlite"/>
+
+    <!-- Console appender — preserves `docker logs` UX -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5level %pid --- [%15.15thread] %-40.40logger{39} : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Blacklite SQLite appender — enables programmatic log access.
+         Writes to the same SQLite file as the application datasource.
+         The appender is asynchronous (uses JCTools internally) so it does
+         not add latency on the hot path.
+         DeletingArchiver caps the table at 500 000 rows (~7 days of DEBUG
+         traffic at realistic Pi 3 workload) to prevent unbounded growth. -->
+    <appender name="BLACKLITE" class="com.tersesystems.blacklite.logback.BlackliteAppender">
+        <file>${blacklite.path}</file>
+
+        <archiver class="com.tersesystems.blacklite.archive.DeletingArchiver">
+            <archiveAfterRows>500000</archiveAfterRows>
+        </archiver>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5level --- [%15.15thread] %-40.40logger{39} : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Application package at DEBUG — detailed trace for diagnosing
+         integration failures (JMAP, YNAB matching, Gemini classification). -->
+    <logger name="com.budgetsortbot" level="DEBUG"/>
+
+    <!-- Suppress dependency noise (Spring internals, Hibernate, RestClient).
+         All third-party loggers default to ERROR so only genuine failures
+         appear in the log output. -->
+    <root level="ERROR">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="BLACKLITE"/>
+    </root>
+
+</configuration>

@@ -12,6 +12,7 @@ interface HelpReportResponse {
 export default function GetHelpView() {
   const [description, setDescription] = useState('')
   const [includeSyncLogs, setIncludeSyncLogs] = useState(true)
+  const [includeAppLogs, setIncludeAppLogs] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sanitized, setSanitized] = useState(false)
@@ -24,6 +25,7 @@ export default function GetHelpView() {
       const response = await apiPostWithBody<HelpReportResponse>('/api/help/report', {
         description,
         includeSyncLogs,
+        includeAppLogs,
       })
       if (response.sanitized) {
         setSanitized(true)
@@ -71,6 +73,17 @@ export default function GetHelpView() {
             onChange={(e) => setIncludeSyncLogs(e.target.checked)}
           />
           {' '}Include recent sync log entries (recommended)
+        </label>
+      </div>
+
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={includeAppLogs}
+            onChange={(e) => setIncludeAppLogs(e.target.checked)}
+          />
+          {' '}Include full application logs
         </label>
       </div>
 

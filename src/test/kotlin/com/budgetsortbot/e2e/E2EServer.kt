@@ -45,6 +45,7 @@ fun main() {
     System.setProperty("app.gemini.base-url", "http://localhost:$port/v1beta")
     System.setProperty("server.port", "8080")
     System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}")
+    System.setProperty("app.blacklite.path", dbFile.absolutePath)
 
     runApplication<Application>()
 }

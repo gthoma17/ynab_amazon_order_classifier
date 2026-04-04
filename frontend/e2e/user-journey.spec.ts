@@ -171,6 +171,12 @@ test('first-time setup and first sync journey', async ({ page }) => {
     page.getByRole('checkbox', { name: /include recent sync log entries/i }),
   ).toBeChecked()
 
+  // App logs checkbox is off by default — check it to exercise the full path
+  await expect(
+    page.getByRole('checkbox', { name: /include full application logs/i }),
+  ).not.toBeChecked()
+  await page.getByRole('checkbox', { name: /include full application logs/i }).check()
+
   // Intercept window.open so we can inspect the GitHub URL without opening a real tab
   let capturedHelpUrl = ''
   await page.exposeFunction('__captureHelpUrl__', (url: string) => {
@@ -203,6 +209,10 @@ test('first-time setup and first sync journey', async ({ page }) => {
   expect(issueBody).toContain('| EMAIL |')
   expect(issueBody).toContain('| YNAB |')
   expect(issueBody).toContain('| SUCCESS |')
+  // Application logs section must appear because the checkbox was checked.
+  // The server has been running and logging at DEBUG level, so either actual
+  // log lines or the empty/unavailable fallback message must be present.
+  expect(issueBody).toContain('Application Logs')
   // Credentials saved in step 2 must have been redacted by the sanitization service
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')

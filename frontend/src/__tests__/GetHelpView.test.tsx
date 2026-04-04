@@ -39,6 +39,13 @@ describe('GetHelpView', () => {
     ).toBeChecked()
   })
 
+  it('renders the app logs checkbox unchecked by default', () => {
+    render(<GetHelpView />)
+    expect(
+      screen.getByRole('checkbox', { name: /include full application logs/i })
+    ).not.toBeChecked()
+  })
+
   it('disables the Get Help button when description is empty', () => {
     render(<GetHelpView />)
     expect(screen.getByRole('button', { name: /get help/i })).toBeDisabled()
@@ -67,6 +74,29 @@ describe('GetHelpView', () => {
         '_blank',
         'noopener,noreferrer'
       )
+    })
+  })
+
+  it('passes includeAppLogs true to the API when the app logs checkbox is checked', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    let capturedBody: Record<string, unknown> | null = null
+    server.use(
+      http.post('/api/help/report', async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>
+        return HttpResponse.json({ body: 'Report body', sanitized: false })
+      })
+    )
+
+    render(<GetHelpView />)
+    await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('checkbox', { name: /include full application logs/i }))
+    await user.click(screen.getByRole('button', { name: /get help/i }))
+
+    await waitFor(() => {
+      expect(capturedBody).not.toBeNull()
+      expect(capturedBody!.includeAppLogs).toBe(true)
     })
   })
 
