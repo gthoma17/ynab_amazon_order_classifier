@@ -32,6 +32,8 @@ export default function GetHelpView() {
     // with fresh content if the description changes after insertion.
     setLogsInserted(false)
     setReportBody(null)
+    setSanitized(false)
+    setTruncated(false)
   }
 
   const handleInsertLogs = async () => {
