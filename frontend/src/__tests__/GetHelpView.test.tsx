@@ -10,6 +10,7 @@ const server = setupServer(
     HttpResponse.json({
       body: '## Problem Description\n\nSomething broke\n',
       sanitized: false,
+      truncated: false,
     })
   )
 )
@@ -46,35 +47,93 @@ describe('GetHelpView', () => {
     ).not.toBeChecked()
   })
 
-  it('disables the Get Help button when description is empty', () => {
+  it('disables the Open Issue button when description is empty', () => {
     render(<GetHelpView />)
-    expect(screen.getByRole('button', { name: /get help/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /open issue/i })).toBeDisabled()
   })
 
-  it('enables the Get Help button once description has text', async () => {
+  it('enables the Open Issue button once description has text', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
-    expect(screen.getByRole('button', { name: /get help/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /open issue/i })).not.toBeDisabled()
   })
 
-  it('calls the report API and opens the GitHub new-issue URL on submit', async () => {
+  it('shows a prominent redaction notice', () => {
+    render(<GetHelpView />)
+    expect(screen.getByRole('note', { name: /redaction notice/i })).toBeInTheDocument()
+    expect(screen.getByText(/api keys/i)).toBeInTheDocument()
+  })
+
+  it('shows Insert Logs button when sync logs checkbox is checked', async () => {
+    render(<GetHelpView />)
+    // Sync logs checkbox is checked by default
+    expect(screen.getByRole('button', { name: /insert logs/i })).toBeInTheDocument()
+  })
+
+  it('hides Insert Logs button when neither logs checkbox is checked', async () => {
+    const user = userEvent.setup()
+    render(<GetHelpView />)
+    await user.click(screen.getByRole('checkbox', { name: /include recent sync log entries/i }))
+    expect(screen.queryByRole('button', { name: /insert logs/i })).not.toBeInTheDocument()
+  })
+
+  it('shows a warning modal when Open Issue is clicked with logs checked but not inserted', async () => {
+    const user = userEvent.setup()
+    render(<GetHelpView />)
+    await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('button', { name: /open issue/i }))
+    expect(screen.getByRole('dialog', { name: /logs not inserted warning/i })).toBeInTheDocument()
+  })
+
+  it('opens issue directly when Open Issue is clicked with no logs checkboxes checked', async () => {
+    const user = userEvent.setup()
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    render(<GetHelpView />)
+    await user.click(screen.getByRole('checkbox', { name: /include recent sync log entries/i }))
+    await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('button', { name: /open issue/i }))
+
+    await waitFor(() => {
+      expect(openSpy).toHaveBeenCalledWith(
+        expect.stringContaining('github.com/gthoma17/budget-sortbot/issues/new'),
+        '_blank',
+        'noopener,noreferrer'
+      )
+    })
+  })
+
+  it('calls the report API and opens the GitHub URL after Insert Logs then Open Issue', async () => {
     const user = userEvent.setup()
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
 
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
-    await user.click(screen.getByRole('button', { name: /get help/i }))
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/✓ logs inserted/i))
+    await user.click(screen.getByRole('button', { name: /open issue/i }))
 
     await waitFor(() => {
       expect(openSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'github.com/gthoma17/budget-sortbot/issues/new'
-        ),
+        expect.stringContaining('github.com/gthoma17/budget-sortbot/issues/new'),
         '_blank',
         'noopener,noreferrer'
       )
     })
+  })
+
+  it('shows preview after inserting logs', async () => {
+    const user = userEvent.setup()
+    render(<GetHelpView />)
+    await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: /report body preview/i })).toBeInTheDocument()
+    )
+    expect(screen.getByRole('textbox', { name: /report body preview/i })).toHaveValue(
+      '## Problem Description\n\nSomething broke\n'
+    )
   })
 
   it('passes includeAppLogs true to the API when the app logs checkbox is checked', async () => {
@@ -85,14 +144,14 @@ describe('GetHelpView', () => {
     server.use(
       http.post('/api/help/report', async ({ request }) => {
         capturedBody = (await request.json()) as Record<string, unknown>
-        return HttpResponse.json({ body: 'Report body', sanitized: false })
+        return HttpResponse.json({ body: 'Report body', sanitized: false, truncated: false })
       })
     )
 
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
     await user.click(screen.getByRole('checkbox', { name: /include full application logs/i }))
-    await user.click(screen.getByRole('button', { name: /get help/i }))
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
 
     await waitFor(() => {
       expect(capturedBody).not.toBeNull()
@@ -105,16 +164,45 @@ describe('GetHelpView', () => {
     vi.spyOn(window, 'open').mockImplementation(() => null)
     server.use(
       http.post('/api/help/report', () =>
-        HttpResponse.json({ body: 'Report with [REDACTED]', sanitized: true })
+        HttpResponse.json({ body: 'Report with [REDACTED]', sanitized: true, truncated: false })
       )
     )
 
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'My token is secret')
-    await user.click(screen.getByRole('button', { name: /get help/i }))
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('status')).toHaveTextContent(/sensitive values were removed/i)
+      const statuses = screen.getAllByRole('status')
+      expect(statuses.some((el) => /sensitive values.*removed/i.test(el.textContent ?? ''))).toBe(true)
+    })
+  })
+
+  it('appends truncation note to the URL when the API returns truncated=true', async () => {
+    const user = userEvent.setup()
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    server.use(
+      http.post('/api/help/report', () =>
+        HttpResponse.json({ body: 'Truncated body content', sanitized: false, truncated: true })
+      )
+    )
+
+    render(<GetHelpView />)
+    await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    // Insert logs so truncated flag is received from the API
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
+    await waitFor(() => {
+      const statuses = screen.getAllByRole('status')
+      expect(statuses.some((el) => /✓ logs inserted/i.test(el.textContent ?? ''))).toBe(true)
+    })
+    await user.click(screen.getByRole('button', { name: /open issue/i }))
+
+    await waitFor(() => {
+      expect(openSpy).toHaveBeenCalledWith(
+        expect.stringContaining(encodeURIComponent('Log content truncated')),
+        '_blank',
+        'noopener,noreferrer'
+      )
     })
   })
 
@@ -124,7 +212,7 @@ describe('GetHelpView', () => {
 
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
-    await user.click(screen.getByRole('button', { name: /get help/i }))
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument()
@@ -136,3 +224,4 @@ describe('GetHelpView', () => {
     expect(screen.getByText(/you control final submission/i)).toBeInTheDocument()
   })
 })
+

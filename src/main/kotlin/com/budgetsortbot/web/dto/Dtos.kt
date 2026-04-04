@@ -98,7 +98,8 @@ data class HelpReportRequest(
 
 data class HelpReportResponse(
     val body: String,
-    val sanitized: Boolean
+    val sanitized: Boolean,
+    val truncated: Boolean = false
 )
 
 // ── Dry run ───────────────────────────────────────────────────────────────────

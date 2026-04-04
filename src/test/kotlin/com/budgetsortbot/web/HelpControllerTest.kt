@@ -139,12 +139,14 @@ class HelpControllerTest {
     }
 
     @Test
-    fun `POST api help report truncates body when assembled content exceeds max characters`() {
+    fun `POST api help report returns truncated true when assembled content exceeds URL budget`() {
         every { syncLogRepository.findAll(any<Pageable>()) } returns PageImpl(emptyList())
         every { applicationLogService.getRecentLogs(any()) } returns emptyList()
         every { reportSanitizationService.sanitize(any()) } answers { firstArg<String>() to false }
 
-        val longDescription = "x".repeat(9000)
+        // A description made up of characters that URL-encode to 3 bytes each (%XX)
+        // ensures the encoded body easily exceeds the URL budget.
+        val longDescription = "ą".repeat(4000)
         val request = HelpReportRequest(description = longDescription, includeSyncLogs = false)
 
         mockMvc.perform(
@@ -153,7 +155,7 @@ class HelpControllerTest {
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.body").value(containsString("truncated")))
+            .andExpect(jsonPath("$.truncated").value(true))
     }
 
     @Test

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 @RestController
 @RequestMapping("/api/help")
@@ -24,18 +26,25 @@ class HelpController(
         // 3–4 most recent sync runs, ordered most-recent-first
         private const val SYNC_LOG_LIMIT = 4
 
-        // GitHub new-issue URL body limit researched empirically: the total URL
-        // accepted by github.com is ~8 192 bytes.  With the base URL (~65 chars)
-        // and URL-encoding overhead for newlines/spaces (≈ 1.5× expansion for
-        // typical log content), a raw body of 8 000 characters fits comfortably
-        // within that budget for the vast majority of reports.
-        private const val MAX_BODY_CHARACTERS = 8000
-
-        private const val TRUNCATION_NOTE =
-            "\n\n_[Log content truncated — use `docker logs` for full output]_"
-
         // Number of recent app-log lines to fetch before applying the budget cap
         private const val APP_LOG_FETCH_LIMIT = 100
+
+        // Full GitHub new-issue base URL including the query param key
+        private const val GITHUB_BASE_URL =
+            "https://github.com/gthoma17/budget-sortbot/issues/new?body="
+
+        // Maximum total GitHub URL length accepted by github.com (empirical)
+        private const val MAX_GITHUB_URL_LENGTH = 8192
+
+        // Budget reserved for the truncation note the frontend appends when truncated=true.
+        // encodeURIComponent("\n\n_[Log content truncated — use `docker logs` for full output]_")
+        // is ≈ 130 characters; 200 gives extra headroom.
+        private const val TRUNCATION_NOTE_BUDGET = 200
+
+        // Maximum encoded body length the frontend is allowed to append to GITHUB_BASE_URL
+        // before the truncation note pushes the total over the limit.
+        private val MAX_ENCODED_BODY_LENGTH =
+            MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - TRUNCATION_NOTE_BUDGET
     }
 
     @PostMapping("/report")
@@ -80,10 +89,7 @@ class HelpController(
                 bodyBuilder.appendLine("_No application log entries found._")
             } else {
                 bodyBuilder.appendLine("```")
-                val remaining = (MAX_BODY_CHARACTERS - bodyBuilder.length - TRUNCATION_NOTE.length - 4)
-                    .coerceAtLeast(0)
-                val combined = appLogs.joinToString("\n")
-                bodyBuilder.appendLine(combined.take(remaining))
+                bodyBuilder.appendLine(appLogs.joinToString("\n"))
                 bodyBuilder.appendLine("```")
             }
             bodyBuilder.appendLine()
@@ -91,11 +97,19 @@ class HelpController(
 
         val (sanitizedBody, wasSanitized) = reportSanitizationService.sanitize(bodyBuilder.toString())
 
-        var body = sanitizedBody
-        if (body.length > MAX_BODY_CHARACTERS) {
-            body = body.take(MAX_BODY_CHARACTERS - TRUNCATION_NOTE.length) + TRUNCATION_NOTE
+        // URL-encode the sanitized body (matching JS encodeURIComponent: spaces → %20, not +)
+        val encoded = URLEncoder.encode(sanitizedBody, Charsets.UTF_8).replace("+", "%20")
+
+        val truncated = encoded.length > MAX_ENCODED_BODY_LENGTH
+        val finalBody = if (truncated) {
+            // Trim encoded string to the allowed budget, stripping any partial %XX sequence
+            val trimmed = encoded.take(MAX_ENCODED_BODY_LENGTH).replace(Regex("%[0-9A-Fa-f]{0,1}$"), "")
+            URLDecoder.decode(trimmed, Charsets.UTF_8)
+        } else {
+            sanitizedBody
         }
 
-        return HelpReportResponse(body = body, sanitized = wasSanitized)
+        return HelpReportResponse(body = finalBody, sanitized = wasSanitized, truncated = truncated)
     }
 }
+
