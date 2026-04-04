@@ -215,6 +215,10 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // the logger package name in the Blacklite pattern.
   expect(issueBody).toContain('Application Logs')
   expect(issueBody).toContain('com.budgetsortbot')
+  // ConfigService logs "Saved config: key=... value=..." at INFO when credentials
+  // are saved (step 2). The sanitization service must have replaced those raw
+  // credential values with [REDACTED] before embedding them in the issue body.
+  expect(issueBody).toContain('[REDACTED]')
   // Credentials saved in step 2 must have been redacted by the sanitization service
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')

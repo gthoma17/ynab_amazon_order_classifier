@@ -4,8 +4,11 @@ import com.budgetsortbot.domain.AppConfig
 import com.budgetsortbot.domain.CategoryRule
 import com.budgetsortbot.infrastructure.persistence.AppConfigRepository
 import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.time.Instant
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class ConfigService(
@@ -29,6 +32,7 @@ class ConfigService(
 
     fun setValue(key: String, value: String) {
         appConfigRepository.save(AppConfig(key = key, value = value, updatedAt = Instant.now()))
+        log.info { "Saved config: key=$key value=$value" }
     }
 
     fun getAllCategoryRules(): List<CategoryRule> = categoryRuleRepository.findAll()
