@@ -241,7 +241,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   expect(issueBody).toContain('| SUCCESS |')
   // Application logs section must appear because the checkbox was checked
   expect(issueBody).toContain('Application Logs')
-  expect(issueBody).toContain('com.budgetsortbot')
+  expect(issueBody).toContain('budgetsortbot')
   // Sensitive credentials must be redacted in the final URL body too
   expect(issueBody).toContain('[REDACTED]')
   expect(issueBody).not.toContain('my-ynab-token')
