@@ -168,7 +168,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   // Prominent redaction notice must be visible so users know what will be redacted
   await expect(page.getByRole('note', { name: /redaction notice/i })).toBeVisible()
-  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(/api keys/i)
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(/sensitive values/i)
 
   await page
     .getByLabel(/describe the problem/i)

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URLDecoder
-import java.net.URLEncoder
 
 @RestController
 @RequestMapping("/api/help")
@@ -45,6 +44,27 @@ class HelpController(
         // before the truncation note pushes the total over the limit.
         private val MAX_ENCODED_BODY_LENGTH =
             MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - TRUNCATION_NOTE_BUDGET
+
+        /**
+         * Encodes [value] exactly as JavaScript's `encodeURIComponent` does:
+         * every byte is percent-encoded except the unreserved characters
+         * A-Z a-z 0-9 - _ . ! ~ * ' ( )
+         */
+        fun encodeURIComponent(value: String): String {
+            val sb = StringBuilder(value.length * 2)
+            for (byte in value.toByteArray(Charsets.UTF_8)) {
+                val c = byte.toInt() and 0xFF
+                if (c in 0x41..0x5A || c in 0x61..0x7A || c in 0x30..0x39 ||
+                    c == 0x2D || c == 0x5F || c == 0x2E ||  // - _ .
+                    c == 0x21 || c == 0x7E || c == 0x2A || c == 0x27 || c == 0x28 || c == 0x29 // ! ~ * ' ( )
+                ) {
+                    sb.append(c.toChar())
+                } else {
+                    sb.append("%%%02X".format(c))
+                }
+            }
+            return sb.toString()
+        }
     }
 
     @PostMapping("/report")
@@ -97,8 +117,9 @@ class HelpController(
 
         val (sanitizedBody, wasSanitized) = reportSanitizationService.sanitize(bodyBuilder.toString())
 
-        // URL-encode the sanitized body (matching JS encodeURIComponent: spaces → %20, not +)
-        val encoded = URLEncoder.encode(sanitizedBody, Charsets.UTF_8).replace("+", "%20")
+        // URL-encode the sanitized body using the same algorithm as JS encodeURIComponent
+        // so the length estimate here exactly matches what the frontend will produce.
+        val encoded = encodeURIComponent(sanitizedBody)
 
         val truncated = encoded.length > MAX_ENCODED_BODY_LENGTH
         val finalBody = if (truncated) {
