@@ -30,12 +30,17 @@ export default function GetHelpView() {
       if (response.sanitized) {
         setSanitized(true)
       }
-      let body = response.body
-      let url = `${GITHUB_ISSUES_URL}?body=${encodeURIComponent(body)}`
+      const body = response.body
+      const encodedBody = encodeURIComponent(body)
+      const baseUrl = `${GITHUB_ISSUES_URL}?body=`
+      let url = baseUrl + encodedBody
       if (url.length > MAX_GITHUB_URL_LENGTH) {
         const note = '\n\n_[truncated — use `docker logs` for full output]_'
-        const trimmedBody = body.slice(0, 2000) + note
-        url = `${GITHUB_ISSUES_URL}?body=${encodeURIComponent(trimmedBody)}`
+        const encodedNote = encodeURIComponent(note)
+        const maxEncodedBodyLen = MAX_GITHUB_URL_LENGTH - baseUrl.length - encodedNote.length
+        // Remove any trailing partial percent-encoded sequence at the cut point
+        const trimmedEncoded = encodedBody.slice(0, maxEncodedBodyLen).replace(/%[0-9A-Fa-f]?$/, '')
+        url = baseUrl + trimmedEncoded + encodedNote
       }
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch {

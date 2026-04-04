@@ -3,6 +3,7 @@ package com.budgetsortbot.service
 import com.budgetsortbot.infrastructure.persistence.BlackliteEntryRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
@@ -31,7 +32,9 @@ class ApplicationLogService(private val blackliteEntryRepository: BlackliteEntry
      */
     fun getRecentLogs(limit: Int): List<String>? {
         return try {
-            blackliteEntryRepository.findRecent(PageRequest.of(0, limit))
+            blackliteEntryRepository.findAll(
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "id.epochSecs", "id.nanos"))
+            )
                 .mapNotNull { entry -> entry.content?.let { String(it, Charsets.UTF_8).trim() } }
                 .filter { it.isNotEmpty() }
         } catch (e: Exception) {

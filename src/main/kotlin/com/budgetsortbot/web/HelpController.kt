@@ -89,13 +89,13 @@ class HelpController(
             bodyBuilder.appendLine()
         }
 
-        var body = bodyBuilder.toString()
+        val (sanitizedBody, wasSanitized) = reportSanitizationService.sanitize(bodyBuilder.toString())
+
+        var body = sanitizedBody
         if (body.length > MAX_BODY_CHARACTERS) {
             body = body.take(MAX_BODY_CHARACTERS - TRUNCATION_NOTE.length) + TRUNCATION_NOTE
         }
 
-        val (sanitizedBody, wasSanitized) = reportSanitizationService.sanitize(body)
-
-        return HelpReportResponse(body = sanitizedBody, sanitized = wasSanitized)
+        return HelpReportResponse(body = body, sanitized = wasSanitized)
     }
 }
