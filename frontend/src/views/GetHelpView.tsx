@@ -94,9 +94,9 @@ export default function GetHelpView() {
       <p>Something not working? Open a pre-filled GitHub issue and we&apos;ll help.</p>
 
       <div role="note" aria-label="Redaction notice">
-        <strong>Privacy:</strong> Sensitive values like API keys are automatically redacted
-        before the issue is opened. Click &ldquo;Insert Logs&rdquo; to preview the sanitized
-        content before submitting.
+        <strong>Privacy:</strong> Sensitive values in the generated report are redacted when
+        you click &ldquo;Insert Logs.&rdquo; Use that step to preview the sanitized content
+        before submitting.
       </div>
 
       <div>
