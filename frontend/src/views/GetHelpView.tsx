@@ -39,7 +39,7 @@ export default function GetHelpView() {
         const encodedNote = encodeURIComponent(note)
         const maxEncodedBodyLen = MAX_GITHUB_URL_LENGTH - baseUrl.length - encodedNote.length
         // Remove any trailing partial percent-encoded sequence at the cut point
-        const trimmedEncoded = encodedBody.slice(0, maxEncodedBodyLen).replace(/%[0-9A-Fa-f]?$/, '')
+        const trimmedEncoded = encodedBody.slice(0, maxEncodedBodyLen).replace(/%[0-9A-Fa-f]{0,2}$/, '')
         url = baseUrl + trimmedEncoded + encodedNote
       }
       window.open(url, '_blank', 'noopener,noreferrer')
