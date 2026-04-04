@@ -13,4 +13,4 @@ spring:
 
 app:
   blacklite:
-    path: ./data/database.sqlite
+    path: ./data/logs.sqlite

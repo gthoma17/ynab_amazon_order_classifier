@@ -28,15 +28,9 @@ import java.io.File
 fun main() {
     // Ensure a clean database on every fresh start
     val dbFile = File("/tmp/ynab-e2e.sqlite")
+    val logDbFile = File("/tmp/ynab-e2e-logs.sqlite")
     dbFile.delete()
-
-    // Pre-create the SQLite file in WAL journal mode so that Blacklite (which opens
-    // the file during Logback initialisation, before Spring starts) and Flyway
-    // (which runs inside the Spring context) can coexist as concurrent writers
-    // without triggering SQLITE_BUSY errors.
-    java.sql.DriverManager.getConnection("jdbc:sqlite:${dbFile.absolutePath}").use { conn ->
-        conn.createStatement().use { it.execute("PRAGMA journal_mode=WAL") }
-    }
+    logDbFile.delete()
 
     // Start WireMock on a random available port
     val wireMock = WireMockServer(WireMockConfiguration.options().dynamicPort())
@@ -52,8 +46,8 @@ fun main() {
     System.setProperty("app.ynab.base-url", "http://localhost:$port/v1")
     System.setProperty("app.gemini.base-url", "http://localhost:$port/v1beta")
     System.setProperty("server.port", "8080")
-    System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}?busy_timeout=30000")
-    System.setProperty("app.blacklite.path", dbFile.absolutePath)
+    System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}")
+    System.setProperty("app.blacklite.path", logDbFile.absolutePath)
 
     runApplication<Application>()
 }

@@ -10,7 +10,7 @@
     </shutdownHook>
 
     <!-- Resolve the SQLite file path from Spring's environment -->
-    <springProperty name="blacklite.path" source="app.blacklite.path" defaultValue="./data/database.sqlite"/>
+    <springProperty name="blacklite.path" source="app.blacklite.path" defaultValue="./data/logs.sqlite"/>
 
     <!-- Console appender — preserves `docker logs` UX -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -20,7 +20,9 @@
     </appender>
 
     <!-- Blacklite SQLite appender — enables programmatic log access.
-         Writes to the same SQLite file as the application datasource.
+         Writes to its own SQLite file (app.blacklite.path) which is
+         intentionally separate from the main application datasource to
+         prevent write-lock conflicts with Flyway and JPA.
          The appender is asynchronous (uses JCTools internally) so it does
          not add latency on the hot path.
          DeletingArchiver caps the table at 500 000 rows (~7 days of DEBUG
