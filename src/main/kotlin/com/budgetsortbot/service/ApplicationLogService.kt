@@ -1,39 +1,38 @@
 package com.budgetsortbot.service
 
+import com.budgetsortbot.infrastructure.persistence.BlackliteEntryRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
 /**
- * Retrieves recent application log entries from the Blacklite SQLite table.
+ * Retrieves recent application log entries from the Blacklite [entries] table
+ * using a read-only JPA repository.
  *
  * Blacklite writes log entries into an `entries` table in the same SQLite
- * database as the application.  This service queries that table directly via
- * [JdbcTemplate] so that the report assembly logic can include recent log
- * lines without any file-I/O or additional datasource configuration.
+ * database as the application datasource.  Querying via the JPA layer keeps
+ * access consistent with the rest of the persistence tier and avoids raw
+ * JDBC usage.
  *
- * Graceful degradation: any exception (e.g. table absent on first run, locked
- * file) is caught and logged; the caller receives an empty list instead of a
- * thrown exception.
+ * Graceful degradation: any exception (e.g. table absent on first run before
+ * any log has been written) is caught; the caller receives `null` to signal
+ * that logs are unavailable.
  */
 @Service
-class ApplicationLogService(private val jdbcTemplate: JdbcTemplate) {
+class ApplicationLogService(private val blackliteEntryRepository: BlackliteEntryRepository) {
 
     /**
-     * Returns up to [limit] recent log lines, most-recent-first.
+     * Returns up to [limit] recent log lines decoded from the `content` BLOB,
+     * ordered most-recent-first.
      * Returns `null` if the query fails (e.g. table absent on first run).
      * Returns an empty list if the table exists but contains no entries.
      */
     fun getRecentLogs(limit: Int): List<String>? {
         return try {
-            val rows = jdbcTemplate.query(
-                "SELECT content FROM entries ORDER BY epoch_secs DESC, nanos DESC LIMIT ?",
-                { rs, _ -> rs.getBytes("content") },
-                limit
-            )
-            rows.mapNotNull { bytes -> bytes?.let { String(it, Charsets.UTF_8).trim() } }
+            blackliteEntryRepository.findRecent(PageRequest.of(0, limit))
+                .mapNotNull { entry -> entry.content?.let { String(it, Charsets.UTF_8).trim() } }
                 .filter { it.isNotEmpty() }
         } catch (e: Exception) {
             logger.debug(e) { "Could not retrieve application logs from Blacklite table" }
@@ -41,3 +40,4 @@ class ApplicationLogService(private val jdbcTemplate: JdbcTemplate) {
         }
     }
 }
+

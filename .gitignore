@@ -14,3 +14,6 @@ src/main/resources/static/assets/
 
 # OS files
 .DS_Store
+
+# Runtime data directory (SQLite database)
+data/
