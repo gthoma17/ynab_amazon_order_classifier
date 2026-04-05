@@ -62,7 +62,7 @@ describe('GetHelpView', () => {
   it('shows a prominent redaction notice', () => {
     render(<GetHelpView />)
     expect(screen.getByRole('note', { name: /redaction notice/i })).toBeInTheDocument()
-    expect(screen.getByText(/api keys/i)).toBeInTheDocument()
+    expect(screen.getByText(/sensitive values/i)).toBeInTheDocument()
   })
 
   it('shows Insert Logs button when sync logs checkbox is checked', async () => {
