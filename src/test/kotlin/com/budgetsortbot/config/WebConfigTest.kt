@@ -8,6 +8,7 @@ import com.budgetsortbot.service.ConfigService
 import com.budgetsortbot.service.ConnectionProbeService
 import com.budgetsortbot.service.DryRunService
 import com.budgetsortbot.service.ReportSanitizationService
+import com.budgetsortbot.service.ApplicationLogService
 import com.budgetsortbot.service.SyncScheduler
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,6 +48,9 @@ class WebConfigTest {
 
     @MockkBean
     private lateinit var reportSanitizationService: ReportSanitizationService
+
+    @MockkBean
+    private lateinit var applicationLogService: ApplicationLogService
 
     @Test
     fun `non-API path forwards to index html`() {

@@ -28,7 +28,9 @@ import java.io.File
 fun main() {
     // Ensure a clean database on every fresh start
     val dbFile = File("/tmp/ynab-e2e.sqlite")
+    val logDbFile = File("/tmp/ynab-e2e-logs.sqlite")
     dbFile.delete()
+    logDbFile.delete()
 
     // Start WireMock on a random available port
     val wireMock = WireMockServer(WireMockConfiguration.options().dynamicPort())
@@ -45,6 +47,7 @@ fun main() {
     System.setProperty("app.gemini.base-url", "http://localhost:$port/v1beta")
     System.setProperty("server.port", "8080")
     System.setProperty("spring.datasource.url", "jdbc:sqlite:${dbFile.absolutePath}")
+    System.setProperty("app.blacklite.path", logDbFile.absolutePath)
 
     runApplication<Application>()
 }

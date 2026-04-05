@@ -81,6 +81,34 @@ class ReportSanitizationServiceTest {
     }
 
     @Test
+    fun `sanitize does not redact non-sensitive config values like schedule or order cap`() {
+        every { appConfigRepository.findAll() } returns listOf(
+            AppConfig(key = "SCHEDULE_CONFIG", value = """{"type":"HOURLY"}""", updatedAt = Instant.now()),
+            AppConfig(key = "ORDER_CAP", value = "10", updatedAt = Instant.now()),
+            AppConfig(key = "START_FROM_DATE", value = "2024-01-01", updatedAt = Instant.now()),
+            AppConfig(key = "INSTALLED_AT", value = "2024-01-01T00:00:00Z", updatedAt = Instant.now())
+        )
+
+        val text = """Schedule: {"type":"HOURLY"} cap=10 since=2024-01-01"""
+        val (result, wasSanitized) = service.sanitize(text)
+
+        assertEquals(text, result)
+        assertFalse(wasSanitized)
+    }
+
+    @Test
+    fun `sanitize redacts unknown future keys by default`() {
+        every { appConfigRepository.findAll() } returns listOf(
+            AppConfig(key = "FUTURE_SECRET_KEY", value = "brand-new-secret", updatedAt = Instant.now())
+        )
+
+        val (result, wasSanitized) = service.sanitize("value=brand-new-secret")
+
+        assertEquals("value=[REDACTED]", result)
+        assertTrue(wasSanitized)
+    }
+
+    @Test
     fun `sanitize ignores blank config values`() {
         every { appConfigRepository.findAll() } returns listOf(
             AppConfig(key = "YNAB_TOKEN", value = "", updatedAt = Instant.now()),
