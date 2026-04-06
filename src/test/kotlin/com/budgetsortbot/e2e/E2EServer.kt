@@ -1,5 +1,6 @@
 package com.budgetsortbot.e2e
 
+import com.budgetsortbot.Application
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.containing
@@ -9,7 +10,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.budgetsortbot.Application
 import org.springframework.boot.runApplication
 import java.io.File
 
@@ -52,7 +52,10 @@ fun main() {
     runApplication<Application>()
 }
 
-private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
+private fun stubFastMail(
+    wireMock: WireMockServer,
+    selfPort: Int,
+) {
     // JMAP session discovery
     wireMock.stubFor(
         get(urlEqualTo("/.well-known/jmap"))
@@ -70,9 +73,9 @@ private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
                                 "urn:ietf:params:jmap:mail": "acct-e2e"
                             }
                         }
-                        """.trimIndent()
-                    )
-            )
+                        """.trimIndent(),
+                    ),
+            ),
     )
 
     // Email/query — returns a single order email ID
@@ -91,9 +94,9 @@ private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
                             "total":1,
                             "position":0
                         },"a"]]}
-                        """.trimIndent()
-                    )
-            )
+                        """.trimIndent(),
+                    ),
+            ),
     )
 
     // Email/get — returns the order email body in real Amazon format
@@ -117,9 +120,9 @@ private fun stubFastMail(wireMock: WireMockServer, selfPort: Int) {
                             }],
                             "notFound":[]
                         },"a"]]}
-                        """.trimIndent()
-                    )
-            )
+                        """.trimIndent(),
+                    ),
+            ),
     )
 }
 
@@ -131,8 +134,8 @@ private fun stubYnab(wireMock: WireMockServer) {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("""{"data":{"budgets":[{"id":"my-budget-id","name":"My Test Budget"}],"default_budget":null}}""")
-            )
+                    .withBody("""{"data":{"budgets":[{"id":"my-budget-id","name":"My Test Budget"}],"default_budget":null}}"""),
+            ),
     )
 
     // GET categories — used by the Category Rules view
@@ -150,9 +153,9 @@ private fun stubYnab(wireMock: WireMockServer) {
                                 {"id":"cat-home","name":"Home Improvement","deleted":false}
                             ]}
                         ]}}
-                        """.trimIndent()
-                    )
-            )
+                        """.trimIndent(),
+                    ),
+            ),
     )
 
     // GET transactions — returns one Amazon transaction matching the order
@@ -172,9 +175,9 @@ private fun stubYnab(wireMock: WireMockServer) {
                             "category_id":null,
                             "payee_name":"Amazon.com"
                         }],"server_knowledge":1000}}
-                        """.trimIndent()
-                    )
-            )
+                        """.trimIndent(),
+                    ),
+            ),
     )
 
     // PUT update transaction
@@ -185,9 +188,9 @@ private fun stubYnab(wireMock: WireMockServer) {
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(
-                        """{"data":{"transaction":{"id":"txn-e2e-1","date":"2024-01-15","amount":-426000}}}"""
-                    )
-            )
+                        """{"data":{"transaction":{"id":"txn-e2e-1","date":"2024-01-15","amount":-426000}}}""",
+                    ),
+            ),
     )
 }
 
@@ -199,8 +202,8 @@ private fun stubGemini(wireMock: WireMockServer) {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("""{"models":[]}""")
-            )
+                    .withBody("""{"models":[]}"""),
+            ),
     )
 
     wireMock.stubFor(
@@ -209,7 +212,7 @@ private fun stubGemini(wireMock: WireMockServer) {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("""{"candidates":[{"content":{"parts":[{"text":"cat-electronics"}]}}]}""")
-            )
+                    .withBody("""{"candidates":[{"content":{"parts":[{"text":"cat-electronics"}]}}]}"""),
+            ),
     )
 }

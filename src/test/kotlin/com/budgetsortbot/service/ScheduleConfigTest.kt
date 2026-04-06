@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class ScheduleConfigTest {
-
     @Test
     fun `EVERY_N_SECONDS with interval 3 produces correct cron`() {
         val config = ScheduleConfig(type = ScheduleType.EVERY_N_SECONDS, secondInterval = 3)

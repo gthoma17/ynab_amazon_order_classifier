@@ -18,9 +18,8 @@ import java.net.URLDecoder
 class HelpController(
     private val syncLogRepository: SyncLogRepository,
     private val applicationLogService: ApplicationLogService,
-    private val reportSanitizationService: ReportSanitizationService
+    private val reportSanitizationService: ReportSanitizationService,
 ) {
-
     companion object {
         // 3–4 most recent sync runs, ordered most-recent-first
         private const val SYNC_LOG_LIMIT = 4
@@ -54,9 +53,19 @@ class HelpController(
             val sb = StringBuilder(value.length * 2)
             for (byte in value.toByteArray(Charsets.UTF_8)) {
                 val c = byte.toInt() and 0xFF
-                if (c in 0x41..0x5A || c in 0x61..0x7A || c in 0x30..0x39 ||
-                    c == 0x2D || c == 0x5F || c == 0x2E ||  // - _ .
-                    c == 0x21 || c == 0x7E || c == 0x2A || c == 0x27 || c == 0x28 || c == 0x29 // ! ~ * ' ( )
+                if (c in 0x41..0x5A ||
+                    c in 0x61..0x7A ||
+                    c in 0x30..0x39 ||
+                    c == 0x2D ||
+                    c == 0x5F ||
+                    c == 0x2E ||
+                    // - _ .
+                    c == 0x21 ||
+                    c == 0x7E ||
+                    c == 0x2A ||
+                    c == 0x27 ||
+                    c == 0x28 ||
+                    c == 0x29 // ! ~ * ' ( )
                 ) {
                     sb.append(c.toChar())
                 } else {
@@ -68,7 +77,9 @@ class HelpController(
     }
 
     @PostMapping("/report")
-    fun createReport(@RequestBody request: HelpReportRequest): HelpReportResponse {
+    fun createReport(
+        @RequestBody request: HelpReportRequest,
+    ): HelpReportResponse {
         val bodyBuilder = StringBuilder()
 
         bodyBuilder.appendLine("## Problem Description")
@@ -80,9 +91,11 @@ class HelpController(
             bodyBuilder.appendLine("## Recent Sync Logs")
             bodyBuilder.appendLine()
 
-            val logs = syncLogRepository.findAll(
-                PageRequest.of(0, SYNC_LOG_LIMIT, Sort.by(Sort.Direction.DESC, "lastRun"))
-            ).content
+            val logs =
+                syncLogRepository
+                    .findAll(
+                        PageRequest.of(0, SYNC_LOG_LIMIT, Sort.by(Sort.Direction.DESC, "lastRun")),
+                    ).content
 
             if (logs.isEmpty()) {
                 bodyBuilder.appendLine("_No sync log entries found._")
@@ -122,15 +135,15 @@ class HelpController(
         val encoded = encodeURIComponent(sanitizedBody)
 
         val truncated = encoded.length > MAX_ENCODED_BODY_LENGTH
-        val finalBody = if (truncated) {
-            // Trim encoded string to the allowed budget, stripping any partial %XX sequence
-            val trimmed = encoded.take(MAX_ENCODED_BODY_LENGTH).replace(Regex("%[0-9A-Fa-f]{0,1}$"), "")
-            URLDecoder.decode(trimmed, Charsets.UTF_8)
-        } else {
-            sanitizedBody
-        }
+        val finalBody =
+            if (truncated) {
+                // Trim encoded string to the allowed budget, stripping any partial %XX sequence
+                val trimmed = encoded.take(MAX_ENCODED_BODY_LENGTH).replace(Regex("%[0-9A-Fa-f]{0,1}$"), "")
+                URLDecoder.decode(trimmed, Charsets.UTF_8)
+            } else {
+                sanitizedBody
+            }
 
         return HelpReportResponse(body = finalBody, sanitized = wasSanitized, truncated = truncated)
     }
 }
-

@@ -18,30 +18,28 @@ const server = setupServer(
       ynabBudgetId: 'budget-abc',
       fastmailApiToken: 'fmjt_test-token',
       geminiKey: null,
-    })
+    }),
   ),
   http.put('/api/config/keys', () => new HttpResponse(null, { status: 204 })),
   http.get('/api/ynab/budgets', () =>
     HttpResponse.json([
       { id: 'budget-abc', name: 'My Main Budget' },
       { id: 'budget-xyz', name: 'Savings Budget' },
-    ])
+    ]),
   ),
   http.post('/api/config/probe/ynab', () =>
-    HttpResponse.json({ success: true, message: 'Connected' })
+    HttpResponse.json({ success: true, message: 'Connected' }),
   ),
   http.post('/api/config/probe/fastmail', () =>
-    HttpResponse.json({ success: true, message: 'Connected' })
+    HttpResponse.json({ success: true, message: 'Connected' }),
   ),
   http.post('/api/config/probe/gemini', () =>
-    HttpResponse.json({ success: true, message: 'Connected' })
+    HttpResponse.json({ success: true, message: 'Connected' }),
   ),
-  http.get('/api/config/processing', () =>
-    HttpResponse.json(defaultProcessingConfig)
-  ),
+  http.get('/api/config/processing', () => HttpResponse.json(defaultProcessingConfig)),
   http.put('/api/config/processing', () => new HttpResponse(null, { status: 204 })),
   http.get('/api/config/dry-run/results', () => HttpResponse.json([])),
-  http.post('/api/config/dry-run', () => HttpResponse.json([]))
+  http.post('/api/config/dry-run', () => HttpResponse.json([])),
 )
 
 beforeAll(() => server.listen())
@@ -64,13 +62,9 @@ describe('ConfigView', () => {
 
   it('loads existing key values from the API', async () => {
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
     // budget select should show the saved budget once budgets are loaded
-    await waitFor(() =>
-      expect(screen.getByLabelText(/^budget$/i)).toHaveValue('budget-abc')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/^budget$/i)).toHaveValue('budget-abc'))
     expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token')
     expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
   })
@@ -82,13 +76,11 @@ describe('ConfigView', () => {
       http.put('/api/config/keys', async ({ request }) => {
         capturedBody = await request.json()
         return new HttpResponse(null, { status: 204 })
-      })
+      }),
     )
 
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
     const tokenInput = screen.getByLabelText(/ynab token/i)
     await user.clear(tokenInput)
@@ -103,9 +95,7 @@ describe('ConfigView', () => {
   it('shows a success message after save', async () => {
     const user = userEvent.setup()
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
     await user.click(screen.getByRole('button', { name: /^save$/i }))
     await screen.findByText('Saved')
   })
@@ -127,13 +117,11 @@ describe('ConfigView', () => {
           ynabBudgetId: null,
           fastmailApiToken: null,
           geminiKey: null,
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue(''))
     expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
   })
 
@@ -147,21 +135,17 @@ describe('ConfigView', () => {
           ynabBudgetId: null,
           fastmailApiToken: null,
           geminiKey: null,
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue(''))
     expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
   })
 
   it('budget select is enabled and shows budget names once loaded', async () => {
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/^budget$/i)).not.toBeDisabled()
-    )
+    await waitFor(() => expect(screen.getByLabelText(/^budget$/i)).not.toBeDisabled())
     expect(screen.getByRole('option', { name: 'My Main Budget' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Savings Budget' })).toBeInTheDocument()
   })
@@ -170,36 +154,28 @@ describe('ConfigView', () => {
     let resolveBudgets!: () => void
     server.use(
       http.get('/api/ynab/budgets', async () => {
-        await new Promise<void>((res) => { resolveBudgets = res })
+        await new Promise<void>((res) => {
+          resolveBudgets = res
+        })
         return HttpResponse.json([{ id: 'budget-abc', name: 'My Main Budget' }])
-      })
+      }),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText('budgets loading')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByLabelText('budgets loading')).toBeInTheDocument())
     resolveBudgets()
   })
 
   it('budget select shows an error when budget fetch fails', async () => {
-    server.use(
-      http.get('/api/ynab/budgets', () =>
-        new HttpResponse(null, { status: 401 })
-      )
-    )
+    server.use(http.get('/api/ynab/budgets', () => new HttpResponse(null, { status: 401 })))
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
   })
 
   it('budget select shows empty state when no budgets returned', async () => {
-    server.use(
-      http.get('/api/ynab/budgets', () => HttpResponse.json([]))
-    )
+    server.use(http.get('/api/ynab/budgets', () => HttpResponse.json([])))
     render(<ConfigView />)
     await waitFor(() =>
-      expect(screen.getByRole('option', { name: /no budgets found/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /no budgets found/i })).toBeInTheDocument(),
     )
     expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
   })
@@ -212,37 +188,29 @@ describe('ConfigView', () => {
           ynabBudgetId: null,
           fastmailApiToken: null,
           geminiKey: null,
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue(''))
     expect(screen.getByRole('button', { name: /test fastmail/i })).toBeDisabled()
   })
 
   it('disables Gemini test button when Gemini key is empty', async () => {
     render(<ConfigView />)
     // geminiKey is null from default server handler
-    await waitFor(() =>
-      expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/gemini key/i)).toHaveValue(''))
     expect(screen.getByRole('button', { name: /test gemini/i })).toBeDisabled()
   })
 
   it('shows success result after YNAB test connection succeeds', async () => {
     const user = userEvent.setup()
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
 
-    await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
     expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected')
   })
 
@@ -250,35 +218,27 @@ describe('ConfigView', () => {
     const user = userEvent.setup()
     server.use(
       http.post('/api/config/probe/ynab', () =>
-        HttpResponse.json({ success: false, message: '401 Unauthorized — check your credentials' })
-      )
+        HttpResponse.json({ success: false, message: '401 Unauthorized — check your credentials' }),
+      ),
     )
 
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
 
-    await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
     expect(screen.getByLabelText('YNAB probe result').textContent).toContain('401 Unauthorized')
   })
 
   it('clears probe results after save', async () => {
     const user = userEvent.setup()
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
     // First run a probe to get a result
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
-    await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
 
     // Save should clear it
     await user.click(screen.getByRole('button', { name: /^save$/i }))
@@ -316,13 +276,11 @@ describe('ConfigView', () => {
           startFromDate: '2024-06-01',
           installedAt: '2024-01-01',
           scheduleConfig: { type: 'DAILY', hour: 14, minute: 0 },
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/max orders per run/i)).toHaveValue(5)
-    )
+    await waitFor(() => expect(screen.getByLabelText(/max orders per run/i)).toHaveValue(5))
     expect(screen.getByLabelText(/start from date/i)).toHaveValue('2024-06-01')
   })
 
@@ -334,13 +292,11 @@ describe('ConfigView', () => {
           startFromDate: null,
           installedAt: null,
           scheduleConfig: { type: 'DAILY', hour: 9, minute: 30 },
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/frequency/i)).toHaveValue('DAILY')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('DAILY'))
     expect(screen.getByLabelText(/^hour$/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^minute$/i)).toBeInTheDocument()
   })
@@ -353,13 +309,11 @@ describe('ConfigView', () => {
           startFromDate: null,
           installedAt: null,
           scheduleConfig: { type: 'WEEKLY', hour: 8, minute: 0, dayOfWeek: 'MON' },
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/frequency/i)).toHaveValue('WEEKLY')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('WEEKLY'))
     expect(screen.getByLabelText(/day of week/i)).toBeInTheDocument()
   })
 
@@ -371,13 +325,11 @@ describe('ConfigView', () => {
           startFromDate: null,
           installedAt: null,
           scheduleConfig: { type: 'EVERY_N_SECONDS', secondInterval: 3 },
-        })
-      )
+        }),
+      ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS'))
     expect(screen.getByLabelText(/every n seconds/i)).toHaveValue(3)
     expect(screen.getByRole('alert')).toHaveTextContent(/not recommended for production/i)
   })
@@ -392,17 +344,15 @@ describe('ConfigView', () => {
           startFromDate: null,
           installedAt: null,
           scheduleConfig: { type: 'EVERY_N_SECONDS', secondInterval: 5 },
-        })
+        }),
       ),
       http.put('/api/config/processing', async ({ request }) => {
         capturedBody = await request.json()
         return new HttpResponse(null, { status: 204 })
-      })
+      }),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS')
-    )
+    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS'))
 
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
 
@@ -420,7 +370,7 @@ describe('ConfigView', () => {
       http.put('/api/config/processing', async ({ request }) => {
         capturedBody = await request.json()
         return new HttpResponse(null, { status: 204 })
-      })
+      }),
     )
     render(<ConfigView />)
     await waitFor(() => screen.getByLabelText(/max orders per run/i))
@@ -453,9 +403,11 @@ describe('ConfigView', () => {
     let resolveRun!: () => void
     server.use(
       http.post('/api/config/dry-run', async () => {
-        await new Promise<void>((res) => { resolveRun = res })
+        await new Promise<void>((res) => {
+          resolveRun = res
+        })
         return HttpResponse.json([])
-      })
+      }),
     )
     render(<ConfigView />)
     await waitFor(() => screen.getByRole('button', { name: /run dry run/i }))
@@ -480,19 +432,14 @@ describe('ConfigView', () => {
       errorMessage: null,
       runAt: '2024-01-20T00:00:00Z',
     }
-    server.use(
-      http.post('/api/config/dry-run', () => HttpResponse.json([mockResult]))
-    )
+    server.use(http.post('/api/config/dry-run', () => HttpResponse.json([mockResult])))
     render(<ConfigView />)
     await waitFor(() => screen.getByRole('button', { name: /run dry run/i }))
 
     await user.click(screen.getByRole('button', { name: /run dry run/i }))
 
-    await waitFor(() =>
-      expect(screen.getByText(/dry run results/i)).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText(/dry run results/i)).toBeInTheDocument())
     expect(screen.getByText('txn-abc')).toBeInTheDocument()
     expect(screen.getByText('Technology')).toBeInTheDocument()
   })
 })
-

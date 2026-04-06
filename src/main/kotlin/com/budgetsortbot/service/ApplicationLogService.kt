@@ -21,8 +21,9 @@ private val logger = KotlinLogging.logger {}
  * that logs are unavailable.
  */
 @Service
-class ApplicationLogService(@Qualifier("logsDataSource") logsDataSource: DataSource) {
-
+class ApplicationLogService(
+    @Qualifier("logsDataSource") logsDataSource: DataSource,
+) {
     private val jdbc = JdbcTemplate(logsDataSource)
 
     /**
@@ -31,18 +32,16 @@ class ApplicationLogService(@Qualifier("logsDataSource") logsDataSource: DataSou
      * Returns `null` if the query fails (e.g. table absent on first run).
      * Returns an empty list if the table exists but contains no entries.
      */
-    fun getRecentLogs(limit: Int): List<String>? {
-        return try {
-            jdbc.query(
-                "SELECT content FROM entries ORDER BY epoch_secs DESC, nanos DESC LIMIT ?",
-                { rs, _ -> rs.getBytes("content")?.let { String(it, Charsets.UTF_8).trim() } ?: "" },
-                limit
-            ).filter { it.isNotEmpty() }
+    fun getRecentLogs(limit: Int): List<String>? =
+        try {
+            jdbc
+                .query(
+                    "SELECT content FROM entries ORDER BY epoch_secs DESC, nanos DESC LIMIT ?",
+                    { rs, _ -> rs.getBytes("content")?.let { String(it, Charsets.UTF_8).trim() } ?: "" },
+                    limit,
+                ).filter { it.isNotEmpty() }
         } catch (e: Exception) {
             logger.debug(e) { "Could not retrieve application logs from Blacklite table" }
             null
         }
-    }
 }
-
-

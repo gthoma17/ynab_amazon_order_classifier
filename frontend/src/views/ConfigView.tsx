@@ -47,7 +47,13 @@ type BudgetsStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
 // ── Processing guardrails ──────────────────────────────────────────────────────
 
-type ScheduleType = 'EVERY_N_SECONDS' | 'EVERY_N_MINUTES' | 'HOURLY' | 'EVERY_N_HOURS' | 'DAILY' | 'WEEKLY'
+type ScheduleType =
+  | 'EVERY_N_SECONDS'
+  | 'EVERY_N_MINUTES'
+  | 'HOURLY'
+  | 'EVERY_N_HOURS'
+  | 'DAILY'
+  | 'WEEKLY'
 
 interface ScheduleConfig {
   type: ScheduleType
@@ -109,8 +115,12 @@ export default function ConfigView() {
   const [scheduleDow, setScheduleDow] = useState('MON')
   const [processingConfigSaved, setProcessingConfigSaved] = useState(false)
 
-  // Dry run
-  const [dryRunStartFrom, setDryRunStartFrom] = useState('')
+  // Dry run — default start date to 1 month ago, computed once at mount
+  const [dryRunStartFrom, setDryRunStartFrom] = useState(() => {
+    const oneMonthAgo = new Date()
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+    return oneMonthAgo.toISOString().split('T')[0]
+  })
   const [dryRunStatus, setDryRunStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [dryRunResults, setDryRunResults] = useState<DryRunResult[]>([])
   const [dryRunError, setDryRunError] = useState('')
@@ -147,28 +157,31 @@ export default function ConfigView() {
       }
     })
 
-    // Default dry-run start to 1 month ago
-    const oneMonthAgo = new Date()
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-    setDryRunStartFrom(oneMonthAgo.toISOString().split('T')[0])
-
     // Load any previous dry-run results
     apiGet<DryRunResult[]>('/api/config/dry-run/results')
-      .then((results) => { if (!cancelled) setDryRunResults(results) })
+      .then((results) => {
+        if (!cancelled) setDryRunResults(results)
+      })
       .catch(() => {})
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
+
+  // Derive displayed budget state from ynabToken at render time to avoid
+  // synchronous setState calls in effects (react-hooks/set-state-in-effect).
+  const displayBudgets = keys.ynabToken ? budgets : []
+  const displayBudgetsStatus: BudgetsStatus = keys.ynabToken ? budgetsStatus : 'idle'
+  const displayBudgetsError = keys.ynabToken ? budgetsError : ''
 
   useEffect(() => {
     if (!keys.ynabToken) {
-      setBudgets([])
-      setBudgetsStatus('idle')
-      setBudgetsError('')
       return
     }
 
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: signals loading state before async fetch
     setBudgetsStatus('loading')
     setBudgetsError('')
 
@@ -187,7 +200,9 @@ export default function ConfigView() {
         }
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [keys.ynabToken])
 
   function handleSave() {
@@ -218,23 +233,20 @@ export default function ConfigView() {
     })
   }
 
-  function handleTest(
-    endpoint: string,
-    setProbe: (state: ProbeState) => void
-  ) {
+  function handleTest(endpoint: string, setProbe: (state: ProbeState) => void) {
     setProbe({ status: 'testing', message: '' })
     apiPost<ProbeResult>(`/api/config/probe/${endpoint}`)
       .then((result) =>
         setProbe({
           status: result.success ? 'success' : 'error',
           message: result.message,
-        })
+        }),
       )
       .catch((err: unknown) =>
         setProbe({
           status: 'error',
           message: err instanceof Error ? err.message : 'Unexpected error',
-        })
+        }),
       )
   }
 
@@ -258,10 +270,7 @@ export default function ConfigView() {
     <div>
       <h1>API Keys</h1>
       <p>
-        <em>
-          "Test Connection" checks saved credentials. Save before testing new
-          values.
-        </em>
+        <em>"Test Connection" checks saved credentials. Save before testing new values.</em>
       </p>
 
       <section>
@@ -276,27 +285,29 @@ export default function ConfigView() {
         </div>
         <div>
           <label htmlFor="ynabBudgetId">Budget</label>
-          {budgetsStatus === 'loading' && (
+          {displayBudgetsStatus === 'loading' && (
             <span aria-label="budgets loading">Loading budgets…</span>
           )}
-          {budgetsStatus === 'error' && (
-            <span role="alert">{budgetsError}</span>
-          )}
+          {displayBudgetsStatus === 'error' && <span role="alert">{displayBudgetsError}</span>}
           <select
             id="ynabBudgetId"
             value={keys.ynabBudgetId}
             onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-            disabled={!keys.ynabToken || budgetsStatus !== 'loaded' || budgets.length === 0}
+            disabled={
+              !keys.ynabToken || displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0
+            }
           >
             {!keys.ynabToken ? (
               <option value="">Enter a YNAB token first</option>
-            ) : budgetsStatus === 'loaded' && budgets.length === 0 ? (
+            ) : displayBudgetsStatus === 'loaded' && displayBudgets.length === 0 ? (
               <option value="">No budgets found</option>
             ) : (
               <>
                 <option value="">Select a budget…</option>
-                {budgets.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
+                {displayBudgets.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
                 ))}
               </>
             )}
@@ -324,29 +335,20 @@ export default function ConfigView() {
             id="fastmailApiToken"
             type="password"
             value={keys.fastmailApiToken}
-            onChange={(e) =>
-              setKeys({ ...keys, fastmailApiToken: e.target.value })
-            }
+            onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
           />
         </div>
         <button
           onClick={() => handleTest('fastmail', setFastmailProbe)}
-          disabled={
-            !keys.fastmailApiToken ||
-            fastmailProbe.status === 'testing'
-          }
+          disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
         >
           {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
         </button>
         {fastmailProbe.status === 'success' && (
-          <span aria-label="FastMail probe result">
-            ✓ {fastmailProbe.message}
-          </span>
+          <span aria-label="FastMail probe result">✓ {fastmailProbe.message}</span>
         )}
         {fastmailProbe.status === 'error' && (
-          <span aria-label="FastMail probe result">
-            ✗ {fastmailProbe.message}
-          </span>
+          <span aria-label="FastMail probe result">✗ {fastmailProbe.message}</span>
         )}
       </section>
 
@@ -382,9 +384,7 @@ export default function ConfigView() {
         <h2>Processing Settings</h2>
 
         <div>
-          <label htmlFor="orderCap">
-            Max orders per run (0 = unlimited)
-          </label>
+          <label htmlFor="orderCap">Max orders per run (0 = unlimited)</label>
           <input
             id="orderCap"
             type="number"
@@ -430,13 +430,10 @@ export default function ConfigView() {
                 min={1}
                 max={59}
                 value={secondInterval}
-                onChange={(e) =>
-                  setSecondInterval(parseInt(e.target.value, 10) || 1)
-                }
+                onChange={(e) => setSecondInterval(parseInt(e.target.value, 10) || 1)}
               />
               <p role="alert">
-                ⚠ Not recommended for production — intended for development and
-                testing only.
+                ⚠ Not recommended for production — intended for development and testing only.
               </p>
             </div>
           )}
@@ -450,9 +447,7 @@ export default function ConfigView() {
                 min={1}
                 max={59}
                 value={minuteInterval}
-                onChange={(e) =>
-                  setMinuteInterval(parseInt(e.target.value, 10) || 1)
-                }
+                onChange={(e) => setMinuteInterval(parseInt(e.target.value, 10) || 1)}
               />
             </div>
           )}
@@ -466,9 +461,7 @@ export default function ConfigView() {
                 min={1}
                 max={23}
                 value={hourInterval}
-                onChange={(e) =>
-                  setHourInterval(parseInt(e.target.value, 10) || 1)
-                }
+                onChange={(e) => setHourInterval(parseInt(e.target.value, 10) || 1)}
               />
             </div>
           )}
@@ -480,9 +473,7 @@ export default function ConfigView() {
                 <select
                   id="scheduleHour"
                   value={scheduleHour}
-                  onChange={(e) =>
-                    setScheduleHour(parseInt(e.target.value, 10))
-                  }
+                  onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
                 >
                   {HOURS.map((h) => (
                     <option key={h} value={h}>
@@ -496,9 +487,7 @@ export default function ConfigView() {
                 <select
                   id="scheduleMinute"
                   value={scheduleMinute}
-                  onChange={(e) =>
-                    setScheduleMinute(parseInt(e.target.value, 10))
-                  }
+                  onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
                 >
                   {MINUTES.map((m) => (
                     <option key={m} value={m}>
@@ -528,9 +517,7 @@ export default function ConfigView() {
           )}
         </fieldset>
 
-        <button onClick={handleSaveProcessingConfig}>
-          Save processing settings
-        </button>
+        <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
         {processingConfigSaved && <p>Processing settings saved</p>}
       </section>
 
@@ -539,8 +526,8 @@ export default function ConfigView() {
         <h2>Dry Run</h2>
         <p>
           <em>
-            Preview what would be written to YNAB — no live changes are made.
-            Order cap applies. Gemini is called for classification.
+            Preview what would be written to YNAB — no live changes are made. Order cap applies.
+            Gemini is called for classification.
           </em>
         </p>
 
@@ -554,20 +541,17 @@ export default function ConfigView() {
           />
         </div>
 
-        <button
-          onClick={handleDryRun}
-          disabled={dryRunStatus === 'running'}
-        >
+        <button onClick={handleDryRun} disabled={dryRunStatus === 'running'}>
           {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
         </button>
 
-        {dryRunStatus === 'error' && (
-          <p role="alert">{dryRunError}</p>
-        )}
+        {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
 
         {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
           <div aria-live="polite">
-            <h3>Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})</h3>
+            <h3>
+              Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})
+            </h3>
             {dryRunResults.length === 0 ? (
               <p>No orders matched.</p>
             ) : (

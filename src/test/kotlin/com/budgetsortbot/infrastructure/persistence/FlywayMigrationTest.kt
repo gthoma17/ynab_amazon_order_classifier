@@ -1,7 +1,9 @@
 package com.budgetsortbot.infrastructure.persistence
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -10,7 +12,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class FlywayMigrationTest {
-
     @Autowired
     private lateinit var jdbcTemplate: JdbcTemplate
 
@@ -87,9 +88,11 @@ class FlywayMigrationTest {
 
     @Test
     fun `V2 migration ORDER_CAP default is 0`() {
-        val cap = jdbcTemplate.queryForObject(
-            "SELECT value FROM app_config WHERE key = 'ORDER_CAP'", String::class.java
-        )
+        val cap =
+            jdbcTemplate.queryForObject(
+                "SELECT value FROM app_config WHERE key = 'ORDER_CAP'",
+                String::class.java,
+            )
         assertEquals("0", cap)
     }
 
@@ -97,19 +100,19 @@ class FlywayMigrationTest {
     fun `amazon_orders email_message_id has a unique constraint`() {
         jdbcTemplate.execute(
             "INSERT INTO amazon_orders (email_message_id, order_date, total_amount, items_json, status, created_at) " +
-            "VALUES ('unique-msg-id', '2024-01-01T00:00:00Z', 9.99, '[\"Item\"]', 'PENDING', '2024-01-01T00:00:00Z')"
+                "VALUES ('unique-msg-id', '2024-01-01T00:00:00Z', 9.99, '[\"Item\"]', 'PENDING', '2024-01-01T00:00:00Z')",
         )
 
         assertThrows(Exception::class.java) {
             jdbcTemplate.execute(
                 "INSERT INTO amazon_orders (email_message_id, order_date, total_amount, items_json, status, created_at) " +
-                "VALUES ('unique-msg-id', '2024-01-02T00:00:00Z', 19.99, '[\"Other\"]', 'PENDING', '2024-01-02T00:00:00Z')"
+                    "VALUES ('unique-msg-id', '2024-01-02T00:00:00Z', 19.99, '[\"Other\"]', 'PENDING', '2024-01-02T00:00:00Z')",
             )
         }
     }
 
-    private fun getColumnNames(tableName: String): List<String> {
-        return jdbcTemplate.queryForList("PRAGMA table_info($tableName)")
+    private fun getColumnNames(tableName: String): List<String> =
+        jdbcTemplate
+            .queryForList("PRAGMA table_info($tableName)")
             .map { row -> (row["name"] as String).lowercase() }
-    }
 }

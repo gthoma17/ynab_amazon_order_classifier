@@ -16,17 +16,13 @@ data class SyncLog(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val source: SyncSource,
-
     @Column(nullable = false)
     val lastRun: Instant,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val status: SyncStatus,
-
-    val message: String? = null
+    val message: String? = null,
 )

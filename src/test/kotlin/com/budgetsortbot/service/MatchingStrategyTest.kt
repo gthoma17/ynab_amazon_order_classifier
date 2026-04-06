@@ -11,24 +11,30 @@ import java.time.Instant
 import java.time.LocalDate
 
 class MatchingStrategyTest {
-
-    private fun makeOrder(amount: String, orderDate: Instant = Instant.parse("2024-01-15T10:00:00Z")) = AmazonOrder(
+    private fun makeOrder(
+        amount: String,
+        orderDate: Instant = Instant.parse("2024-01-15T10:00:00Z"),
+    ) = AmazonOrder(
         id = 1L,
         emailMessageId = "msg@amazon.com",
         orderDate = orderDate,
         totalAmount = BigDecimal(amount),
         itemsJson = """["Item"]""",
         status = OrderStatus.PENDING,
-        createdAt = Instant.now()
+        createdAt = Instant.now(),
     )
 
-    private fun makeTxn(id: String, amount: Long, date: LocalDate) = YnabTransaction(
+    private fun makeTxn(
+        id: String,
+        amount: Long,
+        date: LocalDate,
+    ) = YnabTransaction(
         id = id,
         date = date,
         amount = amount,
         memo = null,
         categoryId = null,
-        payeeName = "Amazon.com"
+        payeeName = "Amazon.com",
     )
 
     @Test

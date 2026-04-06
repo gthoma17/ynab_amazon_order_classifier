@@ -24,7 +24,6 @@ import javax.sql.DataSource
  */
 @Configuration
 class PrimaryDataSourceConfig {
-
     @Value("\${spring.datasource.url}")
     private lateinit var url: String
 

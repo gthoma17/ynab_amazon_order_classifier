@@ -1,5 +1,13 @@
 package com.budgetsortbot.e2e
 
+import com.budgetsortbot.domain.CategoryRule
+import com.budgetsortbot.domain.OrderStatus
+import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
+import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
+import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
+import com.budgetsortbot.service.ConfigService
+import com.budgetsortbot.service.EmailIngestionService
+import com.budgetsortbot.service.YnabSyncService
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.containing
@@ -11,14 +19,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.budgetsortbot.domain.CategoryRule
-import com.budgetsortbot.domain.OrderStatus
-import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
-import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
-import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
-import com.budgetsortbot.service.ConfigService
-import com.budgetsortbot.service.EmailIngestionService
-import com.budgetsortbot.service.YnabSyncService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +31,6 @@ import java.time.Instant
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class FullWorkflowE2ETest {
-
     companion object {
         @JvmField
         val wireMock: WireMockServer =
@@ -90,8 +89,8 @@ class FullWorkflowE2ETest {
                 ynabCategoryId = "cat-electronics",
                 ynabCategoryName = "Electronics",
                 userDescription = "Electronics, gadgets, cables, phones, computers",
-                updatedAt = Instant.now()
-            )
+                updatedAt = Instant.now(),
+            ),
         )
     }
 
@@ -117,9 +116,9 @@ class FullWorkflowE2ETest {
                                     "urn:ietf:params:jmap:mail": "acct-e2e"
                                 }
                             }
-                            """.trimIndent()
-                        )
-                )
+                            """.trimIndent(),
+                        ),
+                ),
         )
 
         // Stub: FastMail Email/query
@@ -138,9 +137,9 @@ class FullWorkflowE2ETest {
                                 "total":1,
                                 "position":0
                             },"a"]]}
-                            """.trimIndent()
-                        )
-                )
+                            """.trimIndent(),
+                        ),
+                ),
         )
 
         // Stub: FastMail Email/get — body contains parseable Amazon order details
@@ -164,9 +163,9 @@ class FullWorkflowE2ETest {
                                 }],
                                 "notFound":[]
                             },"a"]]}
-                            """.trimIndent()
-                        )
-                )
+                            """.trimIndent(),
+                        ),
+                ),
         )
 
         // Stub: YNAB get transactions — returns a matching transaction
@@ -187,9 +186,9 @@ class FullWorkflowE2ETest {
                                 "category_id":null,
                                 "payee_name":"Amazon.com"
                             }],"server_knowledge":1000}}
-                            """.trimIndent()
-                        )
-                )
+                            """.trimIndent(),
+                        ),
+                ),
         )
 
         // Stub: Gemini classification — returns the electronics category ID
@@ -200,9 +199,9 @@ class FullWorkflowE2ETest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(
-                            """{"candidates":[{"content":{"parts":[{"text":"cat-electronics"}]}}]}"""
-                        )
-                )
+                            """{"candidates":[{"content":{"parts":[{"text":"cat-electronics"}]}}]}""",
+                        ),
+                ),
         )
 
         // Stub: YNAB update transaction
@@ -214,9 +213,9 @@ class FullWorkflowE2ETest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(
-                            """{"data":{"transaction":{"id":"txn-e2e-1","date":"2024-01-15","amount":-49990}}}"""
-                        )
-                )
+                            """{"data":{"transaction":{"id":"txn-e2e-1","date":"2024-01-15","amount":-49990}}}""",
+                        ),
+                ),
         )
 
         // --- Step 1: Run email ingestion ---

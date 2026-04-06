@@ -20,9 +20,7 @@ const syncLogs = [
   },
 ]
 
-const server = setupServer(
-  http.get('/api/logs', () => HttpResponse.json(syncLogs))
-)
+const server = setupServer(http.get('/api/logs', () => HttpResponse.json(syncLogs)))
 
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())

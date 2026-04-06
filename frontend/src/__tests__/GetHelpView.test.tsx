@@ -11,8 +11,8 @@ const server = setupServer(
       body: '## Problem Description\n\nSomething broke\n',
       sanitized: false,
       truncated: false,
-    })
-  )
+    }),
+  ),
 )
 
 beforeAll(() => server.listen())
@@ -35,15 +35,13 @@ describe('GetHelpView', () => {
 
   it('renders the sync log checkbox checked by default', () => {
     render(<GetHelpView />)
-    expect(
-      screen.getByRole('checkbox', { name: /include recent sync log entries/i })
-    ).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /include recent sync log entries/i })).toBeChecked()
   })
 
   it('renders the app logs checkbox unchecked by default', () => {
     render(<GetHelpView />)
     expect(
-      screen.getByRole('checkbox', { name: /include full application logs/i })
+      screen.getByRole('checkbox', { name: /include full application logs/i }),
     ).not.toBeChecked()
   })
 
@@ -99,7 +97,7 @@ describe('GetHelpView', () => {
       expect(openSpy).toHaveBeenCalledWith(
         expect.stringContaining('github.com/gthoma17/budget-sortbot/issues/new'),
         '_blank',
-        'noopener,noreferrer'
+        'noopener,noreferrer',
       )
     })
   })
@@ -118,7 +116,7 @@ describe('GetHelpView', () => {
       expect(openSpy).toHaveBeenCalledWith(
         expect.stringContaining('github.com/gthoma17/budget-sortbot/issues/new'),
         '_blank',
-        'noopener,noreferrer'
+        'noopener,noreferrer',
       )
     })
   })
@@ -129,10 +127,10 @@ describe('GetHelpView', () => {
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
     await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: /report body preview/i })).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /report body preview/i })).toBeInTheDocument(),
     )
     expect(screen.getByRole('textbox', { name: /report body preview/i })).toHaveValue(
-      '## Problem Description\n\nSomething broke\n'
+      '## Problem Description\n\nSomething broke\n',
     )
   })
 
@@ -145,7 +143,7 @@ describe('GetHelpView', () => {
       http.post('/api/help/report', async ({ request }) => {
         capturedBody = (await request.json()) as Record<string, unknown>
         return HttpResponse.json({ body: 'Report body', sanitized: false, truncated: false })
-      })
+      }),
     )
 
     render(<GetHelpView />)
@@ -164,8 +162,8 @@ describe('GetHelpView', () => {
     vi.spyOn(window, 'open').mockImplementation(() => null)
     server.use(
       http.post('/api/help/report', () =>
-        HttpResponse.json({ body: 'Report with [REDACTED]', sanitized: true, truncated: false })
-      )
+        HttpResponse.json({ body: 'Report with [REDACTED]', sanitized: true, truncated: false }),
+      ),
     )
 
     render(<GetHelpView />)
@@ -174,7 +172,9 @@ describe('GetHelpView', () => {
 
     await waitFor(() => {
       const statuses = screen.getAllByRole('status')
-      expect(statuses.some((el) => /sensitive values.*removed/i.test(el.textContent ?? ''))).toBe(true)
+      expect(statuses.some((el) => /sensitive values.*removed/i.test(el.textContent ?? ''))).toBe(
+        true,
+      )
     })
   })
 
@@ -183,8 +183,8 @@ describe('GetHelpView', () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
     server.use(
       http.post('/api/help/report', () =>
-        HttpResponse.json({ body: 'Truncated body content', sanitized: false, truncated: true })
-      )
+        HttpResponse.json({ body: 'Truncated body content', sanitized: false, truncated: true }),
+      ),
     )
 
     render(<GetHelpView />)
@@ -201,7 +201,7 @@ describe('GetHelpView', () => {
       expect(openSpy).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent('Log content truncated')),
         '_blank',
-        'noopener,noreferrer'
+        'noopener,noreferrer',
       )
     })
   })
@@ -224,4 +224,3 @@ describe('GetHelpView', () => {
     expect(screen.getByText(/you control final submission/i)).toBeInTheDocument()
   })
 })
-

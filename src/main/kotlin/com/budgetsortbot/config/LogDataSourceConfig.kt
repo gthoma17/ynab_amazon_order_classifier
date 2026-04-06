@@ -18,7 +18,6 @@ import javax.sql.DataSource
  */
 @Configuration
 class LogDataSourceConfig {
-
     @Value("\${app.blacklite.path:./data/logs.sqlite}")
     private lateinit var blacklitePath: String
 

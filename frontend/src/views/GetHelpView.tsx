@@ -77,7 +77,8 @@ export default function GetHelpView() {
       url = GITHUB_BASE_URL + encodedBody
       // Fallback: if somehow the URL is still too long, truncate the encoded body
       if (url.length > MAX_GITHUB_URL_LENGTH) {
-        const maxEncodedBodyLen = MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - encodedNote.length
+        const maxEncodedBodyLen =
+          MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - encodedNote.length
         const trimmed = encodedBody.slice(0, maxEncodedBodyLen).replace(/%[0-9A-Fa-f]{0,1}$/, '')
         url = GITHUB_BASE_URL + trimmed + encodedNote
       }
@@ -94,9 +95,9 @@ export default function GetHelpView() {
       <p>Something not working? Open a pre-filled GitHub issue and we&apos;ll help.</p>
 
       <div role="note" aria-label="Redaction notice">
-        <strong>Privacy:</strong> Sensitive values in the generated report are redacted when
-        you click &ldquo;Insert Logs.&rdquo; Use that step to preview the sanitized content
-        before submitting.
+        <strong>Privacy:</strong> Sensitive values in the generated report are redacted when you
+        click &ldquo;Insert Logs.&rdquo; Use that step to preview the sanitized content before
+        submitting.
       </div>
 
       <div>
@@ -117,9 +118,13 @@ export default function GetHelpView() {
           <input
             type="checkbox"
             checked={includeSyncLogs}
-            onChange={(e) => { setIncludeSyncLogs(e.target.checked); setLogsInserted(false); setReportBody(null) }}
-          />
-          {' '}Include recent sync log entries (recommended)
+            onChange={(e) => {
+              setIncludeSyncLogs(e.target.checked)
+              setLogsInserted(false)
+              setReportBody(null)
+            }}
+          />{' '}
+          Include recent sync log entries (recommended)
         </label>
       </div>
 
@@ -128,9 +133,13 @@ export default function GetHelpView() {
           <input
             type="checkbox"
             checked={includeAppLogs}
-            onChange={(e) => { setIncludeAppLogs(e.target.checked); setLogsInserted(false); setReportBody(null) }}
-          />
-          {' '}Include full application logs
+            onChange={(e) => {
+              setIncludeAppLogs(e.target.checked)
+              setLogsInserted(false)
+              setReportBody(null)
+            }}
+          />{' '}
+          Include full application logs
         </label>
       </div>
 
@@ -177,15 +186,18 @@ export default function GetHelpView() {
             has been redacted, then open the issue.
           </p>
           <button onClick={() => setShowWarning(false)}>Go Back</button>
-          <button onClick={() => { setShowWarning(false); openGithubIssue() }}>Open Anyway</button>
+          <button
+            onClick={() => {
+              setShowWarning(false)
+              openGithubIssue()
+            }}
+          >
+            Open Anyway
+          </button>
         </div>
       )}
 
-      <button
-        onClick={handleOpenIssue}
-        disabled={isOpenDisabled}
-        aria-disabled={isOpenDisabled}
-      >
+      <button onClick={handleOpenIssue} disabled={isOpenDisabled} aria-disabled={isOpenDisabled}>
         {loading ? 'Preparing…' : 'Open Issue'}
       </button>
 
@@ -198,4 +210,3 @@ export default function GetHelpView() {
     </div>
   )
 }
-

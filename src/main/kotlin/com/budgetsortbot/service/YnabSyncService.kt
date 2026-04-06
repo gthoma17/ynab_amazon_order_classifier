@@ -20,9 +20,8 @@ class YnabSyncService(
     private val amazonOrderRepository: AmazonOrderRepository,
     private val syncLogRepository: SyncLogRepository,
     private val configService: ConfigService,
-    private val classificationService: ClassificationService
+    private val classificationService: ClassificationService,
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
     }
@@ -35,13 +34,17 @@ class YnabSyncService(
             return
         }
 
-        val startFromDate = configService.getValue(ConfigService.START_FROM_DATE)
-            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val startFromDate =
+            configService
+                .getValue(ConfigService.START_FROM_DATE)
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
         val startFromInstant = startFromDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()
 
-        val orderCap = configService.getValue(ConfigService.ORDER_CAP)
-            ?.toIntOrNull()
-            ?.takeIf { it > 0 }
+        val orderCap =
+            configService
+                .getValue(ConfigService.ORDER_CAP)
+                ?.toIntOrNull()
+                ?.takeIf { it > 0 }
 
         var status = SyncStatus.SUCCESS
         var message: String? = null
@@ -62,11 +65,12 @@ class YnabSyncService(
             log.info { "YNAB sync: processing ${pendingOrders.size} pending order(s)" }
 
             if (pendingOrders.isNotEmpty()) {
-                val sinceDate = pendingOrders
-                    .minOf { it.orderDate }
-                    .atZone(ZoneOffset.UTC)
-                    .toLocalDate()
-                    .minusDays(1)
+                val sinceDate =
+                    pendingOrders
+                        .minOf { it.orderDate }
+                        .atZone(ZoneOffset.UTC)
+                        .toLocalDate()
+                        .minusDays(1)
 
                 val transactions = ynabClient.getTransactions(budgetId, token, sinceDate)
                 log.debug { "Fetched ${transactions.size} YNAB transaction(s) since $sinceDate" }
@@ -82,7 +86,7 @@ class YnabSyncService(
         }
 
         syncLogRepository.save(
-            SyncLog(source = SyncSource.YNAB, lastRun = Instant.now(), status = status, message = message)
+            SyncLog(source = SyncSource.YNAB, lastRun = Instant.now(), status = status, message = message),
         )
     }
 
@@ -90,7 +94,7 @@ class YnabSyncService(
         order: AmazonOrder,
         transactions: List<com.budgetsortbot.infrastructure.ynab.YnabTransaction>,
         budgetId: String,
-        token: String
+        token: String,
     ) {
         val matched = MatchingStrategy.match(order, transactions)
         if (matched == null) {
@@ -98,9 +102,10 @@ class YnabSyncService(
             return
         }
 
-        val matchedOrder = amazonOrderRepository.save(
-            order.copy(status = OrderStatus.MATCHED, ynabTransactionId = matched.id)
-        )
+        val matchedOrder =
+            amazonOrderRepository.save(
+                order.copy(status = OrderStatus.MATCHED, ynabTransactionId = matched.id),
+            )
         log.info { "Matched order id=${order.id} to YNAB transaction id=${matched.id}" }
 
         try {
@@ -116,8 +121,5 @@ class YnabSyncService(
         }
     }
 
-    private fun buildMemo(order: AmazonOrder): String {
-        return "Amazon order (id=${order.id})"
-    }
+    private fun buildMemo(order: AmazonOrder): String = "Amazon order (id=${order.id})"
 }
-

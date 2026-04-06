@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate
 import java.time.Instant
 
 class FastMailJmapClientTest {
-
     private lateinit var mockServer: MockRestServiceServer
     private lateinit var fastMailClient: FastMailJmapClient
 
@@ -32,17 +31,21 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders returns empty list when Email query returns no ids`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer test-token"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
-        mockServer.expect(requestTo(JMAP_API_URL))
+        mockServer
+            .expect(requestTo(JMAP_API_URL))
             .andExpect(method(HttpMethod.POST))
-            .andRespond(withSuccess(
-                """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
-                MediaType.APPLICATION_JSON
-            ))
+            .andRespond(
+                withSuccess(
+                    """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
+                    MediaType.APPLICATION_JSON,
+                ),
+            )
 
         val result = fastMailClient.searchOrders("test-token", Instant.parse("2024-01-01T00:00:00Z"))
 
@@ -52,18 +55,22 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders sends correct Authorization header on all requests`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer my-token"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
-        mockServer.expect(requestTo(JMAP_API_URL))
+        mockServer
+            .expect(requestTo(JMAP_API_URL))
             .andExpect(method(HttpMethod.POST))
             .andExpect(header("Authorization", "Bearer my-token"))
-            .andRespond(withSuccess(
-                """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
-                MediaType.APPLICATION_JSON
-            ))
+            .andRespond(
+                withSuccess(
+                    """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
+                    MediaType.APPLICATION_JSON,
+                ),
+            )
 
         fastMailClient.searchOrders("my-token", Instant.parse("2024-01-01T00:00:00Z"))
 
@@ -72,18 +79,23 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders returns parsed EmailOrders when emails are found`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
-        mockServer.expect(requestTo(JMAP_API_URL))
+        mockServer
+            .expect(requestTo(JMAP_API_URL))
             .andExpect(method(HttpMethod.POST))
-            .andRespond(withSuccess(
-                """{"methodResponses":[["Email/query",{"accountId":"u1","ids":["email-1","email-2"],"total":2,"position":0},"a"]]}""",
-                MediaType.APPLICATION_JSON
-            ))
+            .andRespond(
+                withSuccess(
+                    """{"methodResponses":[["Email/query",{"accountId":"u1","ids":["email-1","email-2"],"total":2,"position":0},"a"]]}""",
+                    MediaType.APPLICATION_JSON,
+                ),
+            )
 
-        mockServer.expect(requestTo(JMAP_API_URL))
+        mockServer
+            .expect(requestTo(JMAP_API_URL))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(EMAIL_GET_RESPONSE_JSON, MediaType.APPLICATION_JSON))
 
@@ -99,10 +111,12 @@ class FastMailJmapClientTest {
 
     @Test
     fun `searchOrders uses Amazon filter in Email query`() {
-        mockServer.expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("${FastMailJmapClient.FASTMAIL_BASE_URL}/.well-known/jmap"))
             .andRespond(withSuccess(SESSION_JSON, MediaType.APPLICATION_JSON))
 
-        mockServer.expect(requestTo(JMAP_API_URL))
+        mockServer
+            .expect(requestTo(JMAP_API_URL))
             .andExpect(method(HttpMethod.POST))
             .andExpect { request ->
                 val body = (request as MockClientHttpRequest).bodyAsString
@@ -112,11 +126,12 @@ class FastMailJmapClientTest {
                 assert(body.contains(FastMailJmapClient.AMAZON_SUBJECT_FILTER)) {
                     "Expected body to contain '${FastMailJmapClient.AMAZON_SUBJECT_FILTER}' but was: $body"
                 }
-            }
-            .andRespond(withSuccess(
-                """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
-                MediaType.APPLICATION_JSON
-            ))
+            }.andRespond(
+                withSuccess(
+                    """{"methodResponses":[["Email/query",{"accountId":"u1","ids":[],"total":0,"position":0},"a"]]}""",
+                    MediaType.APPLICATION_JSON,
+                ),
+            )
 
         fastMailClient.searchOrders("token", Instant.parse("2024-01-01T00:00:00Z"))
 
@@ -126,7 +141,8 @@ class FastMailJmapClientTest {
     companion object {
         const val JMAP_API_URL = "https://api.fastmail.com/jmap/api/"
 
-        val SESSION_JSON = """
+        val SESSION_JSON =
+            """
             {
                 "username": "user@fastmail.com",
                 "apiUrl": "$JMAP_API_URL",
@@ -135,9 +151,10 @@ class FastMailJmapClientTest {
                     "urn:ietf:params:jmap:mail": "u1"
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
-        val EMAIL_GET_RESPONSE_JSON = """
+        val EMAIL_GET_RESPONSE_JSON =
+            """
             {"methodResponses":[["Email/get",{
                 "accountId":"u1",
                 "list":[
@@ -158,6 +175,6 @@ class FastMailJmapClientTest {
                 ],
                 "notFound":[]
             },"a"]]}
-        """.trimIndent()
+            """.trimIndent()
     }
 }

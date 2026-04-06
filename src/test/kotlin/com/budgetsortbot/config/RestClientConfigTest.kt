@@ -14,7 +14,6 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 
 class RestClientConfigTest {
-
     private val config = RestClientConfig()
     private lateinit var mockServer: MockRestServiceServer
     private lateinit var restTemplate: RestTemplate
@@ -33,7 +32,8 @@ class RestClientConfigTest {
 
     @Test
     fun `restClientCustomizer applies User-Agent header to all requests`() {
-        mockServer.expect(requestTo("https://example.com/test"))
+        mockServer
+            .expect(requestTo("https://example.com/test"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("User-Agent", "YNAB-Amazon-Automator/1.0"))
             .andRespond(withSuccess("ok", MediaType.TEXT_PLAIN))
@@ -42,7 +42,11 @@ class RestClientConfigTest {
         config.restClientCustomizer().customize(builder)
         val client = builder.build()
 
-        client.get().uri("https://example.com/test").retrieve().toBodilessEntity()
+        client
+            .get()
+            .uri("https://example.com/test")
+            .retrieve()
+            .toBodilessEntity()
 
         mockServer.verify()
     }

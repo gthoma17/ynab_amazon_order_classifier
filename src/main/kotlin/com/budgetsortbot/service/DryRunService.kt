@@ -1,6 +1,5 @@
 package com.budgetsortbot.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.domain.DryRunResult
 import com.budgetsortbot.domain.OrderStatus
@@ -13,13 +12,12 @@ import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
 import com.budgetsortbot.infrastructure.persistence.DryRunResultRepository
 import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
 import com.budgetsortbot.infrastructure.ynab.YnabClient
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 
 /**
  * Executes the full sync pipeline (email ingest → YNAB match → Gemini classify)
@@ -38,15 +36,15 @@ class DryRunService(
     private val configService: ConfigService,
     private val classificationService: ClassificationService,
     private val ynabClient: YnabClient,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
-        private val AMOUNT_PATTERN = Regex(
-            """(?:Order Total|Grand Total|Total|Subtotal)\s*:?\s*\$?\s*([\d,]+(?:\.\d+)?)""",
-            RegexOption.IGNORE_CASE
-        )
+        private val AMOUNT_PATTERN =
+            Regex(
+                """(?:Order Total|Grand Total|Total|Subtotal)\s*:?\s*\$?\s*([\d,]+(?:\.\d+)?)""",
+                RegexOption.IGNORE_CASE,
+            )
         private val ITEM_PATTERN = Regex("""^(?:\d+\s+of\s*:\s*|\*\s+)(.+)$""", RegexOption.MULTILINE)
     }
 
@@ -71,15 +69,17 @@ class DryRunService(
                     source = SyncSource.DRY_RUN,
                     lastRun = runAt,
                     status = SyncStatus.FAIL,
-                    message = "YNAB credentials not configured"
-                )
+                    message = "YNAB credentials not configured",
+                ),
             )
             return
         }
 
-        val orderCap = configService.getValue(ConfigService.ORDER_CAP)
-            ?.toIntOrNull()
-            ?.takeIf { it > 0 }
+        val orderCap =
+            configService
+                .getValue(ConfigService.ORDER_CAP)
+                ?.toIntOrNull()
+                ?.takeIf { it > 0 }
 
         // Replace any previous dry-run results so the UI never shows stale data.
         dryRunResultRepository.deleteAll()
@@ -98,56 +98,61 @@ class DryRunService(
                         source = SyncSource.DRY_RUN,
                         lastRun = runAt,
                         status = SyncStatus.SUCCESS,
-                        message = "Dry run: 0 orders processed"
-                    )
+                        message = "Dry run: 0 orders processed",
+                    ),
                 )
                 return
             }
 
             // Step 2: fetch YNAB transactions for matching (read-only)
-            val sinceDate = orders.minOf { it.orderDate }
-                .atZone(ZoneOffset.UTC).toLocalDate().minusDays(1)
+            val sinceDate =
+                orders
+                    .minOf { it.orderDate }
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                    .minusDays(1)
             val transactions = ynabClient.getTransactions(budgetId, token, sinceDate)
             log.debug { "Dry run: fetched ${transactions.size} YNAB transaction(s) since $sinceDate" }
 
             // Step 3: match + classify (no writes to YNAB or amazon_orders)
-            val results = orders.map { order ->
-                val matched = MatchingStrategy.match(order, transactions)
-                if (matched == null) {
-                    log.debug { "Dry run: no YNAB match for order id=${order.id}, amount=${order.totalAmount}" }
-                    DryRunResult(
-                        orderId = order.id,
-                        orderDate = order.orderDate,
-                        totalAmount = order.totalAmount,
-                        itemsJson = order.itemsJson,
-                        ynabTransactionId = null,
-                        proposedCategoryId = null,
-                        proposedCategoryName = null,
-                        runAt = runAt
-                    )
-                } else {
-                    var categoryId: String? = null
-                    var errorMsg: String? = null
-                    try {
-                        categoryId = classificationService.classify(order)
-                    } catch (e: Exception) {
-                        log.warn(e) { "Dry run: Gemini classification failed for order id=${order.id}" }
-                        errorMsg = e.message
+            val results =
+                orders.map { order ->
+                    val matched = MatchingStrategy.match(order, transactions)
+                    if (matched == null) {
+                        log.debug { "Dry run: no YNAB match for order id=${order.id}, amount=${order.totalAmount}" }
+                        DryRunResult(
+                            orderId = order.id,
+                            orderDate = order.orderDate,
+                            totalAmount = order.totalAmount,
+                            itemsJson = order.itemsJson,
+                            ynabTransactionId = null,
+                            proposedCategoryId = null,
+                            proposedCategoryName = null,
+                            runAt = runAt,
+                        )
+                    } else {
+                        var categoryId: String? = null
+                        var errorMsg: String? = null
+                        try {
+                            categoryId = classificationService.classify(order)
+                        } catch (e: Exception) {
+                            log.warn(e) { "Dry run: Gemini classification failed for order id=${order.id}" }
+                            errorMsg = e.message
+                        }
+                        val categoryName = resolveCategoryName(categoryId)
+                        DryRunResult(
+                            orderId = order.id,
+                            orderDate = order.orderDate,
+                            totalAmount = order.totalAmount,
+                            itemsJson = order.itemsJson,
+                            ynabTransactionId = matched.id,
+                            proposedCategoryId = categoryId,
+                            proposedCategoryName = categoryName,
+                            errorMessage = errorMsg,
+                            runAt = runAt,
+                        )
                     }
-                    val categoryName = resolveCategoryName(categoryId)
-                    DryRunResult(
-                        orderId = order.id,
-                        orderDate = order.orderDate,
-                        totalAmount = order.totalAmount,
-                        itemsJson = order.itemsJson,
-                        ynabTransactionId = matched.id,
-                        proposedCategoryId = categoryId,
-                        proposedCategoryName = categoryName,
-                        errorMessage = errorMsg,
-                        runAt = runAt
-                    )
                 }
-            }
 
             dryRunResultRepository.saveAll(results)
             log.info { "Dry run complete: ${results.size} order(s) processed" }
@@ -159,7 +164,7 @@ class DryRunService(
         }
 
         syncLogRepository.save(
-            SyncLog(source = SyncSource.DRY_RUN, lastRun = runAt, status = overallStatus, message = overallMessage)
+            SyncLog(source = SyncSource.DRY_RUN, lastRun = runAt, status = overallStatus, message = overallMessage),
         )
     }
 
@@ -170,10 +175,15 @@ class DryRunService(
      *
      * Returns a list capped to [orderCap] if set.
      */
-    private fun gatherOrders(sinceInstant: Instant, orderCap: Int?): List<AmazonOrder> {
+    private fun gatherOrders(
+        sinceInstant: Instant,
+        orderCap: Int?,
+    ): List<AmazonOrder> {
         // Start with existing PENDING orders filtered by date
-        val existingOrders = amazonOrderRepository.findByStatus(OrderStatus.PENDING)
-            .filter { !it.orderDate.isBefore(sinceInstant) }
+        val existingOrders =
+            amazonOrderRepository
+                .findByStatus(OrderStatus.PENDING)
+                .filter { !it.orderDate.isBefore(sinceInstant) }
         val existingIds = existingOrders.map { it.emailMessageId }.toSet()
 
         // Also fetch and parse fresh emails (transient — not persisted during dry run)
@@ -183,7 +193,10 @@ class DryRunService(
         return if (orderCap != null) combined.take(orderCap) else combined
     }
 
-    private fun fetchFreshEmailOrders(sinceInstant: Instant, alreadyKnownIds: Set<String>): List<AmazonOrder> {
+    private fun fetchFreshEmailOrders(
+        sinceInstant: Instant,
+        alreadyKnownIds: Set<String>,
+    ): List<AmazonOrder> {
         val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
         if (token == null) return emptyList()
 
@@ -203,11 +216,13 @@ class DryRunService(
         val amountStr = amountMatch.groupValues[1].replace(",", "")
         val totalAmount = amountStr.toBigDecimalOrNull() ?: return null
 
-        val items = ITEM_PATTERN.findAll(email.bodyText)
-            .map { it.groupValues[1].trim() }
-            .filter { it.isNotBlank() }
-            .toList()
-            .ifEmpty { listOf("Amazon Order") }
+        val items =
+            ITEM_PATTERN
+                .findAll(email.bodyText)
+                .map { it.groupValues[1].trim() }
+                .filter { it.isNotBlank() }
+                .toList()
+                .ifEmpty { listOf("Amazon Order") }
 
         return AmazonOrder(
             id = null,
@@ -216,13 +231,14 @@ class DryRunService(
             totalAmount = totalAmount,
             itemsJson = objectMapper.writeValueAsString(items),
             status = OrderStatus.PENDING,
-            createdAt = Instant.now()
+            createdAt = Instant.now(),
         )
     }
 
     private fun resolveCategoryName(categoryId: String?): String? {
         if (categoryId == null) return null
-        return configService.getAllCategoryRules()
+        return configService
+            .getAllCategoryRules()
             .find { it.ynabCategoryId == categoryId }
             ?.ynabCategoryName
     }

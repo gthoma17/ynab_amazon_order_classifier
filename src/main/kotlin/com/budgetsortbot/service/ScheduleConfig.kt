@@ -4,13 +4,14 @@ enum class ScheduleType {
     HOURLY,
     EVERY_N_HOURS,
     EVERY_N_MINUTES,
+
     /**
      * Fires every N seconds. Intended for development and testing only —
      * not recommended for production deployments.
      */
     EVERY_N_SECONDS,
     DAILY,
-    WEEKLY
+    WEEKLY,
 }
 
 /**
@@ -35,7 +36,7 @@ data class ScheduleConfig(
      * Day-of-week. Used when type = WEEKLY.
      * Accepts Spring cron day names: MON, TUE, WED, THU, FRI, SAT, SUN.
      */
-    val dayOfWeek: String? = null
+    val dayOfWeek: String? = null,
 ) {
     /**
      * Converts this configuration to a 6-field Spring cron expression.

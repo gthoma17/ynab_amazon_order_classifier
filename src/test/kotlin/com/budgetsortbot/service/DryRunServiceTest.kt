@@ -1,6 +1,5 @@
 package com.budgetsortbot.service
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.domain.CategoryRule
 import com.budgetsortbot.domain.DryRunResult
@@ -8,22 +7,20 @@ import com.budgetsortbot.domain.OrderStatus
 import com.budgetsortbot.domain.SyncLog
 import com.budgetsortbot.domain.SyncSource
 import com.budgetsortbot.domain.SyncStatus
-import com.budgetsortbot.infrastructure.email.EmailOrder
 import com.budgetsortbot.infrastructure.email.EmailProviderClient
 import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
 import com.budgetsortbot.infrastructure.persistence.DryRunResultRepository
 import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
 import com.budgetsortbot.infrastructure.ynab.YnabClient
 import com.budgetsortbot.infrastructure.ynab.YnabTransaction
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -31,7 +28,6 @@ import java.time.Instant
 import java.time.LocalDate
 
 class DryRunServiceTest {
-
     private val emailProviderClient = mockk<EmailProviderClient>()
     private val amazonOrderRepository = mockk<AmazonOrderRepository>()
     private val dryRunResultRepository = mockk<DryRunResultRepository>()
@@ -45,10 +41,17 @@ class DryRunServiceTest {
 
     @BeforeEach
     fun setup() {
-        dryRunService = DryRunService(
-            emailProviderClient, amazonOrderRepository, dryRunResultRepository,
-            syncLogRepository, configService, classificationService, ynabClient, objectMapper
-        )
+        dryRunService =
+            DryRunService(
+                emailProviderClient,
+                amazonOrderRepository,
+                dryRunResultRepository,
+                syncLogRepository,
+                configService,
+                classificationService,
+                ynabClient,
+                objectMapper,
+            )
         // Common defaults
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
@@ -60,18 +63,25 @@ class DryRunServiceTest {
         every { syncLogRepository.save(any()) } answers { firstArg() }
     }
 
-    private fun makeOrder(id: Long, amount: String, daysAgo: Long = 5) = AmazonOrder(
+    private fun makeOrder(
+        id: Long,
+        amount: String,
+        daysAgo: Long = 5,
+    ) = AmazonOrder(
         id = id,
         emailMessageId = "msg-$id@amazon.com",
         orderDate = Instant.now().minusSeconds(daysAgo * 86400),
         totalAmount = BigDecimal(amount),
         itemsJson = """["Keyboard"]""",
         status = OrderStatus.PENDING,
-        createdAt = Instant.now()
+        createdAt = Instant.now(),
     )
 
-    private fun makeTxn(id: String, amount: Long, date: LocalDate) =
-        YnabTransaction(id = id, date = date, amount = amount, memo = null, categoryId = null, payeeName = "Amazon.com")
+    private fun makeTxn(
+        id: String,
+        amount: Long,
+        date: LocalDate,
+    ) = YnabTransaction(id = id, date = date, amount = amount, memo = null, categoryId = null, payeeName = "Amazon.com")
 
     @Test
     fun `runDryRun logs FAIL and returns when YNAB credentials not configured`() {
@@ -198,10 +208,14 @@ class DryRunServiceTest {
     fun `runDryRun uses category name from rules when classifying`() {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-1", -49990L, LocalDate.now().minusDays(5))
-        val rule = CategoryRule(
-            id = 1L, ynabCategoryId = "cat-tech", ynabCategoryName = "Technology",
-            userDescription = "Electronics", updatedAt = Instant.now()
-        )
+        val rule =
+            CategoryRule(
+                id = 1L,
+                ynabCategoryId = "cat-tech",
+                ynabCategoryName = "Technology",
+                userDescription = "Electronics",
+                updatedAt = Instant.now(),
+            )
         every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
         every { ynabClient.getTransactions(any(), any(), any()) } returns listOf(txn)
         every { classificationService.classify(order) } returns "cat-tech"
@@ -228,13 +242,17 @@ class DryRunServiceTest {
 
     @Test
     fun `getResults delegates to repository`() {
-        val expected = listOf(
-            DryRunResult(
-                id = 1L, orderId = 10L,
-                orderDate = Instant.now(), totalAmount = BigDecimal("49.99"),
-                itemsJson = """["Keyboard"]""", runAt = Instant.now()
+        val expected =
+            listOf(
+                DryRunResult(
+                    id = 1L,
+                    orderId = 10L,
+                    orderDate = Instant.now(),
+                    totalAmount = BigDecimal("49.99"),
+                    itemsJson = """["Keyboard"]""",
+                    runAt = Instant.now(),
+                ),
             )
-        )
         every { dryRunResultRepository.findAllByOrderByRunAtDesc() } returns expected
 
         val result = dryRunService.getResults()

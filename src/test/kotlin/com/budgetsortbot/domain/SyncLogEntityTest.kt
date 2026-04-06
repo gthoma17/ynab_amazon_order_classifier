@@ -1,28 +1,30 @@
 package com.budgetsortbot.domain
 
+import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
 import java.time.Instant
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class SyncLogEntityTest {
-
     @Autowired
     private lateinit var syncLogRepository: SyncLogRepository
 
     @Test
     fun `can save and retrieve a SyncLog`() {
-        val log = SyncLog(
-            source = SyncSource.EMAIL,
-            lastRun = Instant.now(),
-            status = SyncStatus.SUCCESS,
-            message = null
-        )
+        val log =
+            SyncLog(
+                source = SyncSource.EMAIL,
+                lastRun = Instant.now(),
+                status = SyncStatus.SUCCESS,
+                message = null,
+            )
 
         val saved = syncLogRepository.save(log)
 
@@ -34,12 +36,13 @@ class SyncLogEntityTest {
 
     @Test
     fun `can save a failed SyncLog with an error message`() {
-        val log = SyncLog(
-            source = SyncSource.YNAB,
-            lastRun = Instant.now(),
-            status = SyncStatus.FAIL,
-            message = "Connection timeout while fetching YNAB transactions"
-        )
+        val log =
+            SyncLog(
+                source = SyncSource.YNAB,
+                lastRun = Instant.now(),
+                status = SyncStatus.FAIL,
+                message = "Connection timeout while fetching YNAB transactions",
+            )
 
         val saved = syncLogRepository.save(log)
 
