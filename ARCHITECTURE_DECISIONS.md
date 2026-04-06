@@ -26,7 +26,7 @@ This document is a quick-reference summary of the Architecture Decision Records 
 | 7 | FastMail JMAP for email | Email ingestion via JMAP (`Email/query` + `Email/get`). IMAP avoided due to connection-state complexity. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#7-email-provider--fastmail-via-jmap) |
 | 8 | Google Gemini for AI classification | `gemini-2.5-flash-lite` model. Zero-shot prompting. Only called after a YNAB match is found. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#8-ai-classification--google-gemini-gemini-25-flash-lite) |
 | 9 | Single-tenant v1, schema ready for v2 | No `tenant_id` in v1 but tables are designed to accept it. No global static state. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#9-tenancy--single-tenant-v1-schema-structured-for-v2) |
-| 10 | API keys stored plaintext in DB | Keys in `app_config` table, no encryption at rest in v1. UI assumed to be on a private network. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#10-security--api-keys-in-db-plaintext-ui-not-internet-exposed) |
+| 10 | API keys stored plaintext in DB | Keys in `app_config` table, no encryption at rest in v1. The entire security posture assumes deployment behind a home router/DMZ; the management console is accessible only to the operator and is never internet-exposed. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#10-security--api-keys-in-db-plaintext-ui-not-internet-exposed) |
 | 11 | Multi-stage Docker, multi-arch | Three-stage Dockerfile (Node → Gradle → JRE). Published for `amd64`, `arm64`, `arm/v7`. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#11-build-and-deployment--multi-stage-docker-multi-arch) |
 
 ---

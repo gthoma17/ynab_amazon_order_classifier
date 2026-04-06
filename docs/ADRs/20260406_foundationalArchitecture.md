@@ -101,9 +101,11 @@ This ADR captures those foundational decisions so future contributors (human or 
 
 ### 10. Security — API Keys in DB (Plaintext), UI Not Internet-Exposed
 
-**Decision:** YNAB, FastMail, and Gemini API keys are stored as plaintext in the `app_config` SQLite table. The UI is assumed to be on a private network and not exposed to the internet.
+**Decision:** YNAB, FastMail, and Gemini API keys are stored as plaintext in the `app_config` SQLite table. The management console (web UI) is assumed to be deployed behind a home router/DMZ and accessible only to the operator; it is never exposed directly to the internet.
 
-**Rationale:** Encryption-at-rest was deferred to a future version. The Pi 3 deployment target is typically on a home LAN behind a router, so the threat model for v1 does not require key encryption. This is explicitly noted as a v2 concern in PLAN.md.
+**Rationale:** The entire security posture of v1 is founded on network-level isolation: the device running Budget Sortbot sits inside a home LAN, behind a NAT router, reachable only by the operator on that private network. Within that threat model, plaintext key storage in a local SQLite file is acceptable — an attacker with local filesystem access already has full system compromise. Encryption-at-rest was explicitly deferred to a future version in PLAN.md. This assumption must not be relaxed (e.g., by binding to a public interface or adding a public reverse proxy) without a corresponding security review and, at minimum, adding authentication and key encryption.
+
+**Consequence:** Any change that makes the management console internet-accessible (public DNS, port-forwarding without authentication, reverse proxy to a public IP) breaks this assumption and must be treated as a security-scope change requiring its own ADR.
 
 ---
 
@@ -121,6 +123,7 @@ This ADR captures those foundational decisions so future contributors (human or 
 - Any story that requires more than ~400 MB active heap, introduces a reactive/async runtime, or requires a separate persistent process must be reviewed against the Pi 3 constraint.
 - The layered architecture and interface-backed infrastructure layer keep the codebase testable without a running database or live external APIs (WireMock + in-memory SQLite covers all integration tests).
 - Future multi-tenancy is possible without a full rewrite, but requires a schema migration and auth middleware additions.
+- **The security posture is predicated on private-network deployment.** The management console must never be internet-exposed without first adding authentication and key encryption. Any story that changes network exposure must include a security review.
 
 ---
 
