@@ -11,6 +11,8 @@ Budget Sortbot automatically classifies Amazon orders into YNAB budget categorie
 
 Everything runs inside a single Docker container. Configuration and state live in a SQLite database at `/app/data/database.sqlite`. Application logs are written to a separate Blacklite SQLite file at `/app/data/logs.sqlite`.
 
+**Non-functional requirement — memory:** The JVM heap is capped at **512 MB** (`-Xmx512m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m`). This is a critical NFR that enables the app to run on resource-constrained hardware such as Raspberry Pi 3 or spare NAS systems; it is a key adoption driver. Do not introduce features or dependencies that require more heap than this limit allows.
+
 ---
 
 ## Repository Layout
@@ -96,7 +98,7 @@ npm test                 # Vitest unit tests (single run)
 npm run test:watch       # Vitest watch mode
 npm run build            # TypeScript check + Vite build → ../src/main/resources/static/
 npm run lint             # ESLint
-npm run test:e2e         # Playwright E2E (requires runE2EServer to be running on port 8080)
+npm run test:e2e         # Playwright E2E (starts Vite dev server and ./gradlew runE2EServer automatically via webServer config; run runE2EServer manually only when debugging outside Playwright)
 ```
 
 ### Docker (production build)
@@ -129,7 +131,8 @@ docker run -d -p 8080:8080 -v /opt/budget-sortbot/data:/app/data budget-sortbot
 
 - Playwright tests in `frontend/e2e/` drive Chromium against `http://localhost:5173` (Vite dev server).
 - The Vite dev server proxies `/api` to `localhost:8080`.
-- Start the backend first with `./gradlew runE2EServer`, then run `npm run test:e2e` from `frontend/`.
+- Run `npm run test:e2e` from `frontend/`; Playwright starts both the Vite dev server and `./gradlew runE2EServer` automatically via its `webServer` configuration (`reuseExistingServer: true` outside CI).
+- Start `./gradlew runE2EServer` manually only when you need to debug the E2E backend outside the normal Playwright test flow.
 - `E2EServer.kt` stubs FastMail JMAP, YNAB API, and Gemini with WireMock.
 
 ---
@@ -138,9 +141,9 @@ docker run -d -p 8080:8080 -v /opt/budget-sortbot/data:/app/data budget-sortbot
 
 ### Order lifecycle (`OrderStatus`)
 
-`PENDING` → `MATCHED` → `COMPLETED`
+Happy path: `PENDING` → `MATCHED` → `COMPLETED`
 
-An order is saved as `PENDING` during email ingestion. `YnabSyncService` sets it to `MATCHED` once a YNAB transaction is found, then `COMPLETED` after the category update is written to YNAB.
+An order is saved as `PENDING` during email ingestion. `YnabSyncService` sets it to `MATCHED` once a YNAB transaction is found, then `COMPLETED` after the category update is written to YNAB. The enum also declares `DISCARDED`, but this value is not referenced anywhere in the current codebase — it is reserved for future use.
 
 ### Sync pipeline
 
@@ -166,7 +169,12 @@ All runtime config lives in the `app_config` table (key/value). Keys are defined
 
 ### Logging
 
-Application logs go to Blacklite (a SQLite-backed Logback appender), configured in `logback-spring.xml`. A second `DataSource` bean (`logsDataSource`) points at this log file. `ApplicationLogService` queries it with `JdbcTemplate`. Because adding any `DataSource` bean causes Spring Boot's auto-configuration to back off, a `@Primary` bean is declared in `PrimaryDataSourceConfig`.
+Application logs are written to **two sinks** configured in `logback-spring.xml`:
+
+1. **Console (stdout)** — preserves `docker logs` behaviour, which is a critical non-functional requirement. The console appender is always active so operators can inspect live output without mounting additional volumes.
+2. **Blacklite (SQLite)** — an asynchronous appender that writes to a separate SQLite file (`app.blacklite.path`, default `./data/logs.sqlite`). `ApplicationLogService` queries this file via a dedicated `JdbcTemplate` (`logsDataSource`), powering the in-UI log viewer.
+
+Because adding any `DataSource` bean causes Spring Boot's auto-configuration to back off, a `@Primary` bean is declared in `PrimaryDataSourceConfig`.
 
 ---
 
@@ -242,3 +250,4 @@ Flyway migrations are in `src/main/resources/db/migration/`:
 5. **`encodeURIComponent` parity** — `HelpController` contains a custom Kotlin implementation that exactly matches JS `encodeURIComponent` (RFC 3986 unreserved + `!~*'()`) for accurate GitHub URL length budgeting.
 6. **`noUnusedLocals`/`noUnusedParameters`** — the TypeScript config treats unused variables as errors; do not introduce dead code in the frontend.
 7. **Test mocking** — always use `@MockkBean` (springmockk) in Spring MVC test slices, not `@MockBean`.
+8. **512 MB heap constraint** — the `JAVA_TOOL_OPTIONS` in the `Dockerfile` sets `-Xmx512m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m`. This must not be exceeded; it enables deployment on Raspberry Pi 3 / NAS hardware and is a critical adoption NFR.
