@@ -1,4 +1,32 @@
 import { test, expect } from '@playwright/test'
+import * as fs from 'fs'
+import * as path from 'path'
+
+/**
+ * ADR infrastructure smoke check.
+ *
+ * Verifies that the Architecture Decision Record directory and summary document
+ * are present and non-empty. This is a structural guard — it does not validate
+ * the *content* of any ADR file.
+ */
+test('ADR infrastructure is present and non-empty', () => {
+  const repoRoot = path.resolve(__dirname, '../..')
+
+  // docs/ADRs/ must exist and contain at least one .md file
+  const adrDir = path.join(repoRoot, 'docs', 'ADRs')
+  expect(fs.existsSync(adrDir), 'docs/ADRs/ directory must exist').toBe(true)
+  const adrFiles = fs.readdirSync(adrDir).filter((f) => f.endsWith('.md'))
+  expect(adrFiles.length, 'docs/ADRs/ must contain at least one .md file').toBeGreaterThan(0)
+
+  // ARCHITECTURE_DECISIONS.md must exist at the repo root and be non-empty
+  const archDecisionsPath = path.join(repoRoot, 'ARCHITECTURE_DECISIONS.md')
+  expect(
+    fs.existsSync(archDecisionsPath),
+    'ARCHITECTURE_DECISIONS.md must exist at repo root',
+  ).toBe(true)
+  const content = fs.readFileSync(archDecisionsPath, 'utf-8')
+  expect(content.trim().length, 'ARCHITECTURE_DECISIONS.md must be non-empty').toBeGreaterThan(0)
+})
 
 /**
  * User journey: first-time app setup and first sync cycle, including the new

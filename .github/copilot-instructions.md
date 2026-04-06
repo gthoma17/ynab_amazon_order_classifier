@@ -1,5 +1,13 @@
 # Copilot Instructions for budget-sortbot
 
+## Before You Start Any Story
+
+**Read [`ARCHITECTURE_DECISIONS.md`](../ARCHITECTURE_DECISIONS.md) before beginning any task.**
+
+That document summarises every foundational architectural choice and links to the full ADR files under `docs/ADRs/`. Understanding prior decisions prevents accidentally reversing choices that were deliberate constraints (e.g., the 512 MB heap cap, SQLite pool size of 1, layered architecture style). If your story introduces a new architectural decision, create a new ADR file under `docs/ADRs/` using the filename pattern `YYYYMMDD_shortCamelCaseTitle.md` and add a summary row to `ARCHITECTURE_DECISIONS.md`.
+
+---
+
 ## Project Overview
 
 Budget Sortbot automatically classifies Amazon orders into YNAB budget categories. The pipeline is:
