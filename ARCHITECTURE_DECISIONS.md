@@ -28,7 +28,6 @@ This document is a quick-reference summary of the Architecture Decision Records 
 | 9 | Single-tenant v1, schema ready for v2 | No `tenant_id` in v1 but tables are designed to accept it. No global static state. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#9-tenancy--single-tenant-v1-schema-structured-for-v2) |
 | 10 | API keys stored plaintext in DB | Keys in `app_config` table, no encryption at rest in v1. UI assumed to be on a private network. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#10-security--api-keys-in-db-plaintext-ui-not-internet-exposed) |
 | 11 | Multi-stage Docker, multi-arch | Three-stage Dockerfile (Node → Gradle → JRE). Published for `amd64`, `arm64`, `arm/v7`. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#11-build-and-deployment--multi-stage-docker-multi-arch) |
-| 12 | Dual-sink logging (stdout + Blacklite SQLite) | Console appender preserves `docker logs`; Blacklite appender powers the in-app log viewer. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#12-logging--dual-sink-console--blacklite-sqlite) |
 
 ---
 

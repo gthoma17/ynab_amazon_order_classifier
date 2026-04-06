@@ -115,16 +115,6 @@ This ADR captures those foundational decisions so future contributors (human or 
 
 ---
 
-### 12. Logging — Dual Sink (Console + Blacklite SQLite)
-
-**Decision:** Application logs are written to two sinks: stdout (via Logback console appender) and a separate Blacklite SQLite file (`/app/data/logs.sqlite`).
-
-**Rationale:** Stdout preserves `docker logs` behaviour, which is important for operators who do not have a volume-mounted logs file accessible. The Blacklite appender enables the in-app log viewer (`GET /api/logs`) without requiring a log aggregation service.
-
-**Consequence:** Adding any `DataSource` bean makes Spring Boot's auto-configuration back off. An explicit `@Primary DataSource` is declared in `PrimaryDataSourceConfig` to maintain correct auto-configuration when both the main DB and log DB data sources are present.
-
----
-
 ## Consequences
 
 - Technology choices are deliberately conservative and favour operational simplicity over scalability.
