@@ -225,6 +225,21 @@ class YnabSyncServiceTest {
     }
 
     @Test
+    fun `processOrder does not mark order COMPLETED when YNAB update fails`() {
+        val order = makeOrder(1L, "49.99")
+        val txn = makeTxn("txn-1", -49990L, LocalDate.of(2024, 1, 15))
+        val matchedOrder = order.copy(status = OrderStatus.MATCHED, ynabTransactionId = "txn-1")
+        val savedSlot = slot<AmazonOrder>()
+        every { amazonOrderRepository.save(capture(savedSlot)) } answers { firstArg() }
+        every { classificationService.classify(matchedOrder) } returns "cat-electronics"
+        every { ynabClient.updateTransaction(any(), any(), any(), any(), any()) } throws RuntimeException("YNAB error")
+
+        ynabSyncService.processOrder(order, listOf(txn), "budget-1", "token")
+
+        assertEquals(OrderStatus.MATCHED, savedSlot.captured.status)
+    }
+
+    @Test
     fun `processOrder does not mark order COMPLETED when classification fails`() {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-1", -49990L, LocalDate.of(2024, 1, 15))

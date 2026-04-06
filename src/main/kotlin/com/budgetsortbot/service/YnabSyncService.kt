@@ -105,11 +105,11 @@ class YnabSyncService(
 
         try {
             val categoryId = classificationService.classify(matchedOrder)
-            val completedOrder = matchedOrder.copy(status = OrderStatus.COMPLETED, ynabCategoryId = categoryId)
-            amazonOrderRepository.save(completedOrder)
-
             val memo = buildMemo(matchedOrder)
             ynabClient.updateTransaction(budgetId, matched.id, token, memo, categoryId)
+
+            val completedOrder = matchedOrder.copy(status = OrderStatus.COMPLETED, ynabCategoryId = categoryId)
+            amazonOrderRepository.save(completedOrder)
             log.info { "Completed order id=${order.id}, classified as categoryId=$categoryId" }
         } catch (e: Exception) {
             log.error(e) { "Failed to classify/update order id=${order.id}" }
