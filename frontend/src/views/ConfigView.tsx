@@ -171,7 +171,9 @@ export default function ConfigView() {
 
   // Derive displayed budget state from ynabToken at render time to avoid
   // synchronous setState calls in effects (react-hooks/set-state-in-effect).
-  const displayBudgets = keys.ynabToken ? budgets : []
+  // Only expose budgets when fully loaded — avoids showing stale options from a
+  // previous token while a new fetch is in flight.
+  const displayBudgets = keys.ynabToken && budgetsStatus === 'loaded' ? budgets : []
   const displayBudgetsStatus: BudgetsStatus = keys.ynabToken ? budgetsStatus : 'idle'
   const displayBudgetsError = keys.ynabToken ? budgetsError : ''
 
@@ -181,7 +183,8 @@ export default function ConfigView() {
     }
 
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: signals loading state before async fetch
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale budgets and signals loading state before async fetch
+    setBudgets([]) // clear stale data from a previous token before fetching
     setBudgetsStatus('loading')
     setBudgetsError('')
 
