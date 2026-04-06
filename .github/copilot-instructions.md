@@ -198,7 +198,7 @@ All endpoints are under `/api/`.
 | GET | `/api/ynab/budgets` | List YNAB budgets for a token |
 | GET | `/api/ynab/categories` | List YNAB categories for a budget |
 | GET | `/api/orders/pending` | List pending Amazon orders |
-| GET | `/api/logs` | List recent sync logs |
+| GET | `/api/logs` | List sync logs |
 | POST | `/api/help/report` | Build a GitHub issue body from logs |
 
 SPA routing: `WebConfig` forwards all single-segment non-file paths to `index.html` using the pattern `/{path:[^\\.]*}`. The Spring Boot 6 `PathPatternParser` does **not** accept `/**/{path}` patterns.
