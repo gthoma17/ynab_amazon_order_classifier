@@ -47,3 +47,11 @@ pre-push:
       run: npm test
       fail_text: |
         Frontend tests failed. Fix the failing tests before pushing.
+
+    journey-test:
+      root: "frontend"
+      run: npm run test:e2e
+      fail_text: |
+        E2E journey test failed. Fix the failing test before pushing.
+        Tip: run `cd frontend && npm run test:e2e` to debug locally.
+        Ensure `npx playwright install chromium` has been run in the frontend directory.
