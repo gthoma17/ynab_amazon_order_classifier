@@ -62,9 +62,7 @@ export default function CategoryRulesView() {
                 <input
                   aria-label={`Description for ${cat.name}`}
                   value={descriptions[cat.id] ?? ''}
-                  onChange={(e) =>
-                    setDescriptions({ ...descriptions, [cat.id]: e.target.value })
-                  }
+                  onChange={(e) => setDescriptions({ ...descriptions, [cat.id]: e.target.value })}
                 />
               </td>
             </tr>

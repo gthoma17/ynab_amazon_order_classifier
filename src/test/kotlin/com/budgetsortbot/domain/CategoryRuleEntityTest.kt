@@ -1,28 +1,30 @@
 package com.budgetsortbot.domain
 
+import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
 import java.time.Instant
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CategoryRuleEntityTest {
-
     @Autowired
     private lateinit var categoryRuleRepository: CategoryRuleRepository
 
     @Test
     fun `can save and retrieve a CategoryRule`() {
-        val rule = CategoryRule(
-            ynabCategoryId = "cat-uuid-001",
-            ynabCategoryName = "Groceries",
-            userDescription = "Food and household supplies from stores",
-            updatedAt = Instant.now()
-        )
+        val rule =
+            CategoryRule(
+                ynabCategoryId = "cat-uuid-001",
+                ynabCategoryName = "Groceries",
+                userDescription = "Food and household supplies from stores",
+                updatedAt = Instant.now(),
+            )
 
         val saved = categoryRuleRepository.save(rule)
 
@@ -34,12 +36,13 @@ class CategoryRuleEntityTest {
 
     @Test
     fun `can find CategoryRule by ynabCategoryId`() {
-        val rule = CategoryRule(
-            ynabCategoryId = "cat-uuid-002",
-            ynabCategoryName = "Electronics",
-            userDescription = "Gadgets, cables, and tech accessories",
-            updatedAt = Instant.now()
-        )
+        val rule =
+            CategoryRule(
+                ynabCategoryId = "cat-uuid-002",
+                ynabCategoryName = "Electronics",
+                userDescription = "Gadgets, cables, and tech accessories",
+                updatedAt = Instant.now(),
+            )
         categoryRuleRepository.save(rule)
 
         val found = categoryRuleRepository.findByYnabCategoryId("cat-uuid-002")
@@ -50,12 +53,13 @@ class CategoryRuleEntityTest {
 
     @Test
     fun `can update userDescription on a CategoryRule`() {
-        val rule = CategoryRule(
-            ynabCategoryId = "cat-uuid-003",
-            ynabCategoryName = "Books",
-            userDescription = "Books and reading material",
-            updatedAt = Instant.now()
-        )
+        val rule =
+            CategoryRule(
+                ynabCategoryId = "cat-uuid-003",
+                ynabCategoryName = "Books",
+                userDescription = "Books and reading material",
+                updatedAt = Instant.now(),
+            )
         val saved = categoryRuleRepository.save(rule)
 
         val updated = saved.copy(userDescription = "Books, audiobooks, and magazines")
@@ -68,8 +72,12 @@ class CategoryRuleEntityTest {
 
     @Test
     fun `can list all CategoryRules`() {
-        categoryRuleRepository.save(CategoryRule(ynabCategoryId = "c1", ynabCategoryName = "Cat1", userDescription = "desc1", updatedAt = Instant.now()))
-        categoryRuleRepository.save(CategoryRule(ynabCategoryId = "c2", ynabCategoryName = "Cat2", userDescription = "desc2", updatedAt = Instant.now()))
+        categoryRuleRepository.save(
+            CategoryRule(ynabCategoryId = "c1", ynabCategoryName = "Cat1", userDescription = "desc1", updatedAt = Instant.now()),
+        )
+        categoryRuleRepository.save(
+            CategoryRule(ynabCategoryId = "c2", ynabCategoryName = "Cat2", userDescription = "desc2", updatedAt = Instant.now()),
+        )
 
         val all = categoryRuleRepository.findAll()
 

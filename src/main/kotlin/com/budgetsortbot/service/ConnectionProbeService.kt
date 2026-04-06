@@ -27,9 +27,10 @@ class ConnectionProbeService(
     private val configService: ConfigService,
     @Value("\${app.fastmail.base-url:https://api.fastmail.com}") private val fastmailBaseUrl: String = "https://api.fastmail.com",
     @Value("\${app.ynab.base-url:https://api.ynab.com/v1}") private val ynabBaseUrl: String = "https://api.ynab.com/v1",
-    @Value("\${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}") private val geminiBaseUrl: String = "https://generativelanguage.googleapis.com/v1beta"
+    @Value(
+        "\${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}",
+    ) private val geminiBaseUrl: String = "https://generativelanguage.googleapis.com/v1beta",
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
     }
@@ -43,7 +44,8 @@ class ConnectionProbeService(
         }
         log.debug { "Probing FastMail" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$fastmailBaseUrl/.well-known/jmap")
                 .header("Authorization", "Bearer $token")
                 .retrieve()
@@ -58,7 +60,8 @@ class ConnectionProbeService(
         }
         log.debug { "Probing YNAB" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$ynabBaseUrl/budgets")
                 .header("Authorization", "Bearer $token")
                 .retrieve()
@@ -73,30 +76,32 @@ class ConnectionProbeService(
         }
         log.debug { "Probing Gemini" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$geminiBaseUrl/models?key={key}", key)
                 .retrieve()
                 .toBodilessEntity()
         }
     }
 
-    private fun probe(action: () -> Unit): ProbeResult = try {
-        action()
-        ProbeResult(success = true, message = "Connected")
-    } catch (e: HttpClientErrorException.Unauthorized) {
-        log.debug { "Probe returned 401 Unauthorized" }
-        ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
-    } catch (e: ResourceAccessException) {
-        log.debug { "Probe network error: ${e.message}" }
-        ProbeResult(success = false, message = "Connection timed out — service may be temporarily unavailable")
-    } catch (e: HttpClientErrorException) {
-        log.debug { "Probe HTTP client error: ${e.statusCode.value()} ${e.statusText}" }
-        ProbeResult(success = false, message = "${e.statusCode.value()} ${e.statusText}")
-    } catch (e: HttpServerErrorException) {
-        log.debug { "Probe server error: ${e.statusCode.value()} ${e.statusText}" }
-        ProbeResult(success = false, message = "Service error: ${e.statusCode.value()} ${e.statusText}")
-    } catch (e: Exception) {
-        log.debug { "Probe unexpected error: ${e.message}" }
-        ProbeResult(success = false, message = "Connection failed: ${e.message ?: "unknown error"}")
-    }
+    private fun probe(action: () -> Unit): ProbeResult =
+        try {
+            action()
+            ProbeResult(success = true, message = "Connected")
+        } catch (e: HttpClientErrorException.Unauthorized) {
+            log.debug { "Probe returned 401 Unauthorized" }
+            ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
+        } catch (e: ResourceAccessException) {
+            log.debug { "Probe network error: ${e.message}" }
+            ProbeResult(success = false, message = "Connection timed out — service may be temporarily unavailable")
+        } catch (e: HttpClientErrorException) {
+            log.debug { "Probe HTTP client error: ${e.statusCode.value()} ${e.statusText}" }
+            ProbeResult(success = false, message = "${e.statusCode.value()} ${e.statusText}")
+        } catch (e: HttpServerErrorException) {
+            log.debug { "Probe server error: ${e.statusCode.value()} ${e.statusText}" }
+            ProbeResult(success = false, message = "Service error: ${e.statusCode.value()} ${e.statusText}")
+        } catch (e: Exception) {
+            log.debug { "Probe unexpected error: ${e.message}" }
+            ProbeResult(success = false, message = "Connection failed: ${e.message ?: "unknown error"}")
+        }
 }

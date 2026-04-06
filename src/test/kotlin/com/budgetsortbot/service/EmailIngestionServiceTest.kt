@@ -1,6 +1,5 @@
 package com.budgetsortbot.service
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.domain.OrderStatus
 import com.budgetsortbot.domain.SyncLog
@@ -10,8 +9,8 @@ import com.budgetsortbot.infrastructure.email.EmailOrder
 import com.budgetsortbot.infrastructure.email.EmailProviderClient
 import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
 import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -26,7 +25,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class EmailIngestionServiceTest {
-
     private val emailProviderClient = mockk<EmailProviderClient>()
     private val amazonOrderRepository = mockk<AmazonOrderRepository>()
     private val syncLogRepository = mockk<SyncLogRepository>()
@@ -35,9 +33,14 @@ class EmailIngestionServiceTest {
 
     @BeforeEach
     fun setup() {
-        emailIngestionService = EmailIngestionService(
-            emailProviderClient, amazonOrderRepository, syncLogRepository, configService, jacksonObjectMapper()
-        )
+        emailIngestionService =
+            EmailIngestionService(
+                emailProviderClient,
+                amazonOrderRepository,
+                syncLogRepository,
+                configService,
+                jacksonObjectMapper(),
+            )
         // Default: no start-from date
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
     }
@@ -46,12 +49,13 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `parseOrderBody extracts total amount and items from typical body`() {
-        val body = """
+        val body =
+            """
             Your order has been placed.
             1 of: USB Cable
             1 of: Phone Case
             Order Total: ${'$'}26.98
-        """.trimIndent()
+            """.trimIndent()
         val email = EmailOrder(messageId = "msg-1", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
@@ -85,10 +89,11 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `parseOrderBody handles Grand Total pattern`() {
-        val body = """
+        val body =
+            """
             1 of: Keyboard
             Grand Total: ${'$'}79.99
-        """.trimIndent()
+            """.trimIndent()
         val email = EmailOrder(messageId = "msg-4", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
@@ -110,14 +115,15 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `parseOrderBody handles Grand Total on next line with currency suffix`() {
-        val body = """
+        val body =
+            """
             * TOTO® WASHLET® C2 Electronic Bidet Toilet Seat
               Quantity: 1
               426 USD
 
             Grand Total:
             426.00 USD
-        """.trimIndent()
+            """.trimIndent()
         val email = EmailOrder(messageId = "msg-6", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
@@ -128,14 +134,15 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `parseOrderBody extracts items from bullet-point format`() {
-        val body = """
+        val body =
+            """
             * TOTO® WASHLET® C2 Electronic Bidet Toilet Seat
               Quantity: 1
               426 USD
 
             Grand Total:
             426.00 USD
-        """.trimIndent()
+            """.trimIndent()
         val email = EmailOrder(messageId = "msg-7", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
@@ -147,7 +154,8 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `parseOrderBody handles real Amazon email format with multiple items`() {
-        val body = """
+        val body =
+            """
             Thanks for your order, Greg!
 
             * USB Cable
@@ -160,7 +168,7 @@ class EmailIngestionServiceTest {
 
             Grand Total:
             54.97 USD
-        """.trimIndent()
+            """.trimIndent()
         val email = EmailOrder(messageId = "msg-8", receivedAt = Instant.now(), bodyText = body)
 
         val result = emailIngestionService.parseOrderBody(email)
@@ -240,8 +248,11 @@ class EmailIngestionServiceTest {
         emailIngestionService.ingest()
 
         // Feb 1 is after Jan 10, so start-from date wins
-        val expected = LocalDate.parse("2024-02-01")
-            .atStartOfDay(ZoneOffset.UTC).toInstant()
+        val expected =
+            LocalDate
+                .parse("2024-02-01")
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
         assertEquals(expected, sinceDateSlot.captured)
     }
 
@@ -264,15 +275,20 @@ class EmailIngestionServiceTest {
 
     @Test
     fun `processEmail skips duplicate messageId`() {
-        val existing = AmazonOrder(
-            id = 1L, emailMessageId = "msg-dup@amazon.com",
-            orderDate = Instant.now(), totalAmount = BigDecimal("10.00"),
-            itemsJson = """["Item"]""", status = OrderStatus.PENDING, createdAt = Instant.now()
-        )
+        val existing =
+            AmazonOrder(
+                id = 1L,
+                emailMessageId = "msg-dup@amazon.com",
+                orderDate = Instant.now(),
+                totalAmount = BigDecimal("10.00"),
+                itemsJson = """["Item"]""",
+                status = OrderStatus.PENDING,
+                createdAt = Instant.now(),
+            )
         every { amazonOrderRepository.findAll() } returns listOf(existing)
 
         emailIngestionService.processEmail(
-            EmailOrder(messageId = "msg-dup@amazon.com", receivedAt = Instant.now(), bodyText = "Order Total: \$10.00")
+            EmailOrder(messageId = "msg-dup@amazon.com", receivedAt = Instant.now(), bodyText = "Order Total: \$10.00"),
         )
 
         verify(exactly = 0) { amazonOrderRepository.save(any()) }
@@ -281,11 +297,12 @@ class EmailIngestionServiceTest {
     @Test
     fun `processEmail saves order when body is parseable and messageId is new`() {
         every { amazonOrderRepository.findAll() } returns emptyList()
-        val email = EmailOrder(
-            messageId = "msg-new@amazon.com",
-            receivedAt = Instant.parse("2024-01-15T10:00:00Z"),
-            bodyText = "1 of: Keyboard\nOrder Total: \$79.99"
-        )
+        val email =
+            EmailOrder(
+                messageId = "msg-new@amazon.com",
+                receivedAt = Instant.parse("2024-01-15T10:00:00Z"),
+                bodyText = "1 of: Keyboard\nOrder Total: \$79.99",
+            )
         val savedSlot = slot<AmazonOrder>()
         every { amazonOrderRepository.save(capture(savedSlot)) } answers { firstArg() }
 
@@ -300,11 +317,12 @@ class EmailIngestionServiceTest {
     @Test
     fun `processEmail skips when body cannot be parsed`() {
         every { amazonOrderRepository.findAll() } returns emptyList()
-        val email = EmailOrder(
-            messageId = "msg-unparseable@amazon.com",
-            receivedAt = Instant.now(),
-            bodyText = "This is not an order confirmation email."
-        )
+        val email =
+            EmailOrder(
+                messageId = "msg-unparseable@amazon.com",
+                receivedAt = Instant.now(),
+                bodyText = "This is not an order confirmation email.",
+            )
 
         emailIngestionService.processEmail(email)
 

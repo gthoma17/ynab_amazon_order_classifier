@@ -13,9 +13,8 @@ private val log = KotlinLogging.logger {}
 @Service
 class ConfigService(
     private val appConfigRepository: AppConfigRepository,
-    private val categoryRuleRepository: CategoryRuleRepository
+    private val categoryRuleRepository: CategoryRuleRepository,
 ) {
-
     companion object {
         const val YNAB_TOKEN = "YNAB_TOKEN"
         const val YNAB_BUDGET_ID = "YNAB_BUDGET_ID"
@@ -27,10 +26,12 @@ class ConfigService(
         const val INSTALLED_AT = "INSTALLED_AT"
     }
 
-    fun getValue(key: String): String? =
-        appConfigRepository.findById(key).map { it.value }.orElse(null)
+    fun getValue(key: String): String? = appConfigRepository.findById(key).map { it.value }.orElse(null)
 
-    fun setValue(key: String, value: String) {
+    fun setValue(
+        key: String,
+        value: String,
+    ) {
         appConfigRepository.save(AppConfig(key = key, value = value, updatedAt = Instant.now()))
         log.info { "Saved config: key=$key value=$value" }
     }

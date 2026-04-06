@@ -16,7 +16,7 @@ const savedRules = [
 const server = setupServer(
   http.get('/api/ynab/categories', () => HttpResponse.json(ynabCategories)),
   http.get('/api/config/categories', () => HttpResponse.json(savedRules)),
-  http.put('/api/config/categories', () => new HttpResponse(null, { status: 204 }))
+  http.put('/api/config/categories', () => new HttpResponse(null, { status: 204 })),
 )
 
 beforeAll(() => server.listen())
@@ -41,9 +41,7 @@ describe('CategoryRulesView', () => {
     render(<CategoryRulesView />)
     await waitFor(() => {
       const inputs = screen.getAllByRole('textbox')
-      const groceriesInput = inputs.find(
-        (el) => (el as HTMLInputElement).value === 'Food items'
-      )
+      const groceriesInput = inputs.find((el) => (el as HTMLInputElement).value === 'Food items')
       expect(groceriesInput).toBeInTheDocument()
     })
   })
@@ -55,7 +53,7 @@ describe('CategoryRulesView', () => {
       http.put('/api/config/categories', async ({ request }) => {
         capturedBody = await request.json()
         return new HttpResponse(null, { status: 204 })
-      })
+      }),
     )
 
     render(<CategoryRulesView />)

@@ -11,10 +11,8 @@ import java.time.Instant
 data class AppConfig(
     @Id
     val key: String,
-
     @Column(nullable = false)
     val value: String,
-
     @Column(nullable = false)
-    val updatedAt: Instant
+    val updatedAt: Instant,
 )

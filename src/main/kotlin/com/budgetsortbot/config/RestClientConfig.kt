@@ -6,11 +6,9 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RestClientConfig {
-
     @Bean
-    fun restClientCustomizer(): RestClientCustomizer {
-        return RestClientCustomizer { builder ->
+    fun restClientCustomizer(): RestClientCustomizer =
+        RestClientCustomizer { builder ->
             builder.defaultHeader("User-Agent", "YNAB-Amazon-Automator/1.0")
         }
-    }
 }

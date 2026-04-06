@@ -168,7 +168,9 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   // Prominent redaction notice must be visible so users know what will be redacted
   await expect(page.getByRole('note', { name: /redaction notice/i })).toBeVisible()
-  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(/sensitive values/i)
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(
+    /sensitive values/i,
+  )
 
   await page
     .getByLabel(/describe the problem/i)
@@ -198,9 +200,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: /report body preview/i })).toBeVisible()
 
   // Sensitive credentials must already be redacted in the preview
-  const previewText = await page
-    .getByRole('textbox', { name: /report body preview/i })
-    .inputValue()
+  const previewText = await page.getByRole('textbox', { name: /report body preview/i }).inputValue()
   expect(previewText).toContain('[REDACTED]')
   expect(previewText).not.toContain('my-ynab-token')
   expect(previewText).not.toContain('my-fastmail-token')
@@ -213,9 +213,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   })
   await page.evaluate(() => {
     window.open = (url?: string | URL) => {
-      ;(window as unknown as Record<string, unknown>).__captureHelpUrl__(
-        url?.toString() ?? '',
-      )
+      ;(window as unknown as Record<string, unknown>).__captureHelpUrl__(url?.toString() ?? '')
       return null
     }
   })
@@ -252,4 +250,3 @@ test('first-time setup and first sync journey', async ({ page }) => {
     expect(capturedHelpUrl).toContain(encodeURIComponent('Log content truncated'))
   }
 })
-

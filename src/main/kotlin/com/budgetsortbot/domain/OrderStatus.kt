@@ -4,5 +4,5 @@ enum class OrderStatus {
     PENDING,
     MATCHED,
     COMPLETED,
-    DISCARDED
+    DISCARDED,
 }

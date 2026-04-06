@@ -16,7 +16,6 @@ import java.time.Instant
 import java.util.Optional
 
 class ConfigServiceTest {
-
     private val appConfigRepository = mockk<AppConfigRepository>()
     private val categoryRuleRepository = mockk<CategoryRuleRepository>()
     private lateinit var configService: ConfigService
@@ -58,10 +57,23 @@ class ConfigServiceTest {
 
     @Test
     fun `getAllCategoryRules returns all rules from repository`() {
-        val rules = listOf(
-            CategoryRule(id = 1L, ynabCategoryId = "cat-1", ynabCategoryName = "Food", userDescription = "Groceries", updatedAt = Instant.now()),
-            CategoryRule(id = 2L, ynabCategoryId = "cat-2", ynabCategoryName = "Tech", userDescription = "Electronics", updatedAt = Instant.now())
-        )
+        val rules =
+            listOf(
+                CategoryRule(
+                    id = 1L,
+                    ynabCategoryId = "cat-1",
+                    ynabCategoryName = "Food",
+                    userDescription = "Groceries",
+                    updatedAt = Instant.now(),
+                ),
+                CategoryRule(
+                    id = 2L,
+                    ynabCategoryId = "cat-2",
+                    ynabCategoryName = "Tech",
+                    userDescription = "Electronics",
+                    updatedAt = Instant.now(),
+                ),
+            )
         every { categoryRuleRepository.findAll() } returns rules
 
         val result = configService.getAllCategoryRules()
@@ -72,9 +84,16 @@ class ConfigServiceTest {
 
     @Test
     fun `saveCategoryRules delegates to repository saveAll`() {
-        val rules = listOf(
-            CategoryRule(id = null, ynabCategoryId = "cat-1", ynabCategoryName = "Food", userDescription = "Groceries", updatedAt = Instant.now())
-        )
+        val rules =
+            listOf(
+                CategoryRule(
+                    id = null,
+                    ynabCategoryId = "cat-1",
+                    ynabCategoryName = "Food",
+                    userDescription = "Groceries",
+                    updatedAt = Instant.now(),
+                ),
+            )
         every { categoryRuleRepository.saveAll(rules) } returns rules
 
         configService.saveCategoryRules(rules)

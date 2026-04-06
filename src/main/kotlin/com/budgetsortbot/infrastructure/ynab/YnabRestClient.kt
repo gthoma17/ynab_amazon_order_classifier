@@ -12,28 +12,33 @@ import java.time.LocalDate
 class YnabRestClient(
     restClientBuilder: RestClient.Builder,
     private val objectMapper: ObjectMapper,
-    @Value("\${app.ynab.base-url:https://api.ynab.com/v1}") baseUrl: String = BASE_URL
+    @Value("\${app.ynab.base-url:https://api.ynab.com/v1}") baseUrl: String = BASE_URL,
 ) : YnabClient {
-
     companion object {
         const val BASE_URL = "https://api.ynab.com/v1"
         private val log = KotlinLogging.logger {}
     }
 
-    private val client = restClientBuilder
-        .baseUrl(baseUrl)
-        .build()
+    private val client =
+        restClientBuilder
+            .baseUrl(baseUrl)
+            .build()
 
-    override fun getTransactions(budgetId: String, token: String, sinceDate: LocalDate?): List<YnabTransaction> {
-        val rawBody = client.get()
-            .uri { builder ->
-                val uriBuilder = builder.path("/budgets/{budgetId}/transactions")
-                if (sinceDate != null) uriBuilder.queryParam("since_date", sinceDate)
-                uriBuilder.build(budgetId)
-            }
-            .header("Authorization", "Bearer $token")
-            .retrieve()
-            .body(String::class.java)
+    override fun getTransactions(
+        budgetId: String,
+        token: String,
+        sinceDate: LocalDate?,
+    ): List<YnabTransaction> {
+        val rawBody =
+            client
+                .get()
+                .uri { builder ->
+                    val uriBuilder = builder.path("/budgets/{budgetId}/transactions")
+                    if (sinceDate != null) uriBuilder.queryParam("since_date", sinceDate)
+                    uriBuilder.build(budgetId)
+                }.header("Authorization", "Bearer $token")
+                .retrieve()
+                .body(String::class.java)
         log.debug { "getTransactions response: $rawBody" }
         val response = rawBody?.let { objectMapper.readValue(it, YnabTransactionsResponse::class.java) }
         val transactions = response?.data?.transactions?.map { it.toYnabTransaction() } ?: emptyList()
@@ -42,11 +47,13 @@ class YnabRestClient(
     }
 
     override fun getBudgets(token: String): List<YnabBudget> {
-        val rawBody = client.get()
-            .uri("/budgets")
-            .header("Authorization", "Bearer $token")
-            .retrieve()
-            .body(String::class.java)
+        val rawBody =
+            client
+                .get()
+                .uri("/budgets")
+                .header("Authorization", "Bearer $token")
+                .retrieve()
+                .body(String::class.java)
         log.debug { "getBudgets response: $rawBody" }
         val response = rawBody?.let { objectMapper.readValue(it, YnabBudgetsResponse::class.java) }
         val budgets = response?.data?.budgets?.map { YnabBudget(it.id, it.name) } ?: emptyList()
@@ -54,29 +61,44 @@ class YnabRestClient(
         return budgets
     }
 
-    override fun getCategories(budgetId: String, token: String): List<YnabCategory> {
-        val rawBody = client.get()
-            .uri("/budgets/{budgetId}/categories", budgetId)
-            .header("Authorization", "Bearer $token")
-            .retrieve()
-            .body(String::class.java)
+    override fun getCategories(
+        budgetId: String,
+        token: String,
+    ): List<YnabCategory> {
+        val rawBody =
+            client
+                .get()
+                .uri("/budgets/{budgetId}/categories", budgetId)
+                .header("Authorization", "Bearer $token")
+                .retrieve()
+                .body(String::class.java)
         log.debug { "getCategories response: $rawBody" }
         val response = rawBody?.let { objectMapper.readValue(it, YnabCategoriesResponse::class.java) }
-        val categories = response?.data?.categoryGroups
-            ?.filter { !it.deleted }
-            ?.flatMap { group ->
-                group.categories
-                    .filter { !it.deleted }
-                    .map { YnabCategory(it.id, it.name, group.name) }
-            }
-            ?: emptyList()
+        val categories =
+            response
+                ?.data
+                ?.categoryGroups
+                ?.filter { !it.deleted }
+                ?.flatMap { group ->
+                    group.categories
+                        .filter { !it.deleted }
+                        .map { YnabCategory(it.id, it.name, group.name) }
+                }
+                ?: emptyList()
         log.debug { "getCategories budgetId=$budgetId returned ${categories.size} categories" }
         return categories
     }
 
-    override fun updateTransaction(budgetId: String, transactionId: String, token: String, memo: String, categoryId: String) {
+    override fun updateTransaction(
+        budgetId: String,
+        transactionId: String,
+        token: String,
+        memo: String,
+        categoryId: String,
+    ) {
         log.debug { "updateTransaction budgetId=$budgetId transactionId=$transactionId categoryId=$categoryId" }
-        client.put()
+        client
+            .put()
             .uri("/budgets/{budgetId}/transactions/{transactionId}", budgetId, transactionId)
             .header("Authorization", "Bearer $token")
             .body(YnabUpdateRequest(YnabTransactionPatch(memo = memo, categoryId = categoryId)))
@@ -86,24 +108,36 @@ class YnabRestClient(
     }
 }
 
-private fun YnabTransactionDto.toYnabTransaction() = YnabTransaction(
-    id = id,
-    date = LocalDate.parse(date),
-    amount = amount,
-    memo = memo,
-    categoryId = categoryId,
-    payeeName = payeeName
+private fun YnabTransactionDto.toYnabTransaction() =
+    YnabTransaction(
+        id = id,
+        date = LocalDate.parse(date),
+        amount = amount,
+        memo = memo,
+        categoryId = categoryId,
+        payeeName = payeeName,
+    )
+
+private data class YnabBudgetsResponse(
+    val data: YnabBudgetsData,
 )
 
-private data class YnabBudgetsResponse(val data: YnabBudgetsData)
+private data class YnabBudgetsData(
+    val budgets: List<YnabBudgetDto>,
+)
 
-private data class YnabBudgetsData(val budgets: List<YnabBudgetDto>)
+private data class YnabBudgetDto(
+    val id: String,
+    val name: String,
+)
 
-private data class YnabBudgetDto(val id: String, val name: String)
+private data class YnabTransactionsResponse(
+    val data: YnabTransactionsData,
+)
 
-private data class YnabTransactionsResponse(val data: YnabTransactionsData)
-
-private data class YnabTransactionsData(val transactions: List<YnabTransactionDto>)
+private data class YnabTransactionsData(
+    val transactions: List<YnabTransactionDto>,
+)
 
 private data class YnabTransactionDto(
     val id: String,
@@ -111,27 +145,35 @@ private data class YnabTransactionDto(
     val amount: Long,
     val memo: String?,
     @JsonProperty("category_id") val categoryId: String?,
-    @JsonProperty("payee_name") val payeeName: String?
+    @JsonProperty("payee_name") val payeeName: String?,
 )
 
-private data class YnabCategoriesResponse(val data: YnabCategoryGroupsData)
+private data class YnabCategoriesResponse(
+    val data: YnabCategoryGroupsData,
+)
 
 private data class YnabCategoryGroupsData(
-    @JsonProperty("category_groups") val categoryGroups: List<YnabCategoryGroupDto>
+    @JsonProperty("category_groups") val categoryGroups: List<YnabCategoryGroupDto>,
 )
 
 private data class YnabCategoryGroupDto(
     val id: String,
     val name: String,
     val deleted: Boolean,
-    val categories: List<YnabCategoryDto>
+    val categories: List<YnabCategoryDto>,
 )
 
-private data class YnabCategoryDto(val id: String, val name: String, val deleted: Boolean)
+private data class YnabCategoryDto(
+    val id: String,
+    val name: String,
+    val deleted: Boolean,
+)
 
-private data class YnabUpdateRequest(val transaction: YnabTransactionPatch)
+private data class YnabUpdateRequest(
+    val transaction: YnabTransactionPatch,
+)
 
 private data class YnabTransactionPatch(
     val memo: String,
-    @JsonProperty("category_id") val categoryId: String
+    @JsonProperty("category_id") val categoryId: String,
 )

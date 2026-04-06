@@ -4,6 +4,7 @@ plugins {
     kotlin("plugin.jpa") version "1.9.25"
     id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.6"
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 group = "com.budgetsortbot"
@@ -51,4 +52,16 @@ tasks.register<JavaExec>("runE2EServer") {
     description = "Start the Spring Boot app with WireMock stubs for Playwright E2E tests"
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.budgetsortbot.e2e.E2EServerKt")
+}
+
+spotless {
+    kotlin {
+        // Use ktlint 1.x for formatting; pinned for deterministic output
+        ktlint("1.5.0")
+        target("src/**/*.kt")
+    }
+    kotlinGradle {
+        ktlint("1.5.0")
+        target("*.gradle.kts")
+    }
 }

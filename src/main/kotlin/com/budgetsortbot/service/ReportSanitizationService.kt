@@ -5,21 +5,21 @@ import org.springframework.stereotype.Service
 
 @Service
 class ReportSanitizationService(
-    private val appConfigRepository: AppConfigRepository
+    private val appConfigRepository: AppConfigRepository,
 ) {
-
     companion object {
         /**
          * Config keys whose values are NOT sensitive and should be left as-is in issue reports.
          * Everything else (including any future keys) is redacted by default — safer than
          * maintaining an opt-in allowlist of sensitive keys.
          */
-        val NON_SENSITIVE_KEYS: Set<String> = setOf(
-            ConfigService.ORDER_CAP,
-            ConfigService.SCHEDULE_CONFIG,
-            ConfigService.START_FROM_DATE,
-            ConfigService.INSTALLED_AT
-        )
+        val NON_SENSITIVE_KEYS: Set<String> =
+            setOf(
+                ConfigService.ORDER_CAP,
+                ConfigService.SCHEDULE_CONFIG,
+                ConfigService.START_FROM_DATE,
+                ConfigService.INSTALLED_AT,
+            )
     }
 
     /**
@@ -30,11 +30,13 @@ class ReportSanitizationService(
      * Blank config values are ignored to avoid spurious replacements.
      */
     fun sanitize(text: String): Pair<String, Boolean> {
-        val sensitiveValues = appConfigRepository.findAll()
-            .filter { it.key !in NON_SENSITIVE_KEYS }
-            .map { it.value }
-            .filter { it.isNotBlank() }
-            .sortedByDescending { it.length }
+        val sensitiveValues =
+            appConfigRepository
+                .findAll()
+                .filter { it.key !in NON_SENSITIVE_KEYS }
+                .map { it.value }
+                .filter { it.isNotBlank() }
+                .sortedByDescending { it.length }
 
         if (sensitiveValues.isEmpty()) return text to false
 
