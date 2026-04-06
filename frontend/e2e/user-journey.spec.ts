@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { fileURLToPath } from 'url'
 
 /**
  * ADR infrastructure smoke check.
@@ -10,7 +11,7 @@ import * as path from 'path'
  * the *content* of any ADR file.
  */
 test('ADR infrastructure is present and non-empty', () => {
-  const repoRoot = path.resolve(__dirname, '../..')
+  const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)))
 
   // docs/ADRs/ must exist and contain at least one .md file
   const adrDir = path.join(repoRoot, 'docs', 'ADRs')
