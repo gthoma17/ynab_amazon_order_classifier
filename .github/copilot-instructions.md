@@ -196,7 +196,7 @@ All endpoints are under `/api/`.
 | POST | `/api/config/dry-run` | Trigger a dry run |
 | GET | `/api/config/dry-run/results` | Fetch dry run results |
 | GET | `/api/ynab/budgets` | List YNAB budgets for a token |
-| GET | `/api/ynab/categories` | List YNAB categories for a budget |
+| GET | `/api/ynab/categories` | List YNAB categories for the configured budget |
 | GET | `/api/orders/pending` | List pending Amazon orders |
 | GET | `/api/logs` | List sync logs |
 | POST | `/api/help/report` | Build a GitHub issue body from logs |
