@@ -3,7 +3,7 @@
 **Date:** 2026-04-06  
 **Status:** Accepted  
 **Deciders:** Greg Thomas  
-**Source:** Derived from `PLAN.md` v1.0.0 (Draft)
+**Source:** Derived from `PLAN.md` (Version: 1.0.0, Status: Draft)
 
 ---
 
