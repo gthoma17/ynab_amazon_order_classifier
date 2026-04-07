@@ -14,23 +14,34 @@ interface CategoryRule {
   userDescription: string
 }
 
+type LoadStatus = 'loading' | 'error' | 'loaded'
+
 export default function CategoryRulesView() {
   const [categories, setCategories] = useState<YnabCategory[]>([])
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading')
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
+    setLoadStatus('loading')
     Promise.all([
       apiGet<YnabCategory[]>('/api/ynab/categories'),
       apiGet<CategoryRule[]>('/api/config/categories'),
-    ]).then(([cats, rules]) => {
-      setCategories(cats)
-      const desc: Record<string, string> = {}
-      for (const rule of rules) {
-        desc[rule.ynabCategoryId] = rule.userDescription
-      }
-      setDescriptions(desc)
-    })
+    ])
+      .then(([cats, rules]) => {
+        setCategories(cats)
+        const desc: Record<string, string> = {}
+        for (const rule of rules) {
+          desc[rule.ynabCategoryId] = rule.userDescription
+        }
+        setDescriptions(desc)
+        setLoadStatus('loaded')
+      })
+      .catch((err: unknown) => {
+        setLoadError(err instanceof Error ? err.message : 'Failed to load categories')
+        setLoadStatus('error')
+      })
   }, [])
 
   function handleSave() {
@@ -45,32 +56,64 @@ export default function CategoryRulesView() {
   return (
     <div>
       <h1>Category Rules</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Group</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((cat) => (
-            <tr key={cat.id}>
-              <td>{cat.name}</td>
-              <td>{cat.categoryGroupName}</td>
-              <td>
-                <input
-                  aria-label={`Description for ${cat.name}`}
-                  value={descriptions[cat.id] ?? ''}
-                  onChange={(e) => setDescriptions({ ...descriptions, [cat.id]: e.target.value })}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={handleSave}>Save</button>
-      {saved && <p>Saved</p>}
+
+      {loadStatus === 'loading' && (
+        <div className="cf-panel" data-testid="categories-loading">
+          <div className="cf-loading">Loading categories…</div>
+        </div>
+      )}
+
+      {loadStatus === 'error' && (
+        <div className="cf-panel" data-testid="categories-error">
+          <div className="cf-error-panel" role="alert">
+            ✗ {loadError}
+          </div>
+        </div>
+      )}
+
+      {loadStatus === 'loaded' && (
+        <div data-testid="categories-loaded">
+          <div className="cf-panel">
+            <span className="cf-panel-label">Ai Classification Rules</span>
+            {categories.length === 0 ? (
+              <div className="cf-crt">
+                <p className="cf-terminal-empty">No categories — connect YNAB first</p>
+              </div>
+            ) : (
+              <table className="cf-data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Group</th>
+                    <th>AI hint description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat) => (
+                    <tr key={cat.id}>
+                      <td>{cat.name}</td>
+                      <td>{cat.categoryGroupName}</td>
+                      <td>
+                        <input
+                          aria-label={`Description for ${cat.name}`}
+                          value={descriptions[cat.id] ?? ''}
+                          onChange={(e) =>
+                            setDescriptions({ ...descriptions, [cat.id]: e.target.value })
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div className="cf-btn-row">
+            <button onClick={handleSave}>Save</button>
+            {saved && <span className="cf-saved">✓ Saved</span>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
