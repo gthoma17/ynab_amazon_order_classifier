@@ -167,21 +167,22 @@ export default function GetHelpView() {
           </div>
         )}
 
-        {reportBody !== null && (
-          <div className="cf-form-row" style={{ marginTop: 'var(--cf-s2)' }}>
-            <label htmlFor="reportPreview">
-              Issue body preview{sanitized ? ' — sensitive values redacted' : ''}
-              {truncated ? ' — content truncated to fit GitHub URL limit' : ''}
-            </label>
-            <textarea
-              id="reportPreview"
-              aria-label="Report body preview"
-              value={reportBody}
-              readOnly
-              rows={12}
-            />
-          </div>
-        )}
+        <div className="cf-form-row" style={{ marginTop: 'var(--cf-s2)' }}>
+          <label htmlFor="reportPreview">
+            Issue body preview
+            {reportBody !== null && sanitized ? ' — sensitive values redacted' : ''}
+            {reportBody !== null && truncated ? ' — content truncated to fit GitHub URL limit' : ''}
+          </label>
+          <textarea
+            id="reportPreview"
+            aria-label="Report body preview"
+            value={reportBody ?? ''}
+            readOnly
+            rows={12}
+            data-placeholder={reportBody === null ? 'true' : undefined}
+            placeholder="-- STANDING BY --"
+          />
+        </div>
 
         {sanitized && (
           <p role="status">Sensitive values (API keys, tokens) were removed from your report.</p>

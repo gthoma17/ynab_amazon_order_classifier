@@ -574,22 +574,24 @@ export default function ConfigView() {
 
           {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
 
-          {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
-            <div aria-live="polite" style={{ marginTop: 'var(--cf-s3)' }}>
-              <h3>
-                Dry Run Results ({dryRunResults.length} order
-                {dryRunResults.length !== 1 ? 's' : ''})
-              </h3>
-              {dryRunResults.length === 0 ? (
-                <p
-                  className="cf-terminal-empty"
-                  style={{ fontSize: '16px', padding: 'var(--cf-s3) 0' }}
-                >
-                  No orders matched.
-                </p>
-              ) : (
-                <div className="cf-crt" style={{ marginTop: 'var(--cf-s2)' }}>
-                  <table className="cf-data-table">
+          <div className="cf-crt" aria-live="polite" style={{ marginTop: 'var(--cf-s3)' }}>
+            {dryRunStatus === 'idle' && dryRunResults.length === 0 ? (
+              <p className="cf-terminal-standby">-- STANDING BY --</p>
+            ) : (
+              <>
+                <h3>
+                  Dry Run Results ({dryRunResults.length} order
+                  {dryRunResults.length !== 1 ? 's' : ''})
+                </h3>
+                {dryRunResults.length === 0 ? (
+                  <p
+                    className="cf-terminal-empty"
+                    style={{ fontSize: '16px', padding: 'var(--cf-s3) 0' }}
+                  >
+                    No orders matched.
+                  </p>
+                ) : (
+                  <table className="cf-data-table" style={{ marginTop: 'var(--cf-s2)' }}>
                     <thead>
                       <tr>
                         <th>Order date</th>
@@ -613,10 +615,10 @@ export default function ConfigView() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </>
+            )}
+          </div>
         </section>
       </div>
     </div>

@@ -555,6 +555,23 @@ button.cf-btn-secondary:disabled {
   z-index: 1;
 }
 
+.cf-terminal-standby {
+  text-align: center;
+  padding: var(--cf-s5) var(--cf-s3);
+  font-family: var(--cf-font-data);
+  font-size: 16px;
+  color: rgba(168, 152, 128, 0.35);
+  letter-spacing: 0.2em;
+  position: relative;
+  z-index: 1;
+}
+
+textarea[data-placeholder='true']::placeholder {
+  color: rgba(168, 152, 128, 0.35);
+  font-family: var(--cf-font-data);
+  letter-spacing: 0.1em;
+}
+
 /* ── Status / success indicators ─────────────────────────── */
 
 .cf-saved {
