@@ -624,7 +624,8 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                           value={String(scheduleHour)}
                           onChange={(v) => setScheduleHour(Number(v))}
                           disabled={!timeActive}
-                          columns={12}
+                          columns="repeat(12, 48px)"
+                          className="cf-radio-group--time"
                           testId="schedule-param-hour"
                           options={HOURS.map((h) => ({
                             value: String(h),
@@ -649,7 +650,8 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                           value={String(scheduleMinute)}
                           onChange={(v) => setScheduleMinute(Number(v))}
                           disabled={!timeActive}
-                          columns={4}
+                          columns="repeat(4, 48px)"
+                          className="cf-radio-group--time"
                           testId="schedule-param-min"
                           options={MINUTES.map((m) => ({
                             value: String(m),

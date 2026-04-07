@@ -12,7 +12,8 @@ interface RadioGroupProps<T extends string> {
   testIdPrefix?: string
   testId?: string
   disabled?: boolean
-  columns?: number
+  columns?: number | string
+  className?: string
 }
 
 export default function RadioGroup<T extends string>({
@@ -25,14 +26,18 @@ export default function RadioGroup<T extends string>({
   testId,
   disabled,
   columns,
+  className,
 }: RadioGroupProps<T>) {
+  const gridStyle = columns
+    ? { gridTemplateColumns: typeof columns === 'string' ? columns : `repeat(${columns}, 1fr)` }
+    : undefined
   return (
     <div
-      className={`cf-radio-group${disabled ? ' cf-radio-group--disabled' : ''}`}
+      className={`cf-radio-group${disabled ? ' cf-radio-group--disabled' : ''}${className ? ` ${className}` : ''}`}
       role="radiogroup"
       aria-label={ariaLabel}
       data-testid={testId}
-      style={columns ? { gridTemplateColumns: `repeat(${columns}, 1fr)` } : undefined}
+      style={gridStyle}
     >
       {options.map((opt) => {
         const selected = opt.value === value

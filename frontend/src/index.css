@@ -1025,7 +1025,8 @@ textarea[data-placeholder='true']::placeholder {
 .cf-splitflap {
   perspective: 400px;
   height: 28px;
-  width: 100%;
+  width: 220px;
+  flex-shrink: 0;
   display: flex;
   align-items: stretch;
 }
@@ -1243,6 +1244,25 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-radio-option--selected .cf-radio-label {
   color: var(--cf-amber);
+}
+
+/* Compact time-param buttons (hour, minute) */
+.cf-radio-group--time .cf-radio-option {
+  padding: 8px;
+  min-height: 32px;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cf-radio-group--time .cf-radio-lamp {
+  width: 6px;
+  height: 6px;
+  margin-top: 0;
+}
+
+.cf-radio-group--time .cf-radio-label {
+  margin-left: 0;
+  font-size: 10px;
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */
