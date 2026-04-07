@@ -775,6 +775,24 @@ textarea[data-placeholder='true']::placeholder {
   }
 }
 
+@keyframes cf-rotary-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes cf-rotary-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 /* ── Button row ───────────────────────────────────────────── */
 
 .cf-btn-row {
@@ -859,27 +877,37 @@ textarea[data-placeholder='true']::placeholder {
   min-width: 0;
 }
 
-.cf-lamp-label {
-  font-family: var(--cf-font-stencil);
-  font-size: 8px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--cf-text-dim);
-}
-
 .cf-lamp-readout {
   font-family: var(--cf-font-body);
   font-size: 11px;
   color: var(--cf-text);
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
+  height: 1.4em;
 }
 
 .cf-lamp-readout[data-placeholder='true'] {
   color: rgba(168, 152, 128, 0.35);
   font-family: var(--cf-font-data);
   letter-spacing: 0.1em;
+}
+
+.cf-rotary-segment {
+  display: block;
+  position: absolute;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-rotary-segment--out {
+  animation: cf-rotary-out 150ms ease-in forwards;
+}
+
+.cf-rotary-segment--in {
+  animation: cf-rotary-in 150ms ease-out forwards;
 }
 
 /* ── Dashboard lamp (always-visible check light) ───────── */
