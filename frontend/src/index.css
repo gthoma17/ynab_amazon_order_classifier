@@ -1100,16 +1100,24 @@ textarea[data-placeholder='true']::placeholder {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--cf-s3);
-  align-items: start;
+  align-items: stretch;
 }
 
 .cf-sync-mode {
   width: max-content;
+  display: flex;
+  flex-direction: column;
 }
 
 .cf-sync-mode .cf-radio-group {
   grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
   margin-top: 0;
+  flex: 1;
+}
+
+.cf-sync-mode .cf-radio-option {
+  align-items: center;
 }
 
 .cf-sync-params {
