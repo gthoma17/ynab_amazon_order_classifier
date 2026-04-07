@@ -1,109 +1,644 @@
+/* =============================================================
+   CASSETTE FUTURISM — Design Tokens & Global Styles
+   Font strategy: Google Fonts CDN (Share Tech Mono, VT323,
+   Courier Prime, IBM Plex Mono, Stardos Stencil).
+   Fallback stack is monospace-only so Pi offline use
+   still reads as intentionally typewriter-style.
+   Numeric readout: VT323 (DSEG7/Digital-7 licensing unclear;
+   VT323 provides adequate dot-matrix character).
+   ============================================================= */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ── Palette ─────────────────────────────────────────────── */
+  --cf-bg: #0d0d0b; /* Matte Black   — deep panels          */
+  --cf-panel: #1c1c1a; /* Gunmetal      — raised surfaces       */
+  --cf-panel-hi: #252523; /* Gunmetal Hi   — hover tint            */
+  --cf-bezel: #c8b89a; /* Aged Plastic  — bezels, housing       */
+  --cf-amber: #ffb347; /* Phosphor Amber — active / glow        */
+  --cf-amber-dim: rgba(255, 179, 71, 0.12);
+  --cf-green: #39ff14; /* CRT Green     — data readouts         */
+  --cf-green-dim: rgba(57, 255, 20, 0.12);
+  --cf-red: #e8341a; /* VU Red        — warnings / errors     */
+  --cf-red-dim: rgba(232, 52, 26, 0.12);
+  --cf-text: #f0ead6; /* Warm White    — body text             */
+  --cf-text-dim: #a89880; /* Faded Cream   — labels / metadata     */
+  --cf-tape: #4a2c0a; /* Oxide Brown   — decorative tape       */
+  --cf-border: #3a3a38; /* Panel dividers                        */
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ── Typography ─────────────────────────────────────────── */
+  --cf-font-display: 'Share Tech Mono', 'VT323', ui-monospace, Consolas, monospace;
+  --cf-font-body: 'Courier Prime', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --cf-font-stencil: 'Stardos Stencil', ui-monospace, Consolas, monospace;
+  --cf-font-data: 'VT323', ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* ── Spacing (8px base grid) ─────────────────────────────── */
+  --cf-s1: 8px;
+  --cf-s2: 16px;
+  --cf-s3: 24px;
+  --cf-s4: 32px;
+  --cf-s5: 40px;
+  --cf-s6: 48px;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* ── Shadows / Bevels ────────────────────────────────────── */
+  --cf-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.7);
+  --cf-inset-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(0, 0, 0, 0.9);
+  --cf-btn-shadow: 0 2px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --cf-btn-active: inset 0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+/* ── Reset & base ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--cf-bg);
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 400;
+  margin: 0 0 var(--cf-s2);
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-family: var(--cf-font-display);
+  font-size: 22px;
+  color: var(--cf-amber);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 179, 71, 0.35);
+  padding-bottom: var(--cf-s2);
+  border-bottom: 1px solid var(--cf-border);
+  margin-bottom: var(--cf-s3);
 }
+
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  font-family: var(--cf-font-stencil);
+  font-size: 11px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: var(--cf-s2);
+}
+
+h3 {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: var(--cf-s1);
+}
+
+p,
+small {
+  color: var(--cf-text-dim);
+  font-family: var(--cf-font-body);
+}
+
+em {
+  font-style: normal;
+  color: var(--cf-text-dim);
+}
+
+/* ── Panel ────────────────────────────────────────────────── */
+
+.cf-panel {
+  background: var(--cf-panel);
+  border: 1px solid var(--cf-border);
+  border-radius: 3px;
+  box-shadow: var(--cf-panel-shadow);
+  padding: var(--cf-s3);
+  margin-bottom: var(--cf-s3);
+  position: relative;
+}
+
+/* Subtle horizontal grain — reads as brushed metal */
+.cf-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.025) 3px,
+    rgba(0, 0, 0, 0.025) 4px
+  );
+}
+
+/* Stencil label positioned at top-left of panel border */
+.cf-panel-label {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  background: var(--cf-panel);
+  position: absolute;
+  top: -8px;
+  left: var(--cf-s2);
+  padding: 0 6px;
+  z-index: 1;
+}
+
+/* ── Form controls ────────────────────────────────────────── */
+
+label:not(.cf-toggle-label) {
+  display: block;
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  margin-bottom: 4px;
+}
+
+.cf-form-row {
+  margin-bottom: var(--cf-s2);
+}
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='date'],
+input[type='email'],
+select,
+textarea {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  padding: 7px 10px;
+  width: 100%;
+  display: block;
+  box-shadow: var(--cf-inset-shadow);
+  outline: none;
+  transition: border-color 0.08s ease;
+}
+
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='number']:focus,
+input[type='date']:focus,
+input[type='email']:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--cf-amber);
+  box-shadow:
+    var(--cf-inset-shadow),
+    0 0 0 1px rgba(255, 179, 71, 0.25);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A89880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+fieldset {
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  padding: var(--cf-s2);
+  margin: var(--cf-s2) 0;
+}
+
+legend {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  padding: 0 6px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+
+button {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 8px 16px;
+  transition:
+    box-shadow 50ms ease-in,
+    background-color 50ms ease-in;
+  position: relative;
+}
+
+/* Primary — amber outline, convex feel */
+button:not(.cf-btn-secondary):not(.cf-btn-danger) {
+  background: var(--cf-panel-hi);
+  color: var(--cf-amber);
+  border: 1px solid rgba(255, 179, 71, 0.6);
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button:not(.cf-btn-secondary):not(.cf-btn-danger):hover:not(:disabled) {
+  background: var(--cf-amber-dim);
+  border-color: var(--cf-amber);
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(255, 179, 71, 0.2);
+}
+
+button:not(.cf-btn-secondary):not(.cf-btn-danger):active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+button:not(.cf-btn-secondary):not(.cf-btn-danger):disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Secondary — neutral */
+button.cf-btn-secondary {
+  background: var(--cf-panel);
+  color: var(--cf-text-dim);
+  border: 1px solid var(--cf-border);
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button.cf-btn-secondary:hover:not(:disabled) {
+  color: var(--cf-text);
+  border-color: var(--cf-text-dim);
+}
+
+button.cf-btn-secondary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Toggle switch ────────────────────────────────────────── */
+
+.cf-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+  cursor: pointer;
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  user-select: none;
+  margin-bottom: var(--cf-s2);
+}
+
+.cf-toggle-label input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 52px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  box-shadow: var(--cf-inset-shadow);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 50ms ease-in,
+    border-color 50ms ease-in;
+}
+
+.cf-toggle-label input[type='checkbox']::after {
+  content: 'OFF';
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  font-family: var(--cf-font-stencil);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  color: var(--cf-text-dim);
+  transition: all 50ms ease-in;
+}
+
+.cf-toggle-label input[type='checkbox']:checked {
+  background: var(--cf-amber-dim);
+  border-color: rgba(255, 179, 71, 0.5);
+}
+
+.cf-toggle-label input[type='checkbox']:checked::after {
+  content: 'ON';
+  left: auto;
+  right: 5px;
+  color: var(--cf-amber);
+  text-shadow: 0 0 4px rgba(255, 179, 71, 0.5);
+}
+
+/* ── CRT Screen wrapper ───────────────────────────────────── */
+
+.cf-crt {
+  background: #050503;
+  border: 2px solid var(--cf-bezel);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.85),
+    0 0 0 4px var(--cf-panel),
+    0 4px 16px rgba(0, 0, 0, 0.9);
+  position: relative;
+  overflow: hidden;
+  padding: var(--cf-s3);
+  /* Subtle green/amber CRT tint */
+  color: #d4cca8;
+}
+
+/* Scanline overlay */
+.cf-crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Vignette */
+.cf-crt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
+  pointer-events: none;
+  z-index: 11;
+}
+
+/* ── Data table ───────────────────────────────────────────── */
+
+.cf-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-data-table th {
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cf-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cf-data-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(58, 58, 56, 0.35);
+  color: var(--cf-text);
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.cf-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Status / Source badges ───────────────────────────────── */
+
+.cf-status {
+  display: inline-block;
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.cf-status-pending {
+  color: var(--cf-amber);
+  background: var(--cf-amber-dim);
+}
+.cf-status-matched {
+  color: var(--cf-text-dim);
+  background: rgba(168, 152, 128, 0.08);
+  border-color: var(--cf-text-dim);
+}
+.cf-status-completed {
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+}
+.cf-status-discarded {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+}
+.cf-status-success {
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+}
+.cf-status-fail {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+}
+
+.cf-source-badge {
+  display: inline-block;
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(58, 58, 56, 0.5);
+  border: 1px solid var(--cf-border);
+  color: var(--cf-text-dim);
+  white-space: nowrap;
+}
+
+/* ── Probe results ────────────────────────────────────────── */
+
+.cf-probe-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  border-radius: 2px;
+  padding: 5px 10px;
+  margin-top: 6px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.cf-probe-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(232, 52, 26, 0.4);
+  border-radius: 2px;
+  padding: 5px 10px;
+  margin-top: 6px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* ── Terminal empty state ─────────────────────────────────── */
+
+.cf-terminal-empty {
+  text-align: center;
+  padding: var(--cf-s5) var(--cf-s3);
+  font-family: var(--cf-font-data);
+  font-size: 22px;
+  color: rgba(168, 152, 128, 0.35);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Status / success indicators ─────────────────────────── */
+
+.cf-saved {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-green);
+  text-shadow: 0 0 5px rgba(57, 255, 20, 0.4);
+  margin-left: var(--cf-s2);
+}
+
+/* ── Role-based overrides ─────────────────────────────────── */
+
+[role='alert'] {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(232, 52, 26, 0.35);
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+[role='status'] {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--cf-green);
+}
+
+/* ── Error panel (loading/fetch fail states) ──────────────── */
+
+.cf-error-panel {
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(232, 52, 26, 0.35);
+  border-radius: 2px;
+  padding: var(--cf-s2);
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-red);
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s1);
+}
+
+/* ── Loading state ────────────────────────────────────────── */
+
+.cf-loading {
+  font-family: var(--cf-font-data);
+  font-size: 18px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.3em;
+  text-align: center;
+  padding: var(--cf-s4);
+  animation: cf-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cf-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
   }
 }
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+/* ── Scrollbar ────────────────────────────────────────────── */
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cf-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cf-text-dim);
 }

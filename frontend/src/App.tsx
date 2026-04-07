@@ -8,15 +8,40 @@ import './App.css'
 
 function App() {
   return (
-    <>
-      <nav>
-        <NavLink to="/">Configuration</NavLink>
-        <NavLink to="/categories">Category Rules</NavLink>
-        <NavLink to="/orders">Pending Orders</NavLink>
-        <NavLink to="/logs">Logs</NavLink>
-        <NavLink to="/help">Get Help</NavLink>
+    <div className="cf-app-shell">
+      <nav className="cf-nav">
+        <span className="cf-nav-brand">
+          <span>▶</span> Budget Sortbot
+        </span>
+        <ul className="cf-nav-links">
+          <li>
+            <NavLink to="/" end data-testid="nav-config">
+              Configuration
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/categories" data-testid="nav-categories">
+              Category Rules
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/orders" data-testid="nav-orders">
+              Pending Orders
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/logs" data-testid="nav-logs">
+              Logs
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/help" data-testid="nav-help">
+              Get Help
+            </NavLink>
+          </li>
+        </ul>
       </nav>
-      <main>
+      <main className="cf-main">
         <Routes>
           <Route path="/" element={<ConfigView />} />
           <Route path="/categories" element={<CategoryRulesView />} />
@@ -25,7 +50,7 @@ function App() {
           <Route path="/help" element={<GetHelpView />} />
         </Routes>
       </main>
-    </>
+    </div>
   )
 }
 
