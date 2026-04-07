@@ -990,11 +990,68 @@ textarea[data-placeholder='true']::placeholder {
   text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
 }
 
+/* ── Sync schedule panel ─────────────────────────────────── */
+
+.cf-sync-schedule {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cf-s3);
+  align-items: start;
+}
+
+.cf-sync-mode .cf-radio-group {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.cf-sync-params {
+  padding-top: 2px;
+}
+
+.cf-sync-param--active > label {
+  color: var(--cf-text);
+}
+
+.cf-sync-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--cf-s1);
+}
+
+.cf-warning-lamp {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #2a2a28;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition:
+    background 80ms ease,
+    box-shadow 80ms ease;
+}
+
+.cf-warning-lamp[data-lit='true'] {
+  background: #e8341a;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(232, 52, 26, 0.8);
+}
+
+.cf-warning-lamp-label {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+}
+
 /* ── Radio group (indicator radio buttons) ───────────────── */
 
 .cf-radio-group {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--cf-s1);
   margin-top: var(--cf-s1);
 }
@@ -1009,8 +1066,9 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-radio-option {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--cf-s2);
+  min-width: 0;
   padding: var(--cf-s1) var(--cf-s2);
   border: 1px solid var(--cf-border);
   border-radius: 2px;
@@ -1040,6 +1098,7 @@ textarea[data-placeholder='true']::placeholder {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 2px;
   background: #2a2a28;
   border: 1px solid rgba(0, 0, 0, 0.6);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
@@ -1056,11 +1115,14 @@ textarea[data-placeholder='true']::placeholder {
 }
 
 .cf-radio-label {
+  margin-left: 0.5rem;
   font-family: var(--cf-font-stencil);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--cf-text);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .cf-radio-option--selected .cf-radio-label {

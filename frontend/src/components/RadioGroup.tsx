@@ -9,6 +9,7 @@ interface RadioGroupProps<T extends string> {
   onChange: (value: T) => void
   name: string
   ariaLabel?: string
+  testIdPrefix?: string
 }
 
 export default function RadioGroup<T extends string>({
@@ -17,6 +18,7 @@ export default function RadioGroup<T extends string>({
   onChange,
   name,
   ariaLabel,
+  testIdPrefix,
 }: RadioGroupProps<T>) {
   return (
     <div className="cf-radio-group" role="radiogroup" aria-label={ariaLabel}>
@@ -27,6 +29,7 @@ export default function RadioGroup<T extends string>({
             key={opt.value}
             className={`cf-radio-option${selected ? ' cf-radio-option--selected' : ''}`}
             data-selected={selected ? 'true' : undefined}
+            data-testid={testIdPrefix ? `${testIdPrefix}-${opt.value}` : undefined}
           >
             <input
               type="radio"

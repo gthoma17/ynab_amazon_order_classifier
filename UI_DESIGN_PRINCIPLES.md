@@ -251,4 +251,33 @@ Use these as visual anchors when making decisions:
 
 ---
 
+---
+
+## 12. Persistent State Panels
+
+Every panel is a fixed physical surface. Controls do not appear or disappear based
+on state — they are always present, always in the same position.
+
+### Mode-Driven Parameter Panels
+
+When a control section has multiple modes that require different parameter
+inputs, render **all parameters simultaneously** in a fixed-height panel.
+Never conditionally mount or unmount inputs based on the selected mode.
+
+Use active / inactive visual state to communicate relevance:
+
+- **Active:** full brightness, interactive, standard recessed input treatment
+- **Inactive:** opacity `0.25`–`0.35`, `disabled` attribute, same position and
+  size as active state — nothing moves
+
+Warning indicators follow the same rule: the lamp housing and its label are
+always present. The lamp illuminates when the relevant mode is selected; the
+label is always readable. The lamp being lit draws attention to text that was
+always there — it does not reveal new text.
+
+The guiding principle: a user should be able to read the entire panel and
+understand all available parameters before touching a single control.
+
+---
+
 *This document is a living reference. When in doubt, ask: "Does this look like it was built, not designed?"*

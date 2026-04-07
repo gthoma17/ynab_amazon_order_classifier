@@ -516,120 +516,130 @@ setFastmailProbe(idleProbe)
           <fieldset>
             <legend>Sync schedule</legend>
 
-            <div className="cf-form-row">
-              <label>Frequency</label>
-              <RadioGroup<ScheduleType>
-                name="scheduleType"
-                ariaLabel="Frequency"
-                value={scheduleType}
-                onChange={setScheduleType}
-                options={[
-                  { value: 'HOURLY', label: 'Every hour' },
-                  { value: 'EVERY_N_HOURS', label: 'Every N hours' },
-                  { value: 'EVERY_N_MINUTES', label: 'Every N minutes' },
-                  { value: 'EVERY_N_SECONDS', label: 'Every N seconds' },
-                  { value: 'DAILY', label: 'Daily' },
-                  { value: 'WEEKLY', label: 'Weekly' },
-                ]}
-              />
-            </div>
+            {(() => {
+              const nActive =
+                scheduleType === 'EVERY_N_HOURS' ||
+                scheduleType === 'EVERY_N_MINUTES' ||
+                scheduleType === 'EVERY_N_SECONDS'
+              const timeActive = scheduleType === 'DAILY' || scheduleType === 'WEEKLY'
+              const dayActive = scheduleType === 'WEEKLY'
+              const warningLit = scheduleType === 'EVERY_N_SECONDS'
 
-            {scheduleType === 'EVERY_N_SECONDS' && (
-              <div>
-                <div className="cf-form-row">
-                  <label htmlFor="secondInterval">Every N seconds</label>
-                  <input
-                    id="secondInterval"
-                    type="number"
-                    min={1}
-                    max={59}
-                    value={secondInterval}
-                    onChange={(e) => setSecondInterval(parseInt(e.target.value, 10) || 1)}
-                  />
+              const nValue =
+                scheduleType === 'EVERY_N_SECONDS'
+                  ? secondInterval
+                  : scheduleType === 'EVERY_N_MINUTES'
+                    ? minuteInterval
+                    : hourInterval
+              const nMax = scheduleType === 'EVERY_N_HOURS' ? 23 : 59
+
+              function handleNChange(e: React.ChangeEvent<HTMLInputElement>) {
+                const v = parseInt(e.target.value, 10) || 1
+                if (scheduleType === 'EVERY_N_SECONDS') setSecondInterval(v)
+                else if (scheduleType === 'EVERY_N_MINUTES') setMinuteInterval(v)
+                else setHourInterval(v)
+              }
+
+              return (
+                <div className="cf-sync-schedule">
+                  <div className="cf-sync-mode">
+                    <RadioGroup<ScheduleType>
+                      name="scheduleType"
+                      ariaLabel="Frequency"
+                      value={scheduleType}
+                      onChange={setScheduleType}
+                      testIdPrefix="schedule-mode"
+                      options={[
+                        { value: 'HOURLY', label: 'Every hour' },
+                        { value: 'EVERY_N_HOURS', label: 'Every N hours' },
+                        { value: 'EVERY_N_MINUTES', label: 'Every N minutes' },
+                        { value: 'EVERY_N_SECONDS', label: 'Every N seconds' },
+                        { value: 'DAILY', label: 'Daily' },
+                        { value: 'WEEKLY', label: 'Weekly' },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="cf-sync-params">
+                    <div className={`cf-form-row${nActive ? ' cf-sync-param--active' : ''}`}>
+                      <label htmlFor="scheduleN">N</label>
+                      <input
+                        id="scheduleN"
+                        type="number"
+                        min={1}
+                        max={nMax}
+                        value={nValue}
+                        disabled={!nActive}
+                        onChange={handleNChange}
+                        data-testid="schedule-param-n"
+                      />
+                    </div>
+
+                    <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                      <label htmlFor="scheduleHour">Hour</label>
+                      <select
+                        id="scheduleHour"
+                        value={scheduleHour}
+                        disabled={!timeActive}
+                        onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
+                        data-testid="schedule-param-hour"
+                      >
+                        {HOURS.map((h) => (
+                          <option key={h} value={h}>
+                            {String(h).padStart(2, '0')}:00
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                      <label htmlFor="scheduleMinute">Min</label>
+                      <select
+                        id="scheduleMinute"
+                        value={scheduleMinute}
+                        disabled={!timeActive}
+                        onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
+                        data-testid="schedule-param-min"
+                      >
+                        {MINUTES.map((m) => (
+                          <option key={m} value={m}>
+                            :{String(m).padStart(2, '0')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className={`cf-form-row${dayActive ? ' cf-sync-param--active' : ''}`}>
+                      <label htmlFor="scheduleDow">Day</label>
+                      <select
+                        id="scheduleDow"
+                        value={scheduleDow}
+                        disabled={!dayActive}
+                        onChange={(e) => setScheduleDow(e.target.value)}
+                        data-testid="schedule-param-day"
+                      >
+                        {DAYS_OF_WEEK.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="cf-sync-warning" data-testid="schedule-warning-lamp">
+                      <span
+                        className="cf-warning-lamp"
+                        data-lit={warningLit ? 'true' : undefined}
+                        aria-hidden="true"
+                      />
+                      <span className="cf-warning-lamp-label">
+                        NOT RECOMMENDED FOR PRODUCTION — DEVELOPMENT AND TESTING ONLY
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p role="alert">
-                  ⚠ Not recommended for production — intended for development and testing only.
-                </p>
-              </div>
-            )}
-
-            {scheduleType === 'EVERY_N_MINUTES' && (
-              <div className="cf-form-row">
-                <label htmlFor="minuteInterval">Every N minutes</label>
-                <input
-                  id="minuteInterval"
-                  type="number"
-                  min={1}
-                  max={59}
-                  value={minuteInterval}
-                  onChange={(e) => setMinuteInterval(parseInt(e.target.value, 10) || 1)}
-                />
-              </div>
-            )}
-
-            {scheduleType === 'EVERY_N_HOURS' && (
-              <div className="cf-form-row">
-                <label htmlFor="hourInterval">Every N hours</label>
-                <input
-                  id="hourInterval"
-                  type="number"
-                  min={1}
-                  max={23}
-                  value={hourInterval}
-                  onChange={(e) => setHourInterval(parseInt(e.target.value, 10) || 1)}
-                />
-              </div>
-            )}
-
-            {(scheduleType === 'DAILY' || scheduleType === 'WEEKLY') && (
-              <>
-                <div className="cf-form-row">
-                  <label htmlFor="scheduleHour">Hour</label>
-                  <select
-                    id="scheduleHour"
-                    value={scheduleHour}
-                    onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
-                  >
-                    {HOURS.map((h) => (
-                      <option key={h} value={h}>
-                        {String(h).padStart(2, '0')}:00
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="cf-form-row">
-                  <label htmlFor="scheduleMinute">Minute</label>
-                  <select
-                    id="scheduleMinute"
-                    value={scheduleMinute}
-                    onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
-                  >
-                    {MINUTES.map((m) => (
-                      <option key={m} value={m}>
-                        :{String(m).padStart(2, '0')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-
-            {scheduleType === 'WEEKLY' && (
-              <div className="cf-form-row">
-                <label htmlFor="scheduleDow">Day of week</label>
-                <select
-                  id="scheduleDow"
-                  value={scheduleDow}
-                  onChange={(e) => setScheduleDow(e.target.value)}
-                >
-                  {DAYS_OF_WEEK.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+              )
+            })()}
           </fieldset>
 
           <div className="cf-btn-row">

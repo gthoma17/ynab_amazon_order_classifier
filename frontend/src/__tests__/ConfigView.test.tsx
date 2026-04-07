@@ -269,7 +269,7 @@ describe('ConfigView', () => {
     expect(screen.getByLabelText(/start from date/i)).toHaveValue('2024-06-01')
   })
 
-  it('shows hour and minute selectors for DAILY schedule', async () => {
+  it('enables hour and minute inputs for DAILY schedule, disables N and day', async () => {
     server.use(
       http.get('/api/config/processing', () =>
         HttpResponse.json({
@@ -282,11 +282,13 @@ describe('ConfigView', () => {
     )
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /^daily$/i })).toBeChecked())
-    expect(screen.getByLabelText(/^hour$/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^minute$/i)).toBeInTheDocument()
+    expect(screen.getByTestId('schedule-param-hour')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-min')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
   })
 
-  it('shows day-of-week selector for WEEKLY schedule', async () => {
+  it('enables day input only for WEEKLY schedule', async () => {
     server.use(
       http.get('/api/config/processing', () =>
         HttpResponse.json({
@@ -299,10 +301,11 @@ describe('ConfigView', () => {
     )
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /^weekly$/i })).toBeChecked())
-    expect(screen.getByLabelText(/day of week/i)).toBeInTheDocument()
+    expect(screen.getByTestId('schedule-param-day')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
   })
 
-  it('shows second-interval input and production warning for EVERY_N_SECONDS schedule', async () => {
+  it('enables N input and lights warning lamp for EVERY_N_SECONDS schedule', async () => {
     server.use(
       http.get('/api/config/processing', () =>
         HttpResponse.json({
@@ -317,8 +320,12 @@ describe('ConfigView', () => {
     await waitFor(() =>
       expect(screen.getByRole('radio', { name: /every n seconds/i })).toBeChecked(),
     )
-    expect(screen.getByRole('spinbutton', { name: /every n seconds/i })).toHaveValue(3)
-    expect(screen.getByRole('alert')).toHaveTextContent(/not recommended for production/i)
+    const nInput = screen.getByTestId('schedule-param-n')
+    expect(nInput).not.toBeDisabled()
+    expect(nInput).toHaveValue(3)
+    const warningLamp = screen.getByTestId('schedule-warning-lamp')
+    expect(warningLamp.querySelector('[data-lit="true"]')).toBeInTheDocument()
+    expect(warningLamp).toHaveTextContent(/not recommended for production/i)
   })
 
   it('sends secondInterval in PUT body when EVERY_N_SECONDS is selected', async () => {
@@ -373,6 +380,74 @@ describe('ConfigView', () => {
     await waitFor(() => expect(capturedBody).not.toBeNull())
     // Dashboard lamp should be lit after save
     await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
+  })
+
+  // --- Sync schedule user journey ---
+
+  it('mode selection drives active state: all params always present, correct ones enabled', async () => {
+    const user = userEvent.setup()
+    render(<ConfigView />)
+
+    // Default mode is EVERY_N_HOURS — N active, others inactive
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked(),
+    )
+    expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
+    // Warning lamp unlit
+    expect(
+      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
+    ).not.toBeInTheDocument()
+
+    // Switch to EVERY_N_SECONDS — N active, warning lamp lit
+    await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
+    expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
+    expect(
+      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
+    ).toBeInTheDocument()
+
+    // Switch to WEEKLY — hour, min, day active; N inactive; warning unlit
+    await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
+    expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-hour')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-min')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-param-day')).not.toBeDisabled()
+    expect(
+      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
+    ).not.toBeInTheDocument()
+
+    // Switch to HOURLY — all params inactive
+    await user.click(screen.getByRole('radio', { name: /^every hour$/i }))
+    expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
+    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
+  })
+
+  it('inactive inputs are excluded from PUT body', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.put('/api/config/processing', async ({ request }) => {
+        capturedBody = await request.json()
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByLabelText(/max orders per run/i))
+
+    // Default: EVERY_N_HOURS — hour/minute/dayOfWeek should be null in body
+    await user.click(screen.getByRole('button', { name: /save processing settings/i }))
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    const sc = (capturedBody as Record<string, unknown>).scheduleConfig as Record<string, unknown>
+    expect(sc.type).toBe('EVERY_N_HOURS')
+    expect(sc.hour).toBeNull()
+    expect(sc.minute).toBe(0)
+    expect(sc.dayOfWeek).toBeNull()
+    expect(sc.minuteInterval).toBeNull()
+    expect(sc.secondInterval).toBeNull()
   })
 
   // --- Dry run ---
