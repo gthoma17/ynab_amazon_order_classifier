@@ -882,6 +882,47 @@ textarea[data-placeholder='true']::placeholder {
   letter-spacing: 0.1em;
 }
 
+/* ── Dashboard lamp (always-visible check light) ───────── */
+
+.cf-dashboard-lamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-dashboard-lamp-bulb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2a2a28;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+  transition:
+    background 100ms ease-in,
+    box-shadow 100ms ease-in;
+}
+
+.cf-dashboard-lamp-bulb[data-lit='true'] {
+  background: var(--cf-green);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(57, 255, 20, 0.9);
+}
+
+.cf-dashboard-lamp-label {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+}
+
+.cf-dashboard-lamp-bulb[data-lit='true'] + .cf-dashboard-lamp-label {
+  color: var(--cf-green);
+  text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
+}
+
 /* ── Radio group (indicator radio buttons) ───────────────── */
 
 .cf-radio-group {

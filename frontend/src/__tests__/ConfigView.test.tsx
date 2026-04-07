@@ -97,8 +97,15 @@ describe('ConfigView', () => {
     const user = userEvent.setup()
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
+
+    // Dashboard lamp should be unlit initially
+    const lamp = screen.getByTestId('config-saved-lamp')
+    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: /^save$/i }))
-    await screen.findByText('Saved')
+
+    // Dashboard lamp should be lit after save
+    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
   })
 
   // --- Test Connection buttons ---
@@ -261,9 +268,13 @@ describe('ConfigView', () => {
       expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected'),
     )
 
+    // Dashboard lamp should be unlit initially
+    const lamp = screen.getByTestId('config-saved-lamp')
+    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+
     // Save should reset probe to idle (readout shows placeholder)
     await user.click(screen.getByRole('button', { name: /^save$/i }))
-    await screen.findByText('Saved')
+    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
     expect(screen.getByLabelText('YNAB probe result').textContent).toContain('STANDING BY')
   })
 
@@ -400,10 +411,15 @@ describe('ConfigView', () => {
     render(<ConfigView />)
     await waitFor(() => screen.getByLabelText(/max orders per run/i))
 
+    // Dashboard lamp should be unlit initially
+    const lamp = screen.getByTestId('processing-saved-lamp')
+    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
-    expect(screen.getByText(/processing settings saved/i)).toBeInTheDocument()
+    // Dashboard lamp should be lit after save
+    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
   })
 
   // --- Dry run ---

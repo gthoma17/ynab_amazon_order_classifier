@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 import IndicatorPanel from '../components/IndicatorPanel'
 import RadioGroup from '../components/RadioGroup'
+import DashboardLamp from '../components/DashboardLamp'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -468,7 +469,7 @@ export default function ConfigView() {
       {/* Save API keys */}
       <div className="cf-btn-row" style={{ marginBottom: 'var(--cf-s4)' }}>
         <button onClick={handleSave}>Save</button>
-        {saved && <span className="cf-saved">Saved</span>}
+        <DashboardLamp label="Saved" isLit={saved} testId="config-saved-lamp" />
       </div>
 
       {/* ── PROCESSING panel ──────────────────────────────────────────────── */}
@@ -619,7 +620,11 @@ export default function ConfigView() {
 
           <div className="cf-btn-row">
             <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
-            {processingConfigSaved && <span className="cf-saved">✓ Processing settings saved</span>}
+            <DashboardLamp
+              label="Saved"
+              isLit={processingConfigSaved}
+              testId="processing-saved-lamp"
+            />
           </div>
         </section>
       </div>
