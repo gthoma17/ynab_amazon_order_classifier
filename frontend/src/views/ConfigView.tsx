@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 import IndicatorPanel from '../components/IndicatorPanel'
+import RadioGroup from '../components/RadioGroup'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -426,19 +427,21 @@ export default function ConfigView() {
             <legend>Sync schedule</legend>
 
             <div className="cf-form-row">
-              <label htmlFor="scheduleType">Frequency</label>
-              <select
-                id="scheduleType"
+              <label>Frequency</label>
+              <RadioGroup<ScheduleType>
+                name="scheduleType"
+                ariaLabel="Frequency"
                 value={scheduleType}
-                onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
-              >
-                <option value="HOURLY">Every hour</option>
-                <option value="EVERY_N_HOURS">Every N hours</option>
-                <option value="EVERY_N_MINUTES">Every N minutes</option>
-                <option value="EVERY_N_SECONDS">Every N seconds</option>
-                <option value="DAILY">Daily</option>
-                <option value="WEEKLY">Weekly</option>
-              </select>
+                onChange={setScheduleType}
+                options={[
+                  { value: 'HOURLY', label: 'Every hour' },
+                  { value: 'EVERY_N_HOURS', label: 'Every N hours' },
+                  { value: 'EVERY_N_MINUTES', label: 'Every N minutes' },
+                  { value: 'EVERY_N_SECONDS', label: 'Every N seconds' },
+                  { value: 'DAILY', label: 'Daily' },
+                  { value: 'WEEKLY', label: 'Weekly' },
+                ]}
+              />
             </div>
 
             {scheduleType === 'EVERY_N_SECONDS' && (

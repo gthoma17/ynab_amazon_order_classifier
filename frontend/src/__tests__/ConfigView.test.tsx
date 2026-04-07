@@ -269,7 +269,7 @@ describe('ConfigView', () => {
 
   it('renders schedule frequency selector', () => {
     render(<ConfigView />)
-    expect(screen.getByLabelText(/frequency/i)).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: /frequency/i })).toBeInTheDocument()
   })
 
   it('loads processing config values from the API', async () => {
@@ -300,7 +300,7 @@ describe('ConfigView', () => {
       ),
     )
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('DAILY'))
+    await waitFor(() => expect(screen.getByRole('radio', { name: /^daily$/i })).toBeChecked())
     expect(screen.getByLabelText(/^hour$/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^minute$/i)).toBeInTheDocument()
   })
@@ -317,7 +317,7 @@ describe('ConfigView', () => {
       ),
     )
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('WEEKLY'))
+    await waitFor(() => expect(screen.getByRole('radio', { name: /^weekly$/i })).toBeChecked())
     expect(screen.getByLabelText(/day of week/i)).toBeInTheDocument()
   })
 
@@ -333,8 +333,10 @@ describe('ConfigView', () => {
       ),
     )
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS'))
-    expect(screen.getByLabelText(/every n seconds/i)).toHaveValue(3)
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /every n seconds/i })).toBeChecked(),
+    )
+    expect(screen.getByRole('spinbutton', { name: /every n seconds/i })).toHaveValue(3)
     expect(screen.getByRole('alert')).toHaveTextContent(/not recommended for production/i)
   })
 
@@ -356,7 +358,9 @@ describe('ConfigView', () => {
       }),
     )
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/frequency/i)).toHaveValue('EVERY_N_SECONDS'))
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /every n seconds/i })).toBeChecked(),
+    )
 
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
 

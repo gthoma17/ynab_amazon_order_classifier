@@ -112,6 +112,20 @@ Every surface should read as a **physical material**. Use layered CSS or SVG tex
 - Clear ON/OFF labeling with stencil text
 - Satisfying visual snap between states
 
+### Dropdowns / Select Inputs
+
+Do not use `<select>` elements or custom dropdown flyouts. Dropdowns violate
+the persistent-panel rule (Section 12) by producing content that appears from
+nowhere.
+
+Replace all dropdowns with **indicator radio groups**:
+- Render all options simultaneously in the layout — never hide options
+- Each option: amber indicator lamp (lit when selected, dark when not) +
+  stencil label
+- Selected state: lamp illuminated (Phosphor Amber `#FFB347` with glow), surface inset
+- Unselected state: lamp dark (`#2A2A28`), surface outset (convex)
+- The number of options should be small enough that all fit without scrolling
+
 ---
 
 ## 6. Layout Principles
