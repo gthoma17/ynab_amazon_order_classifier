@@ -274,6 +274,7 @@ export default function ConfigView() {
               <label htmlFor="ynabToken">YNAB Token</label>
               <input
                 id="ynabToken"
+                type="text"
                 value={keys.ynabToken}
                 onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
               />
@@ -335,6 +336,7 @@ export default function ConfigView() {
               <label htmlFor="fastmailApiToken">FastMail API Token</label>
               <input
                 id="fastmailApiToken"
+                type="text"
                 value={keys.fastmailApiToken}
                 onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
               />
@@ -365,6 +367,7 @@ export default function ConfigView() {
             <label htmlFor="geminiKey">Gemini Key</label>
             <input
               id="geminiKey"
+              type="text"
               value={keys.geminiKey}
               onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
             />
