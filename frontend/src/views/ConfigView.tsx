@@ -335,7 +335,6 @@ export default function ConfigView() {
               <label htmlFor="fastmailApiToken">FastMail API Token</label>
               <input
                 id="fastmailApiToken"
-                type="password"
                 value={keys.fastmailApiToken}
                 onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
               />
