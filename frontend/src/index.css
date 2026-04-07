@@ -1025,8 +1025,8 @@ textarea[data-placeholder='true']::placeholder {
 .cf-splitflap {
   perspective: 400px;
   height: 28px;
-  min-width: 180px;
-  display: inline-flex;
+  width: 100%;
+  display: flex;
   align-items: stretch;
 }
 
@@ -1151,6 +1151,7 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-sync-warning {
   margin-top: var(--cf-s1);
+  padding-left: var(--cf-s2); /* align with inputs: lamp width (8px) + row gap (8px) */
 }
 
 /* ── Radio group (indicator radio buttons) ───────────────── */
