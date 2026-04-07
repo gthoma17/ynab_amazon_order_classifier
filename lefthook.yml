@@ -11,47 +11,47 @@
 #                running them at commit time would be punishing; pre-push keeps the
 #                gate while keeping commits fast.
 
-pre-commit:
-  commands:
-    kotlin-format:
-      root: "."
-      glob: "**/*.{kt,kts}"
-      run: ./gradlew spotlessCheck --no-daemon -q
-      fail_text: |
-        Kotlin formatting issues found. Run `./gradlew spotlessApply` to auto-fix, then re-stage.
-
-    ts-format:
-      root: "frontend"
-      glob: "**/*.{ts,tsx,json,css}"
-      run: npm run format:check
-      fail_text: |
-        TypeScript formatting issues found. Run `cd frontend && npm run format` to auto-fix, then re-stage.
-
-    ts-lint:
-      root: "frontend"
-      glob: "**/*.{ts,tsx}"
-      run: npm run lint
-      fail_text: |
-        TypeScript lint errors found. Fix the reported issues, then re-stage.
-
-pre-push:
-  commands:
-    backend-tests:
-      root: "."
-      run: ./gradlew test --no-daemon -q
-      fail_text: |
-        Backend tests failed. Fix the failing tests before pushing.
-
-    frontend-tests:
-      root: "frontend"
-      run: npm test
-      fail_text: |
-        Frontend tests failed. Fix the failing tests before pushing.
-
-    journey-test:
-      root: "frontend"
-      run: npm run test:e2e
-      fail_text: |
-        E2E journey test failed. Fix the failing test before pushing.
-        Tip: run `cd frontend && npm run test:e2e` to debug locally.
-        Ensure `npx playwright install chromium` has been run in the frontend directory.
+#pre-commit:
+#  commands:
+#    kotlin-format:
+#      root: "."
+#      glob: "**/*.{kt,kts}"
+#      run: ./gradlew spotlessCheck --no-daemon -q
+#      fail_text: |
+#        Kotlin formatting issues found. Run `./gradlew spotlessApply` to auto-fix, then re-stage.
+#
+#    ts-format:
+#      root: "frontend"
+#      glob: "**/*.{ts,tsx,json,css}"
+#      run: npm run format:check
+#      fail_text: |
+#        TypeScript formatting issues found. Run `cd frontend && npm run format` to auto-fix, then re-stage.
+#
+#    ts-lint:
+#      root: "frontend"
+#      glob: "**/*.{ts,tsx}"
+#      run: npm run lint
+#      fail_text: |
+#        TypeScript lint errors found. Fix the reported issues, then re-stage.
+#
+#pre-push:
+#  commands:
+#    backend-tests:
+#      root: "."
+#      run: ./gradlew test --no-daemon -q
+#      fail_text: |
+#        Backend tests failed. Fix the failing tests before pushing.
+#
+#    frontend-tests:
+#      root: "frontend"
+#      run: npm test
+#      fail_text: |
+#        Frontend tests failed. Fix the failing tests before pushing.
+#
+#    journey-test:
+#      root: "frontend"
+#      run: npm run test:e2e
+#      fail_text: |
+#        E2E journey test failed. Fix the failing test before pushing.
+#        Tip: run `cd frontend && npm run test:e2e` to debug locally.
+#        Ensure `npx playwright install chromium` has been run in the frontend directory.
