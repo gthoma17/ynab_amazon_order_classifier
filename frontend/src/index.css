@@ -183,6 +183,32 @@ label:not(.cf-toggle-label) {
   margin-bottom: var(--cf-s2);
 }
 
+/* Shared class for the three API credential inputs (YNAB Token, FastMail
+   API Token, Gemini Key). Uses an opaque background so appearance is
+   identical regardless of panel nesting depth. */
+.cf-credential-input {
+  background: #0d0d0c;
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  height: 34px;
+  padding: 7px 10px;
+  width: 100%;
+  display: block;
+  box-shadow: var(--cf-inset-shadow);
+  outline: none;
+  transition: border-color 0.08s ease;
+}
+
+.cf-credential-input:focus {
+  border-color: var(--cf-amber);
+  box-shadow:
+    var(--cf-inset-shadow),
+    0 0 0 1px rgba(255, 179, 71, 0.25);
+}
+
 input[type='text'],
 input[type='password'],
 input[type='number'],

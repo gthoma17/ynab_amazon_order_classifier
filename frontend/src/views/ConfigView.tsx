@@ -307,6 +307,7 @@ setFastmailProbe(idleProbe)
               <input
                 id="ynabToken"
                 type="text"
+                className="cf-credential-input"
                 value={keys.ynabToken}
                 onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
               />
@@ -415,6 +416,7 @@ setFastmailProbe(idleProbe)
               <input
                 id="fastmailApiToken"
                 type="text"
+                className="cf-credential-input"
                 value={keys.fastmailApiToken}
                 onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
               />
@@ -457,6 +459,7 @@ setFastmailProbe(idleProbe)
             <input
               id="geminiKey"
               type="text"
+              className="cf-credential-input"
               value={keys.geminiKey}
               onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
             />
