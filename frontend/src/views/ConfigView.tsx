@@ -601,7 +601,7 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                           type="number"
                           min={1}
                           max={nMax}
-                          value={nValue}
+                          value={nActive ? nValue : ''}
                           disabled={!nActive}
                           onChange={handleNChange}
                           data-testid="schedule-param-n"
@@ -617,20 +617,20 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                         data-testid="schedule-lamp-hour"
                       />
                       <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
-                        <label htmlFor="scheduleHour">Hour</label>
-                        <select
-                          id="scheduleHour"
-                          value={scheduleHour}
+                        <label>Hour</label>
+                        <RadioGroup<string>
+                          name="scheduleHour"
+                          ariaLabel="Hour"
+                          value={String(scheduleHour)}
+                          onChange={(v) => setScheduleHour(Number(v))}
                           disabled={!timeActive}
-                          onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
-                          data-testid="schedule-param-hour"
-                        >
-                          {HOURS.map((h) => (
-                            <option key={h} value={h}>
-                              {String(h).padStart(2, '0')}:00
-                            </option>
-                          ))}
-                        </select>
+                          columns={12}
+                          testId="schedule-param-hour"
+                          options={HOURS.map((h) => ({
+                            value: String(h),
+                            label: String(h).padStart(2, '0'),
+                          }))}
+                        />
                       </div>
                     </div>
 
@@ -642,20 +642,20 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                         data-testid="schedule-lamp-min"
                       />
                       <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
-                        <label htmlFor="scheduleMinute">Min</label>
-                        <select
-                          id="scheduleMinute"
-                          value={scheduleMinute}
+                        <label>Min</label>
+                        <RadioGroup<string>
+                          name="scheduleMinute"
+                          ariaLabel="Minute"
+                          value={String(scheduleMinute)}
+                          onChange={(v) => setScheduleMinute(Number(v))}
                           disabled={!timeActive}
-                          onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
-                          data-testid="schedule-param-min"
-                        >
-                          {MINUTES.map((m) => (
-                            <option key={m} value={m}>
-                              :{String(m).padStart(2, '0')}
-                            </option>
-                          ))}
-                        </select>
+                          columns={4}
+                          testId="schedule-param-min"
+                          options={MINUTES.map((m) => ({
+                            value: String(m),
+                            label: ':' + String(m).padStart(2, '0'),
+                          }))}
+                        />
                       </div>
                     </div>
 
@@ -667,20 +667,17 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                         data-testid="schedule-lamp-day"
                       />
                       <div className={`cf-form-row${dayActive ? ' cf-sync-param--active' : ''}`}>
-                        <label htmlFor="scheduleDow">Day</label>
-                        <select
-                          id="scheduleDow"
+                        <label>Day</label>
+                        <RadioGroup<string>
+                          name="scheduleDow"
+                          ariaLabel="Day of week"
                           value={scheduleDow}
+                          onChange={setScheduleDow}
                           disabled={!dayActive}
-                          onChange={(e) => setScheduleDow(e.target.value)}
-                          data-testid="schedule-param-day"
-                        >
-                          {DAYS_OF_WEEK.map((d) => (
-                            <option key={d} value={d}>
-                              {d}
-                            </option>
-                        ))}
-                        </select>
+                          columns={7}
+                          testId="schedule-param-day"
+                          options={DAYS_OF_WEEK.map((d) => ({ value: d, label: d }))}
+                        />
                       </div>
                     </div>
 

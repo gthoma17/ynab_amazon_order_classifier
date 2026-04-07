@@ -1097,9 +1097,13 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-sync-schedule {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
   gap: var(--cf-s3);
   align-items: start;
+}
+
+.cf-sync-mode {
+  width: max-content;
 }
 
 .cf-sync-mode .cf-radio-group {
@@ -1138,8 +1142,8 @@ textarea[data-placeholder='true']::placeholder {
   transition:
     background 50ms,
     box-shadow 50ms;
-  align-self: flex-end;
-  margin-bottom: 10px;
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 .cf-param-lamp[data-active='true'] {
@@ -1161,6 +1165,11 @@ textarea[data-placeholder='true']::placeholder {
   grid-template-columns: repeat(3, 1fr);
   gap: var(--cf-s1);
   margin-top: var(--cf-s1);
+}
+
+.cf-radio-group--disabled {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .cf-radio-input {

@@ -285,10 +285,10 @@ describe('ConfigView', () => {
     )
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /^daily$/i })).toBeChecked())
-    expect(screen.getByTestId('schedule-param-hour')).not.toBeDisabled()
-    expect(screen.getByTestId('schedule-param-min')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-hour')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-min')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
   })
 
   it('enables day input only for WEEKLY schedule', async () => {
@@ -304,7 +304,7 @@ describe('ConfigView', () => {
     )
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /^weekly$/i })).toBeChecked())
-    expect(screen.getByTestId('schedule-param-day')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-day')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
   })
 
@@ -401,9 +401,9 @@ describe('ConfigView', () => {
       expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked(),
     )
     expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
-    expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
     // Warning slot idle (no message)
     expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument()
 
@@ -417,9 +417,9 @@ describe('ConfigView', () => {
     // Switch to WEEKLY — hour, min, day active; N inactive; warning slot idle
     await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-hour')).not.toBeDisabled()
-    expect(screen.getByTestId('schedule-param-min')).not.toBeDisabled()
-    expect(screen.getByTestId('schedule-param-day')).not.toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-hour')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-min')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-day')).toHaveAttribute('data-active', 'true')
     await waitFor(() =>
       expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument(),
     )
@@ -427,9 +427,9 @@ describe('ConfigView', () => {
     // Switch to HOURLY — all params inactive
     await user.click(screen.getByRole('radio', { name: /^hourly$/i }))
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
-    expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
   })
 
   it('inactive inputs are excluded from PUT body', async () => {
