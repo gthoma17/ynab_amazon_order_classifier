@@ -250,3 +250,47 @@ test('first-time setup and first sync journey', async ({ page }) => {
     expect(capturedHelpUrl).toContain(encodeURIComponent('Log content truncated'))
   }
 })
+
+test('page structure and empty states', async ({ page }) => {
+  test.setTimeout(60_000)
+
+  const consoleErrors: string[] = []
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      consoleErrors.push(msg.text())
+    }
+  })
+
+  // Nav links present
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: /configuration/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /category rules/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /pending orders/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /logs/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /get help/i })).toBeVisible()
+
+  // Configuration page: section headings
+  await expect(page.getByRole('heading', { name: /api keys/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'YNAB', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'FastMail', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Gemini', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /processing settings/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dry Run', exact: true })).toBeVisible()
+
+  // Pending Orders: empty state
+  await page.getByRole('link', { name: /pending orders/i }).click()
+  await expect(page.getByRole('heading', { name: /pending orders/i })).toBeVisible()
+  await expect(page.getByText(/no pending orders/i)).toBeVisible()
+
+  // Sync Logs: heading renders (may or may not have logs)
+  await page.getByRole('link', { name: /logs/i }).click()
+  await expect(page.getByRole('heading', { name: /sync logs/i })).toBeVisible()
+
+  // Get Help: textarea visible
+  await page.getByRole('link', { name: /get help/i }).click()
+  await expect(page.getByRole('heading', { name: /get help/i })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /describe the problem/i })).toBeVisible()
+
+  // No console errors
+  expect(consoleErrors).toHaveLength(0)
+})

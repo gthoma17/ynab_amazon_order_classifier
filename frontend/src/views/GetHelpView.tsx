@@ -90,17 +90,17 @@ export default function GetHelpView() {
   const isOpenDisabled = !description.trim() || loading
 
   return (
-    <div>
+    <div className="view">
       <h1>Get Help</h1>
       <p>Something not working? Open a pre-filled GitHub issue and we&apos;ll help.</p>
 
-      <div role="note" aria-label="Redaction notice">
+      <div role="note" aria-label="Redaction notice" className="alert alert--warning">
         <strong>Privacy:</strong> Sensitive values in the generated report are redacted when you
         click &ldquo;Insert Logs.&rdquo; Use that step to preview the sanitized content before
         submitting.
       </div>
 
-      <div>
+      <div className="field" style={{ marginTop: 16 }}>
         <label htmlFor="description">
           Describe the problem <span aria-hidden="true">*</span>
         </label>
@@ -113,8 +113,8 @@ export default function GetHelpView() {
         />
       </div>
 
-      <div>
-        <label>
+      <div className="field">
+        <label className="checkbox-label">
           <input
             type="checkbox"
             checked={includeSyncLogs}
@@ -123,13 +123,13 @@ export default function GetHelpView() {
               setLogsInserted(false)
               setReportBody(null)
             }}
-          />{' '}
+          />
           Include recent sync log entries (recommended)
         </label>
       </div>
 
-      <div>
-        <label>
+      <div className="field">
+        <label className="checkbox-label">
           <input
             type="checkbox"
             checked={includeAppLogs}
@@ -138,13 +138,13 @@ export default function GetHelpView() {
               setLogsInserted(false)
               setReportBody(null)
             }}
-          />{' '}
+          />
           Include full application logs
         </label>
       </div>
 
       {logsRequested && (
-        <div>
+        <div className="action-row">
           <button
             onClick={handleInsertLogs}
             disabled={isInsertDisabled}
@@ -157,7 +157,7 @@ export default function GetHelpView() {
       )}
 
       {reportBody !== null && (
-        <div>
+        <div className="field" style={{ marginTop: 12 }}>
           <label htmlFor="reportPreview">
             Issue body preview{sanitized ? ' — sensitive values redacted' : ''}
             {truncated ? ' — content truncated to fit GitHub URL limit' : ''}
@@ -176,7 +176,11 @@ export default function GetHelpView() {
         <p role="status">Sensitive values (API keys, tokens) were removed from your report.</p>
       )}
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p role="alert" className="alert alert--error">
+          {error}
+        </p>
+      )}
 
       {showWarning && (
         <div role="dialog" aria-modal="true" aria-label="Logs not inserted warning">
@@ -185,21 +189,25 @@ export default function GetHelpView() {
             Click &ldquo;Insert Logs&rdquo; first to preview and confirm that sensitive information
             has been redacted, then open the issue.
           </p>
-          <button onClick={() => setShowWarning(false)}>Go Back</button>
-          <button
-            onClick={() => {
-              setShowWarning(false)
-              openGithubIssue()
-            }}
-          >
-            Open Anyway
-          </button>
+          <div className="action-row" style={{ marginTop: 12 }}>
+            <button onClick={() => setShowWarning(false)}>Go Back</button>
+            <button
+              onClick={() => {
+                setShowWarning(false)
+                openGithubIssue()
+              }}
+            >
+              Open Anyway
+            </button>
+          </div>
         </div>
       )}
 
-      <button onClick={handleOpenIssue} disabled={isOpenDisabled} aria-disabled={isOpenDisabled}>
-        {loading ? 'Preparing…' : 'Open Issue'}
-      </button>
+      <div className="action-row" style={{ marginTop: 16 }}>
+        <button onClick={handleOpenIssue} disabled={isOpenDisabled} aria-disabled={isOpenDisabled}>
+          {loading ? 'Preparing…' : 'Open Issue'}
+        </button>
+      </div>
 
       <p>
         <small>

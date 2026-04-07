@@ -75,4 +75,23 @@ describe('CategoryRulesView', () => {
     await user.click(screen.getByRole('button', { name: /save/i }))
     await screen.findByText(/saved/i)
   })
+
+  it('shows an empty state when no categories are returned', async () => {
+    server.use(
+      http.get('/api/ynab/categories', () => HttpResponse.json([])),
+      http.get('/api/config/categories', () => HttpResponse.json([])),
+    )
+    render(<CategoryRulesView />)
+    await waitFor(() => {
+      expect(screen.getByText(/no categories loaded/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows an error state when the categories fetch fails', async () => {
+    server.use(http.get('/api/ynab/categories', () => new HttpResponse(null, { status: 500 })))
+    render(<CategoryRulesView />)
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load ynab categories/i)).toBeInTheDocument()
+    })
+  })
 })

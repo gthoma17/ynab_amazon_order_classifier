@@ -270,322 +270,380 @@ export default function ConfigView() {
   }
 
   return (
-    <div>
+    <div className="view">
       <h1>API Keys</h1>
       <p>
-        <em>"Test Connection" checks saved credentials. Save before testing new values.</em>
+        <em>
+          &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
+        </em>
       </p>
 
-      <section>
-        <h2>YNAB</h2>
-        <div>
-          <label htmlFor="ynabToken">YNAB Token</label>
-          <input
-            id="ynabToken"
-            value={keys.ynabToken}
-            onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
-          />
+      {/* ── YNAB ──────────────────────────────────────────────────────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h2>YNAB</h2>
         </div>
-        <div>
-          <label htmlFor="ynabBudgetId">Budget</label>
-          {displayBudgetsStatus === 'loading' && (
-            <span aria-label="budgets loading">Loading budgets…</span>
-          )}
-          {displayBudgetsStatus === 'error' && <span role="alert">{displayBudgetsError}</span>}
-          <select
-            id="ynabBudgetId"
-            value={keys.ynabBudgetId}
-            onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-            disabled={
-              !keys.ynabToken || displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0
-            }
-          >
-            {!keys.ynabToken ? (
-              <option value="">Enter a YNAB token first</option>
-            ) : displayBudgetsStatus === 'loaded' && displayBudgets.length === 0 ? (
-              <option value="">No budgets found</option>
-            ) : (
-              <>
-                <option value="">Select a budget…</option>
-                {displayBudgets.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </>
+        <div className="panel-body">
+          <div className="field">
+            <label htmlFor="ynabToken">YNAB Token</label>
+            <input
+              id="ynabToken"
+              value={keys.ynabToken}
+              onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="ynabBudgetId">Budget</label>
+            {displayBudgetsStatus === 'loading' && (
+              <span aria-label="budgets loading">Loading budgets…</span>
             )}
-          </select>
-        </div>
-        <button
-          onClick={() => handleTest('ynab', setYnabProbe)}
-          disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
-        >
-          {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
-        </button>
-        {ynabProbe.status === 'success' && (
-          <span aria-label="YNAB probe result">✓ {ynabProbe.message}</span>
-        )}
-        {ynabProbe.status === 'error' && (
-          <span aria-label="YNAB probe result">✗ {ynabProbe.message}</span>
-        )}
-      </section>
-
-      <section>
-        <h2>FastMail</h2>
-        <div>
-          <label htmlFor="fastmailApiToken">FastMail API Token</label>
-          <input
-            id="fastmailApiToken"
-            type="password"
-            value={keys.fastmailApiToken}
-            onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
-          />
-        </div>
-        <button
-          onClick={() => handleTest('fastmail', setFastmailProbe)}
-          disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
-        >
-          {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
-        </button>
-        {fastmailProbe.status === 'success' && (
-          <span aria-label="FastMail probe result">✓ {fastmailProbe.message}</span>
-        )}
-        {fastmailProbe.status === 'error' && (
-          <span aria-label="FastMail probe result">✗ {fastmailProbe.message}</span>
-        )}
-      </section>
-
-      <section>
-        <h2>Gemini</h2>
-        <div>
-          <label htmlFor="geminiKey">Gemini Key</label>
-          <input
-            id="geminiKey"
-            value={keys.geminiKey}
-            onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
-          />
-        </div>
-        <button
-          onClick={() => handleTest('gemini', setGeminiProbe)}
-          disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
-        >
-          {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
-        </button>
-        {geminiProbe.status === 'success' && (
-          <span aria-label="Gemini probe result">✓ {geminiProbe.message}</span>
-        )}
-        {geminiProbe.status === 'error' && (
-          <span aria-label="Gemini probe result">✗ {geminiProbe.message}</span>
-        )}
-      </section>
-
-      <button onClick={handleSave}>Save</button>
-      {saved && <p>Saved</p>}
-
-      {/* ── Processing guardrails ──────────────────────────────────────────── */}
-      <section>
-        <h2>Processing Settings</h2>
-
-        <div>
-          <label htmlFor="orderCap">Max orders per run (0 = unlimited)</label>
-          <input
-            id="orderCap"
-            type="number"
-            min={0}
-            value={orderCap}
-            onChange={(e) => setOrderCap(parseInt(e.target.value, 10) || 0)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="startFromDate">Start from date</label>
-          <input
-            id="startFromDate"
-            type="date"
-            value={startFromDate}
-            onChange={(e) => setStartFromDate(e.target.value)}
-          />
-        </div>
-
-        <fieldset>
-          <legend>Sync schedule</legend>
-
-          <label htmlFor="scheduleType">Frequency</label>
-          <select
-            id="scheduleType"
-            value={scheduleType}
-            onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
-          >
-            <option value="HOURLY">Every hour</option>
-            <option value="EVERY_N_HOURS">Every N hours</option>
-            <option value="EVERY_N_MINUTES">Every N minutes</option>
-            <option value="EVERY_N_SECONDS">Every N seconds</option>
-            <option value="DAILY">Daily</option>
-            <option value="WEEKLY">Weekly</option>
-          </select>
-
-          {scheduleType === 'EVERY_N_SECONDS' && (
-            <div>
-              <label htmlFor="secondInterval">Every N seconds</label>
-              <input
-                id="secondInterval"
-                type="number"
-                min={1}
-                max={59}
-                value={secondInterval}
-                onChange={(e) => setSecondInterval(parseInt(e.target.value, 10) || 1)}
-              />
-              <p role="alert">
-                ⚠ Not recommended for production — intended for development and testing only.
-              </p>
-            </div>
-          )}
-
-          {scheduleType === 'EVERY_N_MINUTES' && (
-            <div>
-              <label htmlFor="minuteInterval">Every N minutes</label>
-              <input
-                id="minuteInterval"
-                type="number"
-                min={1}
-                max={59}
-                value={minuteInterval}
-                onChange={(e) => setMinuteInterval(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-          )}
-
-          {scheduleType === 'EVERY_N_HOURS' && (
-            <div>
-              <label htmlFor="hourInterval">Every N hours</label>
-              <input
-                id="hourInterval"
-                type="number"
-                min={1}
-                max={23}
-                value={hourInterval}
-                onChange={(e) => setHourInterval(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-          )}
-
-          {(scheduleType === 'DAILY' || scheduleType === 'WEEKLY') && (
-            <>
-              <div>
-                <label htmlFor="scheduleHour">Hour</label>
-                <select
-                  id="scheduleHour"
-                  value={scheduleHour}
-                  onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
-                >
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {String(h).padStart(2, '0')}:00
+            {displayBudgetsStatus === 'error' && <span role="alert">{displayBudgetsError}</span>}
+            <select
+              id="ynabBudgetId"
+              value={keys.ynabBudgetId}
+              onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
+              disabled={
+                !keys.ynabToken || displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0
+              }
+            >
+              {!keys.ynabToken ? (
+                <option value="">Enter a YNAB token first</option>
+              ) : displayBudgetsStatus === 'loaded' && displayBudgets.length === 0 ? (
+                <option value="">No budgets found</option>
+              ) : (
+                <>
+                  <option value="">Select a budget…</option>
+                  {displayBudgets.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="scheduleMinute">Minute</label>
-                <select
-                  id="scheduleMinute"
-                  value={scheduleMinute}
-                  onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
-                >
-                  {MINUTES.map((m) => (
-                    <option key={m} value={m}>
-                      :{String(m).padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-
-          {scheduleType === 'WEEKLY' && (
-            <div>
-              <label htmlFor="scheduleDow">Day of week</label>
-              <select
-                id="scheduleDow"
-                value={scheduleDow}
-                onChange={(e) => setScheduleDow(e.target.value)}
-              >
-                {DAYS_OF_WEEK.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </fieldset>
-
-        <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
-        {processingConfigSaved && <p>Processing settings saved</p>}
-      </section>
-
-      {/* ── Dry run ────────────────────────────────────────────────────────── */}
-      <section>
-        <h2>Dry Run</h2>
-        <p>
-          <em>
-            Preview what would be written to YNAB — no live changes are made. Order cap applies.
-            Gemini is called for classification.
-          </em>
-        </p>
-
-        <div>
-          <label htmlFor="dryRunStartFrom">Dry-run start from</label>
-          <input
-            id="dryRunStartFrom"
-            type="date"
-            value={dryRunStartFrom}
-            onChange={(e) => setDryRunStartFrom(e.target.value)}
-          />
-        </div>
-
-        <button onClick={handleDryRun} disabled={dryRunStatus === 'running'}>
-          {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
-        </button>
-
-        {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
-
-        {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
-          <div aria-live="polite">
-            <h3>
-              Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})
-            </h3>
-            {dryRunResults.length === 0 ? (
-              <p>No orders matched.</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Order date</th>
-                    <th>Amount</th>
-                    <th>Items</th>
-                    <th>Matched transaction</th>
-                    <th>Proposed category</th>
-                    <th>Note</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dryRunResults.map((r) => (
-                    <tr key={r.id} aria-label={`dry-run-row-${r.id}`}>
-                      <td>{new Date(r.orderDate).toLocaleDateString()}</td>
-                      <td>${r.totalAmount}</td>
-                      <td>{r.items.join(', ')}</td>
-                      <td>{r.ynabTransactionId ?? '—'}</td>
-                      <td>{r.proposedCategoryName ?? r.proposedCategoryId ?? '—'}</td>
-                      <td>{r.errorMessage ?? ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                </>
+              )}
+            </select>
+          </div>
+          <div className="action-row">
+            <button
+              onClick={() => handleTest('ynab', setYnabProbe)}
+              disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
+            >
+              {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
+            </button>
+            {ynabProbe.status === 'success' && (
+              <span aria-label="YNAB probe result" className="probe-result probe-result--success">
+                ✓ {ynabProbe.message}
+              </span>
+            )}
+            {ynabProbe.status === 'error' && (
+              <span aria-label="YNAB probe result" className="probe-result probe-result--error">
+                ✗ {ynabProbe.message}
+              </span>
             )}
           </div>
-        )}
-      </section>
+        </div>
+      </div>
+
+      {/* ── FastMail ──────────────────────────────────────────────────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h2>FastMail</h2>
+        </div>
+        <div className="panel-body">
+          <div className="field">
+            <label htmlFor="fastmailApiToken">FastMail API Token</label>
+            <input
+              id="fastmailApiToken"
+              type="password"
+              value={keys.fastmailApiToken}
+              onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
+            />
+          </div>
+          <div className="action-row">
+            <button
+              onClick={() => handleTest('fastmail', setFastmailProbe)}
+              disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
+            >
+              {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
+            </button>
+            {fastmailProbe.status === 'success' && (
+              <span
+                aria-label="FastMail probe result"
+                className="probe-result probe-result--success"
+              >
+                ✓ {fastmailProbe.message}
+              </span>
+            )}
+            {fastmailProbe.status === 'error' && (
+              <span aria-label="FastMail probe result" className="probe-result probe-result--error">
+                ✗ {fastmailProbe.message}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Gemini ────────────────────────────────────────────────────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Gemini</h2>
+        </div>
+        <div className="panel-body">
+          <div className="field">
+            <label htmlFor="geminiKey">Gemini Key</label>
+            <input
+              id="geminiKey"
+              value={keys.geminiKey}
+              onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
+            />
+          </div>
+          <div className="action-row">
+            <button
+              onClick={() => handleTest('gemini', setGeminiProbe)}
+              disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
+            >
+              {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
+            </button>
+            {geminiProbe.status === 'success' && (
+              <span aria-label="Gemini probe result" className="probe-result probe-result--success">
+                ✓ {geminiProbe.message}
+              </span>
+            )}
+            {geminiProbe.status === 'error' && (
+              <span aria-label="Gemini probe result" className="probe-result probe-result--error">
+                ✗ {geminiProbe.message}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="action-row">
+        <button onClick={handleSave}>Save</button>
+        {saved && <span className="save-badge">Saved</span>}
+      </div>
+
+      {/* ── Processing Settings ───────────────────────────────────────────── */}
+      <div className="panel" style={{ marginTop: 20 }}>
+        <div className="panel-header">
+          <h2>Processing Settings</h2>
+        </div>
+        <div className="panel-body">
+          <div className="field">
+            <label htmlFor="orderCap">Max orders per run (0 = unlimited)</label>
+            <input
+              id="orderCap"
+              type="number"
+              min={0}
+              value={orderCap}
+              onChange={(e) => setOrderCap(parseInt(e.target.value, 10) || 0)}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="startFromDate">Start from date</label>
+            <input
+              id="startFromDate"
+              type="date"
+              value={startFromDate}
+              onChange={(e) => setStartFromDate(e.target.value)}
+            />
+          </div>
+
+          <fieldset>
+            <legend>Sync schedule</legend>
+
+            <div className="field">
+              <label htmlFor="scheduleType">Frequency</label>
+              <select
+                id="scheduleType"
+                value={scheduleType}
+                onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
+              >
+                <option value="HOURLY">Every hour</option>
+                <option value="EVERY_N_HOURS">Every N hours</option>
+                <option value="EVERY_N_MINUTES">Every N minutes</option>
+                <option value="EVERY_N_SECONDS">Every N seconds</option>
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
+              </select>
+            </div>
+
+            {scheduleType === 'EVERY_N_SECONDS' && (
+              <div className="field">
+                <label htmlFor="secondInterval">Every N seconds</label>
+                <input
+                  id="secondInterval"
+                  type="number"
+                  min={1}
+                  max={59}
+                  value={secondInterval}
+                  onChange={(e) => setSecondInterval(parseInt(e.target.value, 10) || 1)}
+                />
+                <p role="alert" className="alert alert--warning" style={{ marginTop: 8 }}>
+                  ⚠ Not recommended for production — intended for development and testing only.
+                </p>
+              </div>
+            )}
+
+            {scheduleType === 'EVERY_N_MINUTES' && (
+              <div className="field">
+                <label htmlFor="minuteInterval">Every N minutes</label>
+                <input
+                  id="minuteInterval"
+                  type="number"
+                  min={1}
+                  max={59}
+                  value={minuteInterval}
+                  onChange={(e) => setMinuteInterval(parseInt(e.target.value, 10) || 1)}
+                />
+              </div>
+            )}
+
+            {scheduleType === 'EVERY_N_HOURS' && (
+              <div className="field">
+                <label htmlFor="hourInterval">Every N hours</label>
+                <input
+                  id="hourInterval"
+                  type="number"
+                  min={1}
+                  max={23}
+                  value={hourInterval}
+                  onChange={(e) => setHourInterval(parseInt(e.target.value, 10) || 1)}
+                />
+              </div>
+            )}
+
+            {(scheduleType === 'DAILY' || scheduleType === 'WEEKLY') && (
+              <>
+                <div className="field">
+                  <label htmlFor="scheduleHour">Hour</label>
+                  <select
+                    id="scheduleHour"
+                    value={scheduleHour}
+                    onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
+                  >
+                    {HOURS.map((h) => (
+                      <option key={h} value={h}>
+                        {String(h).padStart(2, '0')}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="scheduleMinute">Minute</label>
+                  <select
+                    id="scheduleMinute"
+                    value={scheduleMinute}
+                    onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
+                  >
+                    {MINUTES.map((m) => (
+                      <option key={m} value={m}>
+                        :{String(m).padStart(2, '0')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {scheduleType === 'WEEKLY' && (
+              <div className="field">
+                <label htmlFor="scheduleDow">Day of week</label>
+                <select
+                  id="scheduleDow"
+                  value={scheduleDow}
+                  onChange={(e) => setScheduleDow(e.target.value)}
+                >
+                  {DAYS_OF_WEEK.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </fieldset>
+
+          <div className="action-row">
+            <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
+            {processingConfigSaved && <span className="save-badge">Processing settings saved</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Dry Run ────────────────────────────────────────────────────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Dry Run</h2>
+        </div>
+        <div className="panel-body">
+          <p>
+            <em>
+              Preview what would be written to YNAB — no live changes are made. Order cap applies.
+              Gemini is called for classification.
+            </em>
+          </p>
+
+          <div className="field" style={{ marginTop: 12 }}>
+            <label htmlFor="dryRunStartFrom">Dry-run start from</label>
+            <input
+              id="dryRunStartFrom"
+              type="date"
+              value={dryRunStartFrom}
+              onChange={(e) => setDryRunStartFrom(e.target.value)}
+            />
+          </div>
+
+          <div className="action-row">
+            <button onClick={handleDryRun} disabled={dryRunStatus === 'running'}>
+              {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
+            </button>
+          </div>
+
+          {dryRunStatus === 'error' && (
+            <p role="alert" className="alert alert--error" style={{ marginTop: 8 }}>
+              {dryRunError}
+            </p>
+          )}
+
+          {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
+            <div aria-live="polite" style={{ marginTop: 16 }}>
+              <h3>
+                Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''}
+                )
+              </h3>
+              {dryRunResults.length === 0 ? (
+                <p>No orders matched.</p>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order date</th>
+                      <th>Amount</th>
+                      <th>Items</th>
+                      <th>Matched transaction</th>
+                      <th>Proposed category</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dryRunResults.map((r) => (
+                      <tr key={r.id} aria-label={`dry-run-row-${r.id}`}>
+                        <td>{new Date(r.orderDate).toLocaleDateString()}</td>
+                        <td>${r.totalAmount}</td>
+                        <td>{r.items.join(', ')}</td>
+                        <td>{r.ynabTransactionId ?? '—'}</td>
+                        <td>{r.proposedCategoryName ?? r.proposedCategoryId ?? '—'}</td>
+                        <td>{r.errorMessage ?? ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -18,31 +18,40 @@ export default function PendingOrdersView() {
   }, [])
 
   return (
-    <div>
+    <div className="view">
       <h1>Pending Orders</h1>
       {orders.length === 0 ? (
-        <p>No pending orders</p>
+        <div className="empty-state">
+          <p className="empty-state__title">No pending orders</p>
+          <p className="empty-state__body">
+            No orders have been parsed yet. Orders appear here after the sync pipeline runs and
+            finds Amazon order confirmation emails that have not yet been matched to a YNAB
+            transaction.
+          </p>
+        </div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Order Date</th>
-              <th>Total</th>
-              <th>Items</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id}>
-                <td>{order.orderDate}</td>
-                <td>{order.totalAmount.toFixed(2)}</td>
-                <td>{order.items.join(', ')}</td>
-                <td>{order.status}</td>
+        <div className="panel">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Date</th>
+                <th>Total</th>
+                <th>Items</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td>{order.orderDate}</td>
+                  <td>{order.totalAmount.toFixed(2)}</td>
+                  <td>{order.items.join(', ')}</td>
+                  <td>{order.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

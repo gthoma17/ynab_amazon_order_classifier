@@ -9,8 +9,11 @@ import './App.css'
 function App() {
   return (
     <>
-      <nav>
-        <NavLink to="/">Configuration</NavLink>
+      <nav className="app-nav">
+        <span className="app-nav__brand">Budget Sortbot</span>
+        <NavLink end to="/">
+          Configuration
+        </NavLink>
         <NavLink to="/categories">Category Rules</NavLink>
         <NavLink to="/orders">Pending Orders</NavLink>
         <NavLink to="/logs">Logs</NavLink>
