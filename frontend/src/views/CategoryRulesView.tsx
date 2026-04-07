@@ -24,6 +24,7 @@ export default function CategoryRulesView() {
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets loading state before async fetch
     setLoadStatus('loading')
     Promise.all([
       apiGet<YnabCategory[]>('/api/ynab/categories'),

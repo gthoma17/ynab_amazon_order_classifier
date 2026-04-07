@@ -425,7 +425,7 @@ export default function ConfigView() {
       {/* Save API keys */}
       <div className="cf-btn-row" style={{ marginBottom: 'var(--cf-s4)' }}>
         <button onClick={handleSave}>Save</button>
-        {saved && <span className="cf-saved">✓ Saved</span>}
+        {saved && <span className="cf-saved">Saved</span>}
       </div>
 
       {/* ── PROCESSING panel ──────────────────────────────────────────────── */}
