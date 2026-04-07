@@ -97,6 +97,7 @@ export default function ConfigView() {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [budgetsStatus, setBudgetsStatus] = useState<BudgetsStatus>('idle')
   const [budgetsError, setBudgetsError] = useState('')
+  const [highlightedBudgetIndex, setHighlightedBudgetIndex] = useState(-1)
 
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
@@ -171,6 +172,7 @@ export default function ConfigView() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale budgets and signals loading state before async fetch
     setBudgets([])
     setBudgetsStatus('loading')
+    setHighlightedBudgetIndex(-1)
     setBudgetsError('')
 
     const params = new URLSearchParams({ token: keys.ynabToken })
@@ -254,6 +256,19 @@ export default function ConfigView() {
       })
   }
 
+  function handleBudgetKeyDown(e: React.KeyboardEvent) {
+    if (displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlightedBudgetIndex((prev) => Math.min(prev + 1, displayBudgets.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlightedBudgetIndex((prev) => Math.max(prev - 1, 0))
+    } else if (e.key === 'Enter' && highlightedBudgetIndex >= 0) {
+      setKeys({ ...keys, ynabBudgetId: displayBudgets[highlightedBudgetIndex].id })
+    }
+  }
+
   return (
     <div>
       <h1>API Keys</h1>
@@ -281,36 +296,96 @@ export default function ConfigView() {
               />
             </div>
             <div className="cf-form-row">
-              <label htmlFor="ynabBudgetId">Budget</label>
-              {displayBudgetsStatus === 'loading' && (
-                <span aria-label="budgets loading">Loading budgets…</span>
-              )}
-              {displayBudgetsStatus === 'error' && <span role="alert">{displayBudgetsError}</span>}
-              <select
-                id="ynabBudgetId"
-                value={keys.ynabBudgetId}
-                onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-                disabled={
-                  !keys.ynabToken ||
-                  displayBudgetsStatus !== 'loaded' ||
-                  displayBudgets.length === 0
+              <label id="budget-selector-label">Budget</label>
+              <div
+                className="cf-crt cf-budget-selector"
+                data-testid="budget-selector-screen"
+                role="listbox"
+                aria-labelledby="budget-selector-label"
+                aria-activedescendant={
+                  keys.ynabBudgetId ? `budget-option-${keys.ynabBudgetId}` : undefined
                 }
+                tabIndex={
+                  displayBudgetsStatus === 'loaded' && displayBudgets.length > 0 ? 0 : undefined
+                }
+                onKeyDown={handleBudgetKeyDown}
               >
-                {!keys.ynabToken ? (
-                  <option value="">Enter a YNAB token first</option>
-                ) : displayBudgetsStatus === 'loaded' && displayBudgets.length === 0 ? (
-                  <option value="">No budgets found</option>
+                {displayBudgetsStatus === 'idle' ? (
+                  <div className="cf-budget-standby">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>AWAITING TOKEN
+                    </span>
+                    <span className="cf-budget-cursor" aria-hidden="true">
+                      _
+                    </span>
+                  </div>
+                ) : displayBudgetsStatus === 'loading' ? (
+                  <div className="cf-budget-standby" aria-label="budgets loading">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>FETCHING BUDGETS...
+                    </span>
+                    <span className="cf-budget-cursor" aria-hidden="true">
+                      _
+                    </span>
+                  </div>
+                ) : displayBudgetsStatus === 'error' ? (
+                  <div className="cf-budget-error" role="alert">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>CONNECTION FAILED
+                    </span>
+                    <span>&nbsp;</span>
+                    <span>&nbsp;&nbsp;{displayBudgetsError}</span>
+                    <span>&nbsp;&nbsp;CHECK YNAB TOKEN AND RETRY</span>
+                  </div>
+                ) : displayBudgets.length === 0 ? (
+                  <div className="cf-budget-empty">
+                    <span>NO BUDGETS FOUND</span>
+                  </div>
                 ) : (
                   <>
-                    <option value="">Select a budget…</option>
-                    {displayBudgets.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
+                    <div className="cf-budget-header">SELECT BUDGET</div>
+                    <div className="cf-budget-divider" aria-hidden="true">
+                      --------------------------------
+                    </div>
+                    <div className="cf-budget-list">
+                      {displayBudgets.map((b, index) => (
+                        <div
+                          key={b.id}
+                          id={`budget-option-${b.id}`}
+                          role="option"
+                          aria-selected={keys.ynabBudgetId === b.id}
+                          data-testid={
+                            keys.ynabBudgetId === b.id
+                              ? 'budget-option-selected'
+                              : `budget-option-${b.id}`
+                          }
+                          className={[
+                            'cf-budget-option',
+                            keys.ynabBudgetId === b.id ? 'cf-budget-option--selected' : '',
+                            highlightedBudgetIndex === index ? 'cf-budget-option--highlighted' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          onClick={() => {
+                            setKeys({ ...keys, ynabBudgetId: b.id })
+                            setHighlightedBudgetIndex(index)
+                          }}
+                        >
+                          <span aria-hidden="true" className="cf-budget-prompt">
+                            {keys.ynabBudgetId === b.id ? '>' : '\u00a0'}
+                          </span>
+                          <span className="cf-budget-name">{b.name}</span>
+                          {keys.ynabBudgetId === b.id && (
+                            <span aria-hidden="true" className="cf-budget-sel">
+                              [SEL]
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </>
                 )}
-              </select>
+              </div>
             </div>
             <div className="cf-btn-row">
               <button

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
@@ -55,7 +55,7 @@ describe('ConfigView', () => {
   it('renders input fields for all four keys', () => {
     render(<ConfigView />)
     expect(screen.getByLabelText(/ynab token/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^budget$/i)).toBeInTheDocument()
+    expect(screen.getByTestId('budget-selector-screen')).toBeInTheDocument()
     expect(screen.getByLabelText(/fastmail api token/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/gemini key/i)).toBeInTheDocument()
   })
@@ -63,8 +63,9 @@ describe('ConfigView', () => {
   it('loads existing key values from the API', async () => {
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
-    // budget select should show the saved budget once budgets are loaded
-    await waitFor(() => expect(screen.getByLabelText(/^budget$/i)).toHaveValue('budget-abc'))
+    // budget selector should show the saved budget as selected once budgets are loaded
+    await waitFor(() => expect(screen.getByTestId('budget-option-selected')).toBeInTheDocument())
+    expect(screen.getByTestId('budget-option-selected')).toHaveTextContent('My Main Budget')
     expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token')
     expect(screen.getByLabelText(/gemini key/i)).toHaveValue('')
   })
@@ -125,9 +126,9 @@ describe('ConfigView', () => {
     expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
   })
 
-  // --- Budget dropdown ---
+  // --- Budget terminal screen ---
 
-  it('budget select is disabled when YNAB token is empty', async () => {
+  it('budget selector shows idle state when YNAB token is empty', async () => {
     server.use(
       http.get('/api/config/keys', () =>
         HttpResponse.json({
@@ -140,13 +141,15 @@ describe('ConfigView', () => {
     )
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue(''))
-    expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
+    const budgetScreen = screen.getByTestId('budget-selector-screen')
+    expect(within(budgetScreen).queryByRole('option')).not.toBeInTheDocument()
   })
 
-  it('budget select is enabled and shows budget names once loaded', async () => {
+  it('budget selector shows option rows once budgets are loaded', async () => {
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/^budget$/i)).not.toBeDisabled())
-    expect(screen.getByRole('option', { name: 'My Main Budget' })).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: 'My Main Budget' })).toBeInTheDocument(),
+    )
     expect(screen.getByRole('option', { name: 'Savings Budget' })).toBeInTheDocument()
   })
 
@@ -171,13 +174,27 @@ describe('ConfigView', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
   })
 
-  it('budget select shows empty state when no budgets returned', async () => {
+  it('budget selector shows empty state when no budgets returned', async () => {
     server.use(http.get('/api/ynab/budgets', () => HttpResponse.json([])))
     render(<ConfigView />)
+    await waitFor(() => expect(screen.getByText(/no budgets found/i)).toBeInTheDocument())
+    const budgetScreen = screen.getByTestId('budget-selector-screen')
+    expect(within(budgetScreen).queryByRole('option')).not.toBeInTheDocument()
+  })
+
+  it('budget selector clicking an option updates selection', async () => {
+    const user = userEvent.setup()
+    render(<ConfigView />)
     await waitFor(() =>
-      expect(screen.getByRole('option', { name: /no budgets found/i })).toBeInTheDocument(),
+      expect(screen.getByRole('option', { name: 'Savings Budget' })).toBeInTheDocument(),
     )
-    expect(screen.getByLabelText(/^budget$/i)).toBeDisabled()
+    await user.click(screen.getByRole('option', { name: 'Savings Budget' }))
+    expect(screen.getByTestId('budget-option-selected')).toHaveTextContent('Savings Budget')
+  })
+
+  it('budget selector screen is always present in the layout', () => {
+    render(<ConfigView />)
+    expect(screen.getByTestId('budget-selector-screen')).toBeInTheDocument()
   })
 
   it('disables FastMail test button when FastMail API token is empty', async () => {

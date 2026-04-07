@@ -44,9 +44,16 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // ── Step 2: Enter credentials and save ─────────────────────────────────────
 
   await page.locator('#ynabToken').fill('my-ynab-token')
-  // Wait for the budget dropdown to be populated from the API, then select the budget
-  await expect(page.locator('#ynabBudgetId')).not.toBeDisabled({ timeout: 10_000 })
-  await page.locator('#ynabBudgetId').selectOption({ value: 'my-budget-id' })
+  // Budget terminal screen shows loading state while fetching
+  await expect(page.getByTestId('budget-selector-screen')).toContainText(/fetching budgets/i)
+  // Wait for budget options to load in the terminal screen
+  await expect(
+    page.getByTestId('budget-selector-screen').getByRole('option').first(),
+  ).toBeVisible({ timeout: 10_000 })
+  // Select the budget by clicking its option row
+  await page.getByTestId('budget-option-my-budget-id').click()
+  // Confirm selected state is reflected correctly
+  await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
   await page.locator('#geminiKey').fill('my-gemini-key')
   await page.getByRole('button', { name: 'Save', exact: true }).click()

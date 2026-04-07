@@ -112,6 +112,39 @@ Every surface should read as a **physical material**. Use layered CSS or SVG tex
 - Clear ON/OFF labeling with stencil text
 - Satisfying visual snap between states
 
+### Static Option Selectors (Known Sets)
+
+For small, static, known-at-render-time option sets (e.g. a frequency selector with fixed choices), use an **indicator radio group**: a set of labeled radio inputs styled as hardware selector switches. Each option is always visible; the selected one is lit.
+
+For dynamic option sets loaded from an API, see **Dynamic Option Selectors** below.
+
+### Dynamic Option Selectors (API-loaded options)
+
+When the option list is populated from an API call and the full set is not known
+at render time, use the **Fallout terminal screen pattern** rather than an
+indicator radio group.
+
+The selector is a CRT screen component (bezel, scanlines, vignette) at fixed
+height, always present in the layout. Screen contents reflect the current state:
+
+- **Loading:** blinking cursor, `FETCHING...` copy, CRT Green
+- **Loaded:** scrollable list of `> Option Name` rows, each clickable/selectable
+- **Selected:** chosen row retains `>` prefix and carries a selection marker;
+  others dim but remain visible
+- **Error:** VU Red text, static (no cursor), error message and recovery hint
+
+This pattern is honest to the physical metaphor: in-universe these are
+touchscreen terminals, making a clickable list physically plausible. It also
+scales to any number of options without layout shift.
+
+**Accessibility:** apply `role="listbox"` to the content area, `role="option"`
+and `aria-selected` to each row. Arrow key + Enter navigation is required.
+Decorative `>` prefixes must be `aria-hidden`.
+
+**Static, small, known option sets** (e.g. frequency selector) continue to use
+the indicator radio group pattern. Use the terminal screen pattern only when
+options are dynamic or not known at render time.
+
 ### Dropdowns / Select Inputs
 
 Do not use `<select>` elements or custom dropdown flyouts. Dropdowns violate
