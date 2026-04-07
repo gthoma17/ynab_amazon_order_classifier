@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
 import IndicatorPanel from '../components/IndicatorPanel'
 import RadioGroup from '../components/RadioGroup'
-import DashboardLamp from '../components/DashboardLamp'
+import SplitFlapSlot from '../components/SplitFlapSlot'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -90,8 +90,8 @@ const MINUTES = [0, 15, 30, 45]
 
 export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
-  const [signalSourcesSaved, setSignalSourcesSaved] = useState(false)
-  const [aiEngineSaved, setAiEngineSaved] = useState(false)
+  const [signalSourcesMessage, setSignalSourcesMessage] = useState<string | null>(null)
+  const [aiEngineMessage, setAiEngineMessage] = useState<string | null>(null)
 const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
 
@@ -102,14 +102,14 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
 
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
-  const [scheduleType, setScheduleType] = useState<ScheduleType>('EVERY_N_HOURS')
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('WEEKLY')
   const [secondInterval, setSecondInterval] = useState(10)
   const [minuteInterval, setMinuteInterval] = useState(30)
   const [hourInterval, setHourInterval] = useState(5)
-  const [scheduleHour, setScheduleHour] = useState(0)
+  const [scheduleHour, setScheduleHour] = useState(9)
   const [scheduleMinute, setScheduleMinute] = useState(0)
   const [scheduleDow, setScheduleDow] = useState('MON')
-  const [processingConfigSaved, setProcessingConfigSaved] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState<string | null>(null)
 
   const [dryRunStartFrom, setDryRunStartFrom] = useState(() => {
     const oneMonthAgo = new Date()
@@ -143,7 +143,7 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
         setSecondInterval(sc.secondInterval ?? 10)
         setMinuteInterval(sc.minuteInterval ?? 30)
         setHourInterval(sc.hourInterval ?? 5)
-        setScheduleHour(sc.hour ?? 0)
+        setScheduleHour(sc.hour ?? 9)
         setScheduleMinute(sc.minute ?? 0)
         setScheduleDow(sc.dayOfWeek ?? 'MON')
       }
@@ -196,6 +196,25 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
     }
   }, [keys.ynabToken])
 
+  // Auto-reset save slot messages after 5 seconds
+  useEffect(() => {
+    if (!signalSourcesMessage) return
+    const t = setTimeout(() => setSignalSourcesMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [signalSourcesMessage])
+
+  useEffect(() => {
+    if (!aiEngineMessage) return
+    const t = setTimeout(() => setAiEngineMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [aiEngineMessage])
+
+  useEffect(() => {
+    if (!processingMessage) return
+    const t = setTimeout(() => setProcessingMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [processingMessage])
+
   function handleSaveSignalSources() {
     apiPut('/api/config/keys', {
       ynabToken: keys.ynabToken,
@@ -203,8 +222,8 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
       fastmailApiToken: keys.fastmailApiToken,
       geminiKey: keys.geminiKey,
     }).then(() => {
-      setSignalSourcesSaved(true)
-setFastmailProbe(idleProbe)
+      setSignalSourcesMessage('✓  SAVED')
+      setFastmailProbe(idleProbe)
     })
   }
 
@@ -215,7 +234,7 @@ setFastmailProbe(idleProbe)
       fastmailApiToken: keys.fastmailApiToken,
       geminiKey: keys.geminiKey,
     }).then(() => {
-      setAiEngineSaved(true)
+      setAiEngineMessage('✓  SAVED')
       setGeminiProbe(idleProbe)
     })
   }
@@ -235,7 +254,7 @@ setFastmailProbe(idleProbe)
       startFromDate: startFromDate || null,
       scheduleConfig,
     }).then(() => {
-      setProcessingConfigSaved(true)
+      setProcessingMessage('✓  SAVED')
     })
   }
 
@@ -287,7 +306,7 @@ setFastmailProbe(idleProbe)
 
   return (
     <div>
-      <h1>API Keys</h1>
+      <h1>Configuration</h1>
       <p style={{ marginBottom: 'var(--cf-s3)' }}>
         <em>
           &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
@@ -442,10 +461,10 @@ setFastmailProbe(idleProbe)
         {/* Save Signal Sources */}
         <div className="cf-btn-row">
           <button onClick={handleSaveSignalSources}>Save Signal Sources</button>
-          <DashboardLamp
-            label="Saved"
-            isLit={signalSourcesSaved}
-            testId="signal-sources-saved-lamp"
+          <SplitFlapSlot
+            message={signalSourcesMessage}
+            testId="signal-sources-saved-slot"
+            messageTestId="signal-sources-saved-message"
           />
         </div>
       </div>
@@ -481,7 +500,11 @@ setFastmailProbe(idleProbe)
           </div>
           <div className="cf-btn-row">
             <button onClick={handleSaveAiEngine}>Save AI Engine</button>
-            <DashboardLamp label="Saved" isLit={aiEngineSaved} testId="ai-engine-saved-lamp" />
+            <SplitFlapSlot
+              message={aiEngineMessage}
+              testId="ai-engine-saved-slot"
+              messageTestId="ai-engine-saved-message"
+            />
           </div>
         </section>
       </div>
@@ -523,7 +546,10 @@ setFastmailProbe(idleProbe)
                 scheduleType === 'EVERY_N_SECONDS'
               const timeActive = scheduleType === 'DAILY' || scheduleType === 'WEEKLY'
               const dayActive = scheduleType === 'WEEKLY'
-              const warningLit = scheduleType === 'EVERY_N_SECONDS'
+              const warningMessage =
+                scheduleType === 'EVERY_N_SECONDS'
+                  ? '⚠  NOT RECOMMENDED FOR PRODUCTION · DEV / TEST ONLY'
+                  : null
 
               const nValue =
                 scheduleType === 'EVERY_N_SECONDS'
@@ -550,91 +576,121 @@ setFastmailProbe(idleProbe)
                       onChange={setScheduleType}
                       testIdPrefix="schedule-mode"
                       options={[
-                        { value: 'HOURLY', label: 'Every hour' },
+                        { value: 'WEEKLY', label: 'Weekly' },
+                        { value: 'DAILY', label: 'Daily' },
+                        { value: 'HOURLY', label: 'Hourly' },
                         { value: 'EVERY_N_HOURS', label: 'Every N hours' },
                         { value: 'EVERY_N_MINUTES', label: 'Every N minutes' },
                         { value: 'EVERY_N_SECONDS', label: 'Every N seconds' },
-                        { value: 'DAILY', label: 'Daily' },
-                        { value: 'WEEKLY', label: 'Weekly' },
                       ]}
                     />
                   </div>
 
                   <div className="cf-sync-params">
-                    <div className={`cf-form-row${nActive ? ' cf-sync-param--active' : ''}`}>
-                      <label htmlFor="scheduleN">N</label>
-                      <input
-                        id="scheduleN"
-                        type="number"
-                        min={1}
-                        max={nMax}
-                        value={nValue}
-                        disabled={!nActive}
-                        onChange={handleNChange}
-                        data-testid="schedule-param-n"
-                      />
-                    </div>
-
-                    <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
-                      <label htmlFor="scheduleHour">Hour</label>
-                      <select
-                        id="scheduleHour"
-                        value={scheduleHour}
-                        disabled={!timeActive}
-                        onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
-                        data-testid="schedule-param-hour"
-                      >
-                        {HOURS.map((h) => (
-                          <option key={h} value={h}>
-                            {String(h).padStart(2, '0')}:00
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
-                      <label htmlFor="scheduleMinute">Min</label>
-                      <select
-                        id="scheduleMinute"
-                        value={scheduleMinute}
-                        disabled={!timeActive}
-                        onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
-                        data-testid="schedule-param-min"
-                      >
-                        {MINUTES.map((m) => (
-                          <option key={m} value={m}>
-                            :{String(m).padStart(2, '0')}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className={`cf-form-row${dayActive ? ' cf-sync-param--active' : ''}`}>
-                      <label htmlFor="scheduleDow">Day</label>
-                      <select
-                        id="scheduleDow"
-                        value={scheduleDow}
-                        disabled={!dayActive}
-                        onChange={(e) => setScheduleDow(e.target.value)}
-                        data-testid="schedule-param-day"
-                      >
-                        {DAYS_OF_WEEK.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="cf-sync-warning" data-testid="schedule-warning-lamp">
+                    <div className="cf-sync-param-row">
                       <span
-                        className="cf-warning-lamp"
-                        data-lit={warningLit ? 'true' : undefined}
+                        className="cf-param-lamp"
+                        data-active={nActive ? 'true' : undefined}
                         aria-hidden="true"
+                        data-testid="schedule-lamp-n"
                       />
-                      <span className="cf-warning-lamp-label">
-                        NOT RECOMMENDED FOR PRODUCTION — DEVELOPMENT AND TESTING ONLY
-                      </span>
+                      <div className={`cf-form-row${nActive ? ' cf-sync-param--active' : ''}`}>
+                        <label htmlFor="scheduleN">N</label>
+                        <input
+                          id="scheduleN"
+                          type="number"
+                          min={1}
+                          max={nMax}
+                          value={nValue}
+                          disabled={!nActive}
+                          onChange={handleNChange}
+                          data-testid="schedule-param-n"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={timeActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-hour"
+                      />
+                      <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                        <label htmlFor="scheduleHour">Hour</label>
+                        <select
+                          id="scheduleHour"
+                          value={scheduleHour}
+                          disabled={!timeActive}
+                          onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
+                          data-testid="schedule-param-hour"
+                        >
+                          {HOURS.map((h) => (
+                            <option key={h} value={h}>
+                              {String(h).padStart(2, '0')}:00
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={timeActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-min"
+                      />
+                      <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                        <label htmlFor="scheduleMinute">Min</label>
+                        <select
+                          id="scheduleMinute"
+                          value={scheduleMinute}
+                          disabled={!timeActive}
+                          onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
+                          data-testid="schedule-param-min"
+                        >
+                          {MINUTES.map((m) => (
+                            <option key={m} value={m}>
+                              :{String(m).padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={dayActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-day"
+                      />
+                      <div className={`cf-form-row${dayActive ? ' cf-sync-param--active' : ''}`}>
+                        <label htmlFor="scheduleDow">Day</label>
+                        <select
+                          id="scheduleDow"
+                          value={scheduleDow}
+                          disabled={!dayActive}
+                          onChange={(e) => setScheduleDow(e.target.value)}
+                          data-testid="schedule-param-day"
+                        >
+                          {DAYS_OF_WEEK.map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                        ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-warning">
+                      <SplitFlapSlot
+                        message={warningMessage}
+                        color="red"
+                        testId="schedule-warning-slot"
+                        messageTestId="schedule-warning-message"
+                      />
                     </div>
                   </div>
                 </div>
@@ -644,10 +700,10 @@ setFastmailProbe(idleProbe)
 
           <div className="cf-btn-row">
             <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
-            <DashboardLamp
-              label="Saved"
-              isLit={processingConfigSaved}
-              testId="processing-saved-lamp"
+            <SplitFlapSlot
+              message={processingMessage}
+              testId="processing-saved-slot"
+              messageTestId="processing-saved-message"
             />
           </div>
         </section>

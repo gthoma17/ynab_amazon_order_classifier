@@ -47,9 +47,9 @@ afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 describe('ConfigView', () => {
-  it('renders a heading "API Keys"', () => {
+  it('renders a heading "Configuration"', () => {
     render(<ConfigView />)
-    expect(screen.getByRole('heading', { name: /api keys/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /configuration/i })).toBeInTheDocument()
   })
 
   it('renders input fields for all four keys', () => {
@@ -98,14 +98,16 @@ describe('ConfigView', () => {
     render(<ConfigView />)
     await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
-    // Dashboard lamp should be unlit initially
-    const lamp = screen.getByTestId('signal-sources-saved-lamp')
-    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+    // Slot should be idle (no message) before save
+    expect(screen.queryByTestId('signal-sources-saved-message')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /save signal sources/i }))
 
-    // Dashboard lamp should be lit after save
-    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
+    // Slot should show SAVED message after save
+    await waitFor(() =>
+      expect(screen.getByTestId('signal-sources-saved-message')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('signal-sources-saved-message')).toHaveTextContent(/saved/i)
   })
 
   // --- Test Connection buttons ---
@@ -221,13 +223,14 @@ describe('ConfigView', () => {
       expect(screen.getByLabelText('FastMail probe result').textContent).toContain('Connected'),
     )
 
-    // Dashboard lamp should be unlit initially
-    const lamp = screen.getByTestId('signal-sources-saved-lamp')
-    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+    // Slot should be idle before save
+    expect(screen.queryByTestId('signal-sources-saved-message')).not.toBeInTheDocument()
 
     // Save should reset probe to idle (readout shows placeholder)
     await user.click(screen.getByRole('button', { name: /save signal sources/i }))
-    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByTestId('signal-sources-saved-message')).toBeInTheDocument(),
+    )
     expect(screen.getByLabelText('FastMail probe result').textContent).toContain('STANDING BY')
   })
 
@@ -305,7 +308,7 @@ describe('ConfigView', () => {
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
   })
 
-  it('enables N input and lights warning lamp for EVERY_N_SECONDS schedule', async () => {
+  it('enables N input and shows warning slot for EVERY_N_SECONDS schedule', async () => {
     server.use(
       http.get('/api/config/processing', () =>
         HttpResponse.json({
@@ -323,9 +326,12 @@ describe('ConfigView', () => {
     const nInput = screen.getByTestId('schedule-param-n')
     expect(nInput).not.toBeDisabled()
     expect(nInput).toHaveValue(3)
-    const warningLamp = screen.getByTestId('schedule-warning-lamp')
-    expect(warningLamp.querySelector('[data-lit="true"]')).toBeInTheDocument()
-    expect(warningLamp).toHaveTextContent(/not recommended for production/i)
+    await waitFor(() =>
+      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
+      /not recommended for production/i,
+    )
   })
 
   it('sends secondInterval in PUT body when EVERY_N_SECONDS is selected', async () => {
@@ -371,15 +377,17 @@ describe('ConfigView', () => {
     render(<ConfigView />)
     await waitFor(() => screen.getByLabelText(/max orders per run/i))
 
-    // Dashboard lamp should be unlit initially
-    const lamp = screen.getByTestId('processing-saved-lamp')
-    expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
+    // Slot should be idle before save
+    expect(screen.queryByTestId('processing-saved-message')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
-    // Dashboard lamp should be lit after save
-    await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
+    // Slot should show SAVED message after save
+    await waitFor(() =>
+      expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i)
   })
 
   // --- Sync schedule user journey ---
@@ -396,30 +404,28 @@ describe('ConfigView', () => {
     expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
     expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
     expect(screen.getByTestId('schedule-param-day')).toBeDisabled()
-    // Warning lamp unlit
-    expect(
-      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
-    ).not.toBeInTheDocument()
+    // Warning slot idle (no message)
+    expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument()
 
-    // Switch to EVERY_N_SECONDS — N active, warning lamp lit
+    // Switch to EVERY_N_SECONDS — N active, warning slot shows message
     await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
     expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
-    expect(
-      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
-    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
+    )
 
-    // Switch to WEEKLY — hour, min, day active; N inactive; warning unlit
+    // Switch to WEEKLY — hour, min, day active; N inactive; warning slot idle
     await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
     expect(screen.getByTestId('schedule-param-hour')).not.toBeDisabled()
     expect(screen.getByTestId('schedule-param-min')).not.toBeDisabled()
     expect(screen.getByTestId('schedule-param-day')).not.toBeDisabled()
-    expect(
-      screen.getByTestId('schedule-warning-lamp').querySelector('[data-lit="true"]'),
-    ).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument(),
+    )
 
     // Switch to HOURLY — all params inactive
-    await user.click(screen.getByRole('radio', { name: /^every hour$/i }))
+    await user.click(screen.getByRole('radio', { name: /^hourly$/i }))
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
     expect(screen.getByTestId('schedule-param-hour')).toBeDisabled()
     expect(screen.getByTestId('schedule-param-min')).toBeDisabled()
@@ -448,6 +454,78 @@ describe('ConfigView', () => {
     expect(sc.dayOfWeek).toBeNull()
     expect(sc.minuteInterval).toBeNull()
     expect(sc.secondInterval).toBeNull()
+  })
+
+  // --- Split-flap slot journey ---
+
+  it('split-flap slot: idle on load, shows message after save, warning slot on Every N Seconds', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/config/processing', () => new HttpResponse(null, { status: 204 })),
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByLabelText(/max orders per run/i))
+
+    // Idle state: slot container present, message element absent
+    expect(screen.getByTestId('processing-saved-slot')).toBeInTheDocument()
+    expect(screen.queryByTestId('processing-saved-message')).not.toBeInTheDocument()
+
+    // Warning slot: idle when WEEKLY (default from API → EVERY_N_HOURS, message absent)
+    expect(screen.getByTestId('schedule-warning-slot')).toBeInTheDocument()
+    expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument()
+
+    // Switch to Every N Seconds → warning message appears
+    await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
+    await waitFor(() =>
+      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
+      /not recommended for production/i,
+    )
+
+    // Switch back → warning message disappears
+    await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
+    await waitFor(() =>
+      expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument(),
+    )
+
+    // Save → processing slot shows SAVED
+    await user.click(screen.getByRole('button', { name: /save processing settings/i }))
+    await waitFor(() =>
+      expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i)
+  })
+
+  it('indicator lamps match active mode', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'EVERY_N_HOURS', hourInterval: 2 },
+        }),
+      ),
+    )
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked(),
+    )
+
+    // EVERY_N_HOURS: N lamp active, others inactive
+    expect(screen.getByTestId('schedule-lamp-n')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
+
+    // Switch to WEEKLY: hour, min, day lamps active; N inactive
+    await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
+    expect(screen.getByTestId('schedule-lamp-n')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-hour')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-min')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-day')).toHaveAttribute('data-active', 'true')
   })
 
   // --- Dry run ---

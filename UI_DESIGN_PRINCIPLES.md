@@ -145,6 +145,36 @@ Decorative `>` prefixes must be `aria-hidden`.
 the indicator radio group pattern. Use the terminal screen pattern only when
 options are dynamic or not known at render time.
 
+### Split-Flap Message Slots
+
+Use a split-flap message slot for any transient status message — save
+confirmations, operation results, mode-triggered warnings — where a persistent
+lamp would be ambiguous to a first-time user.
+
+A split-flap slot communicates two things simultaneously:
+- The housing (always present, hatched idle texture) signals that a message
+  *could* appear here
+- The flipped face shows the current message when one exists
+
+**States:**
+- **Idle:** fixed-size panel filled with hatched or horizontal-rule texture in
+  Faded Cream at low opacity. Always present, never empty-looking.
+- **Message:** flip animation (`rotateX`, `200ms`, `ease-in-out`) reveals
+  message text. Color follows standard palette conventions (Green = success,
+  Red = failure/warning, Amber = in-progress).
+- **Reset:** transient messages flip back to idle after a pair-determined
+  timeout (suggest 4–6s). Persistent messages (mode-triggered warnings) flip
+  back when the triggering condition clears.
+
+**Rules:**
+- Container is always fixed height and width — no layout shift on any
+  transition
+- `prefers-reduced-motion`: replace flip with `opacity` crossfade (`150ms`)
+- Do not use for state that needs to persist indefinitely — use an indicator
+  lamp instead
+- Do not use for state the user needs to act on — use an error panel with
+  explicit copy instead
+
 ### Dropdowns / Select Inputs
 
 Do not use `<select>` elements or custom dropdown flyouts. Dropdowns violate

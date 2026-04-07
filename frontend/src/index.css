@@ -990,6 +990,109 @@ textarea[data-placeholder='true']::placeholder {
   text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
 }
 
+/* ── Split-flap message slot ─────────────────────────────── */
+
+@keyframes cf-flip-out {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+
+@keyframes cf-flip-in {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes cf-flip-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cf-flip-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.cf-splitflap {
+  perspective: 400px;
+  height: 28px;
+  min-width: 180px;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.cf-splitflap-face {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  box-shadow: var(--cf-inset-shadow);
+  transform-origin: center center;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cf-splitflap-face.cf-splitflap--flip-out {
+  animation: cf-flip-out 100ms ease-in forwards;
+}
+
+.cf-splitflap-face.cf-splitflap--flip-in {
+  animation: cf-flip-in 100ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-splitflap-face.cf-splitflap--flip-out {
+    animation: cf-flip-fade-out 75ms ease-in forwards;
+  }
+
+  .cf-splitflap-face.cf-splitflap--flip-in {
+    animation: cf-flip-fade-in 75ms ease-out forwards;
+  }
+}
+
+.cf-splitflap-idle {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(168, 152, 128, 0.2) 0px,
+    rgba(168, 152, 128, 0.2) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  border-radius: 1px;
+}
+
+.cf-splitflap-message {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cf-splitflap-face[data-color='green'] .cf-splitflap-message {
+  color: var(--cf-green);
+  text-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
+}
+
+.cf-splitflap-face[data-color='red'] .cf-splitflap-message {
+  color: var(--cf-red);
+  text-shadow: 0 0 6px rgba(232, 52, 26, 0.6);
+}
+
 /* ── Sync schedule panel ─────────────────────────────────── */
 
 .cf-sync-schedule {
@@ -1012,39 +1115,42 @@ textarea[data-placeholder='true']::placeholder {
   color: var(--cf-text);
 }
 
-.cf-sync-warning {
+.cf-sync-param-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: var(--cf-s1);
+  margin-bottom: var(--cf-s2);
 }
 
-.cf-warning-lamp {
-  width: 10px;
-  height: 10px;
+.cf-sync-param-row > .cf-form-row {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.cf-param-lamp {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
   background: #2a2a28;
   border: 1px solid rgba(0, 0, 0, 0.6);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
   transition:
-    background 80ms ease,
-    box-shadow 80ms ease;
+    background 50ms,
+    box-shadow 50ms;
+  align-self: flex-end;
+  margin-bottom: 10px;
 }
 
-.cf-warning-lamp[data-lit='true'] {
-  background: #e8341a;
+.cf-param-lamp[data-active='true'] {
+  background: var(--cf-amber);
   box-shadow:
     inset 0 1px 2px rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(232, 52, 26, 0.8);
+    0 0 5px rgba(255, 179, 71, 0.7);
 }
 
-.cf-warning-lamp-label {
-  font-family: var(--cf-font-stencil);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--cf-text-dim);
+.cf-sync-warning {
+  margin-top: var(--cf-s1);
 }
 
 /* ── Radio group (indicator radio buttons) ───────────────── */
