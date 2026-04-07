@@ -1159,6 +1159,10 @@ textarea[data-placeholder='true']::placeholder {
   padding-left: var(--cf-s2); /* align with inputs: lamp width (8px) + row gap (8px) */
 }
 
+.cf-sync-warning .cf-splitflap {
+  width: 100%;
+}
+
 /* ── Radio group (indicator radio buttons) ───────────────── */
 
 .cf-radio-group {
