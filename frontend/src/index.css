@@ -388,6 +388,7 @@ button.cf-btn-secondary:disabled {
   position: relative;
   overflow: hidden;
   padding: var(--cf-s3);
+  min-height: 120px;
   /* Subtle green/amber CRT tint */
   color: #d4cca8;
 }
@@ -785,6 +786,7 @@ textarea[data-placeholder='true']::placeholder {
   border: 1px solid var(--cf-border);
   border-radius: 2px;
   margin-top: var(--cf-s2);
+  min-height: 48px;
 }
 
 .cf-lamp-housing {
