@@ -387,20 +387,20 @@ export default function ConfigView() {
                 )}
               </div>
             </div>
-            <div className="cf-btn-row">
+            <div className="cf-test-control">
               <button
                 onClick={() => handleTest('ynab', setYnabProbe)}
                 disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
               >
                 {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
               </button>
+              <IndicatorPanel
+                label="YNAB"
+                state={ynabProbe.status}
+                message={ynabProbe.message}
+                readoutAriaLabel="YNAB probe result"
+              />
             </div>
-            <IndicatorPanel
-              label="YNAB"
-              state={ynabProbe.status}
-              message={ynabProbe.message}
-              readoutAriaLabel="YNAB probe result"
-            />
           </section>
         </div>
 
@@ -417,20 +417,20 @@ export default function ConfigView() {
                 onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
               />
             </div>
-            <div className="cf-btn-row">
+            <div className="cf-test-control">
               <button
                 onClick={() => handleTest('fastmail', setFastmailProbe)}
                 disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
               >
                 {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
               </button>
+              <IndicatorPanel
+                label="FastMail"
+                state={fastmailProbe.status}
+                message={fastmailProbe.message}
+                readoutAriaLabel="FastMail probe result"
+              />
             </div>
-            <IndicatorPanel
-              label="FastMail"
-              state={fastmailProbe.status}
-              message={fastmailProbe.message}
-              readoutAriaLabel="FastMail probe result"
-            />
           </section>
         </div>
       </div>
@@ -448,20 +448,20 @@ export default function ConfigView() {
               onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
             />
           </div>
-          <div className="cf-btn-row">
+          <div className="cf-test-control">
             <button
               onClick={() => handleTest('gemini', setGeminiProbe)}
               disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
             >
               {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
             </button>
+            <IndicatorPanel
+              label="Gemini"
+              state={geminiProbe.status}
+              message={geminiProbe.message}
+              readoutAriaLabel="Gemini probe result"
+            />
           </div>
-          <IndicatorPanel
-            label="Gemini"
-            state={geminiProbe.status}
-            message={geminiProbe.message}
-            readoutAriaLabel="Gemini probe result"
-          />
         </section>
       </div>
 

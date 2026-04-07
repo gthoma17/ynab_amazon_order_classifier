@@ -775,6 +775,33 @@ textarea[data-placeholder='true']::placeholder {
   }
 }
 
+/* ── Button row ───────────────────────────────────────────── */
+
+.cf-btn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+  margin-top: var(--cf-s2);
+}
+
+/* ── Test control row (button + indicator on same line) ──── */
+
+.cf-test-control {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cf-s2);
+  margin-top: var(--cf-s2);
+}
+
+.cf-test-control button {
+  flex-shrink: 0;
+}
+
+.cf-test-control .cf-indicator-panel {
+  flex: 1;
+  margin-top: 0;
+}
+
 /* ── Indicator lamp panel ─────────────────────────────────── */
 
 .cf-indicator-panel {
