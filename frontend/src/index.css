@@ -813,6 +813,19 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-test-control button {
   flex-shrink: 0;
+  min-height: 48px;
+}
+
+.cf-test-btn-label--hidden {
+  visibility: hidden;
+}
+
+.cf-test-btn-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cf-test-control .cf-indicator-panel {

@@ -92,8 +92,7 @@ export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
   const [signalSourcesSaved, setSignalSourcesSaved] = useState(false)
   const [aiEngineSaved, setAiEngineSaved] = useState(false)
-  const [ynabProbe, setYnabProbe] = useState<ProbeState>(idleProbe)
-  const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
+const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
 
   const [budgets, setBudgets] = useState<Budget[]>([])
@@ -205,8 +204,7 @@ export default function ConfigView() {
       geminiKey: keys.geminiKey,
     }).then(() => {
       setSignalSourcesSaved(true)
-      setYnabProbe(idleProbe)
-      setFastmailProbe(idleProbe)
+setFastmailProbe(idleProbe)
     })
   }
 
@@ -405,20 +403,6 @@ export default function ConfigView() {
                 )}
               </div>
             </div>
-            <div className="cf-test-control">
-              <button
-                onClick={() => handleTest('ynab', setYnabProbe)}
-                disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
-              >
-                {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
-              </button>
-              <IndicatorPanel
-                label="YNAB"
-                state={ynabProbe.status}
-                message={ynabProbe.message}
-                readoutAriaLabel="YNAB probe result"
-              />
-            </div>
           </section>
         </div>
 
@@ -440,7 +424,8 @@ export default function ConfigView() {
                 onClick={() => handleTest('fastmail', setFastmailProbe)}
                 disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
               >
-                {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
+                <span className={fastmailProbe.status === 'testing' ? 'cf-test-btn-label--hidden' : undefined}>Test FastMail</span>
+                {fastmailProbe.status === 'testing' && <span className="cf-test-btn-overlay">Testing…</span>}
               </button>
               <IndicatorPanel
                 label="FastMail"
@@ -481,7 +466,8 @@ export default function ConfigView() {
               onClick={() => handleTest('gemini', setGeminiProbe)}
               disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
             >
-              {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
+              <span className={geminiProbe.status === 'testing' ? 'cf-test-btn-label--hidden' : undefined}>Test Gemini</span>
+              {geminiProbe.status === 'testing' && <span className="cf-test-btn-overlay">Testing…</span>}
             </button>
             <IndicatorPanel
               label="Gemini"

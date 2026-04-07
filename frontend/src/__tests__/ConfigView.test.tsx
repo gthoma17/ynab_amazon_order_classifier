@@ -112,25 +112,8 @@ describe('ConfigView', () => {
 
   it('renders Test Connection buttons for each integration', () => {
     render(<ConfigView />)
-    expect(screen.getByRole('button', { name: /test ynab/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /test fastmail/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /test gemini/i })).toBeInTheDocument()
-  })
-
-  it('disables YNAB test button when YNAB token is empty', async () => {
-    server.use(
-      http.get('/api/config/keys', () =>
-        HttpResponse.json({
-          ynabToken: null,
-          ynabBudgetId: null,
-          fastmailApiToken: null,
-          geminiKey: null,
-        }),
-      ),
-    )
-    render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue(''))
-    expect(screen.getByRole('button', { name: /test ynab/i })).toBeDisabled()
   })
 
   // --- Budget terminal screen ---
@@ -227,45 +210,15 @@ describe('ConfigView', () => {
     expect(screen.getByRole('button', { name: /test gemini/i })).toBeDisabled()
   })
 
-  it('shows success result after YNAB test connection succeeds', async () => {
-    const user = userEvent.setup()
-    render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
-
-    await user.click(screen.getByRole('button', { name: /test ynab/i }))
-
-    await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected'),
-    )
-  })
-
-  it('shows error result when YNAB test connection fails', async () => {
-    const user = userEvent.setup()
-    server.use(
-      http.post('/api/config/probe/ynab', () =>
-        HttpResponse.json({ success: false, message: '401 Unauthorized — check your credentials' }),
-      ),
-    )
-
-    render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
-
-    await user.click(screen.getByRole('button', { name: /test ynab/i }))
-
-    await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('401 Unauthorized'),
-    )
-  })
-
   it('clears probe results after save', async () => {
     const user = userEvent.setup()
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
+    await waitFor(() => expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token'))
 
     // First run a probe to get a result
-    await user.click(screen.getByRole('button', { name: /test ynab/i }))
+    await user.click(screen.getByRole('button', { name: /test fastmail/i }))
     await waitFor(() =>
-      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected'),
+      expect(screen.getByLabelText('FastMail probe result').textContent).toContain('Connected'),
     )
 
     // Dashboard lamp should be unlit initially
@@ -275,7 +228,7 @@ describe('ConfigView', () => {
     // Save should reset probe to idle (readout shows placeholder)
     await user.click(screen.getByRole('button', { name: /save signal sources/i }))
     await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
-    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('STANDING BY')
+    expect(screen.getByLabelText('FastMail probe result').textContent).toContain('STANDING BY')
   })
 
   // --- Processing settings ---
