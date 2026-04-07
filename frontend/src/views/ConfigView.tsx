@@ -90,7 +90,8 @@ const MINUTES = [0, 15, 30, 45]
 
 export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
-  const [saved, setSaved] = useState(false)
+  const [signalSourcesSaved, setSignalSourcesSaved] = useState(false)
+  const [aiEngineSaved, setAiEngineSaved] = useState(false)
   const [ynabProbe, setYnabProbe] = useState<ProbeState>(idleProbe)
   const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
@@ -196,11 +197,27 @@ export default function ConfigView() {
     }
   }, [keys.ynabToken])
 
-  function handleSave() {
-    apiPut('/api/config/keys', keys).then(() => {
-      setSaved(true)
+  function handleSaveSignalSources() {
+    apiPut('/api/config/keys', {
+      ynabToken: keys.ynabToken,
+      ynabBudgetId: keys.ynabBudgetId,
+      fastmailApiToken: keys.fastmailApiToken,
+      geminiKey: keys.geminiKey,
+    }).then(() => {
+      setSignalSourcesSaved(true)
       setYnabProbe(idleProbe)
       setFastmailProbe(idleProbe)
+    })
+  }
+
+  function handleSaveAiEngine() {
+    apiPut('/api/config/keys', {
+      ynabToken: keys.ynabToken,
+      ynabBudgetId: keys.ynabBudgetId,
+      fastmailApiToken: keys.fastmailApiToken,
+      geminiKey: keys.geminiKey,
+    }).then(() => {
+      setAiEngineSaved(true)
       setGeminiProbe(idleProbe)
     })
   }
@@ -434,6 +451,16 @@ export default function ConfigView() {
             </div>
           </section>
         </div>
+
+        {/* Save Signal Sources */}
+        <div className="cf-btn-row">
+          <button onClick={handleSaveSignalSources}>Save Signal Sources</button>
+          <DashboardLamp
+            label="Saved"
+            isLit={signalSourcesSaved}
+            testId="signal-sources-saved-lamp"
+          />
+        </div>
       </div>
 
       {/* ── AI ENGINE panel ───────────────────────────────────────────────── */}
@@ -463,13 +490,11 @@ export default function ConfigView() {
               readoutAriaLabel="Gemini probe result"
             />
           </div>
+          <div className="cf-btn-row">
+            <button onClick={handleSaveAiEngine}>Save AI Engine</button>
+            <DashboardLamp label="Saved" isLit={aiEngineSaved} testId="ai-engine-saved-lamp" />
+          </div>
         </section>
-      </div>
-
-      {/* Save API keys */}
-      <div className="cf-btn-row" style={{ marginBottom: 'var(--cf-s4)' }}>
-        <button onClick={handleSave}>Save</button>
-        <DashboardLamp label="Saved" isLit={saved} testId="config-saved-lamp" />
       </div>
 
       {/* ── PROCESSING panel ──────────────────────────────────────────────── */}

@@ -87,7 +87,7 @@ describe('ConfigView', () => {
     await user.clear(tokenInput)
     await user.type(tokenInput, 'new-token')
 
-    await user.click(screen.getByRole('button', { name: /^save$/i }))
+    await user.click(screen.getByRole('button', { name: /save signal sources/i }))
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
     expect((capturedBody as Record<string, string>).ynabToken).toBe('new-token')
@@ -99,10 +99,10 @@ describe('ConfigView', () => {
     await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
 
     // Dashboard lamp should be unlit initially
-    const lamp = screen.getByTestId('config-saved-lamp')
+    const lamp = screen.getByTestId('signal-sources-saved-lamp')
     expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^save$/i }))
+    await user.click(screen.getByRole('button', { name: /save signal sources/i }))
 
     // Dashboard lamp should be lit after save
     await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
@@ -269,11 +269,11 @@ describe('ConfigView', () => {
     )
 
     // Dashboard lamp should be unlit initially
-    const lamp = screen.getByTestId('config-saved-lamp')
+    const lamp = screen.getByTestId('signal-sources-saved-lamp')
     expect(lamp.querySelector('[data-lit="true"]')).not.toBeInTheDocument()
 
     // Save should reset probe to idle (readout shows placeholder)
-    await user.click(screen.getByRole('button', { name: /^save$/i }))
+    await user.click(screen.getByRole('button', { name: /save signal sources/i }))
     await waitFor(() => expect(lamp.querySelector('[data-lit="true"]')).toBeInTheDocument())
     expect(screen.getByLabelText('YNAB probe result').textContent).toContain('STANDING BY')
   })
