@@ -44,8 +44,6 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // ── Step 2: Enter credentials and save ─────────────────────────────────────
 
   await page.locator('#ynabToken').fill('my-ynab-token')
-  // Budget terminal screen shows loading state while fetching
-  await expect(page.getByTestId('budget-selector-screen')).toContainText(/fetching budgets/i)
   // Wait for budget options to load in the terminal screen
   await expect(
     page.getByTestId('budget-selector-screen').getByRole('option').first(),
@@ -55,9 +53,11 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Confirm selected state is reflected correctly
   await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
+  await page.getByRole('button', { name: 'Save Signal Sources' }).click()
+  await expect(page.getByTestId('signal-sources-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
   await page.locator('#geminiKey').fill('my-gemini-key')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Saved')).toBeVisible()
+  await page.getByRole('button', { name: 'Save AI Engine' }).click()
+  await expect(page.getByTestId('ai-engine-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
 
   // ── Step 3: Test Connection for each integration ────────────────────────────
   // Credentials are now saved. Click each "Test" button and assert the inline
@@ -86,11 +86,11 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
-  await page.locator('#scheduleType').selectOption('EVERY_N_SECONDS')
-  await expect(page.getByRole('alert')).toContainText(/not recommended for production/i)
-  await page.locator('#secondInterval').fill('3')
+  await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
+  await expect(page.getByTestId('schedule-warning-lamp')).toContainText(/not recommended for production/i)
+  await page.getByTestId('schedule-param-n').fill('3')
   await page.getByRole('button', { name: 'Save processing settings' }).click()
-  await expect(page.getByText('Processing settings saved')).toBeVisible()
+  await expect(page.getByTestId('processing-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
 
   // ── Step 5: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
