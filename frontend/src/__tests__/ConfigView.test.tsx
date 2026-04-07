@@ -210,8 +210,9 @@ describe('ConfigView', () => {
 
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
 
-    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
-    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected')
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected'),
+    )
   })
 
   it('shows error result when YNAB test connection fails', async () => {
@@ -227,8 +228,9 @@ describe('ConfigView', () => {
 
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
 
-    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
-    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('401 Unauthorized')
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('401 Unauthorized'),
+    )
   })
 
   it('clears probe results after save', async () => {
@@ -238,12 +240,14 @@ describe('ConfigView', () => {
 
     // First run a probe to get a result
     await user.click(screen.getByRole('button', { name: /test ynab/i }))
-    await waitFor(() => expect(screen.getByLabelText('YNAB probe result')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected'),
+    )
 
-    // Save should clear it
+    // Save should reset probe to idle (readout shows placeholder)
     await user.click(screen.getByRole('button', { name: /^save$/i }))
     await screen.findByText('Saved')
-    expect(screen.queryByLabelText('YNAB probe result')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('YNAB probe result').textContent).toContain('STANDING BY')
   })
 
   // --- Processing settings ---

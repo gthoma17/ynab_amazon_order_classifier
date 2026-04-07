@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
+import IndicatorPanel from '../components/IndicatorPanel'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -317,24 +318,12 @@ export default function ConfigView() {
                 {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
               </button>
             </div>
-            {ynabProbe.status === 'success' && (
-              <span
-                aria-label="YNAB probe result"
-                className="cf-probe-success"
-                style={{ display: 'flex' }}
-              >
-                ✓ {ynabProbe.message}
-              </span>
-            )}
-            {ynabProbe.status === 'error' && (
-              <span
-                aria-label="YNAB probe result"
-                className="cf-probe-error"
-                style={{ display: 'flex' }}
-              >
-                ✗ {ynabProbe.message}
-              </span>
-            )}
+            <IndicatorPanel
+              label="YNAB"
+              state={ynabProbe.status}
+              message={ynabProbe.message}
+              readoutAriaLabel="YNAB probe result"
+            />
           </section>
         </div>
 
@@ -359,24 +348,12 @@ export default function ConfigView() {
                 {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
               </button>
             </div>
-            {fastmailProbe.status === 'success' && (
-              <span
-                aria-label="FastMail probe result"
-                className="cf-probe-success"
-                style={{ display: 'flex' }}
-              >
-                ✓ {fastmailProbe.message}
-              </span>
-            )}
-            {fastmailProbe.status === 'error' && (
-              <span
-                aria-label="FastMail probe result"
-                className="cf-probe-error"
-                style={{ display: 'flex' }}
-              >
-                ✗ {fastmailProbe.message}
-              </span>
-            )}
+            <IndicatorPanel
+              label="FastMail"
+              state={fastmailProbe.status}
+              message={fastmailProbe.message}
+              readoutAriaLabel="FastMail probe result"
+            />
           </section>
         </div>
       </div>
@@ -401,24 +378,12 @@ export default function ConfigView() {
               {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
             </button>
           </div>
-          {geminiProbe.status === 'success' && (
-            <span
-              aria-label="Gemini probe result"
-              className="cf-probe-success"
-              style={{ display: 'flex' }}
-            >
-              ✓ {geminiProbe.message}
-            </span>
-          )}
-          {geminiProbe.status === 'error' && (
-            <span
-              aria-label="Gemini probe result"
-              className="cf-probe-error"
-              style={{ display: 'flex' }}
-            >
-              ✗ {geminiProbe.message}
-            </span>
-          )}
+          <IndicatorPanel
+            label="Gemini"
+            state={geminiProbe.status}
+            message={geminiProbe.message}
+            readoutAriaLabel="Gemini probe result"
+          />
         </section>
       </div>
 
