@@ -300,6 +300,17 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
     }
   }
 
+  const budgetListboxActiveDescendant =
+    displayBudgetsStatus === 'loaded'
+      ? (() => {
+          const id =
+            highlightedBudgetIndex >= 0
+              ? displayBudgets[highlightedBudgetIndex]?.id
+              : keys.ynabBudgetId
+          return id ? `budget-option-${id}` : undefined
+        })()
+      : undefined
+
   return (
     <div>
       <h1>Configuration</h1>
@@ -334,17 +345,7 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                 data-testid="budget-selector-screen"
                 role="listbox"
                 aria-labelledby="budget-selector-label"
-                aria-activedescendant={
-                  displayBudgetsStatus === 'loaded'
-                    ? (() => {
-                        const activeBudgetId =
-                          highlightedBudgetIndex >= 0
-                            ? displayBudgets[highlightedBudgetIndex]?.id
-                            : keys.ynabBudgetId
-                        return activeBudgetId ? `budget-option-${activeBudgetId}` : undefined
-                      })()
-                    : undefined
-                }
+                aria-activedescendant={budgetListboxActiveDescendant}
                 tabIndex={
                   displayBudgetsStatus === 'loaded' && displayBudgets.length > 0 ? 0 : undefined
                 }
