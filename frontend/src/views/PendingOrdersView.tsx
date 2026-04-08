@@ -21,7 +21,7 @@ function statusClass(status: string): string {
     case 'DISCARDED':
       return 'cf-status cf-status-discarded'
     default:
-      return 'cf-status cf-status-matched'
+      return 'cf-status'
   }
 }
 
