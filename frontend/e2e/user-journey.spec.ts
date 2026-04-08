@@ -39,7 +39,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // ── Step 1: Open the app — API Keys page ──────────────────────────────────
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
   // ── Step 2: Enter credentials and save ─────────────────────────────────────
 
@@ -54,18 +54,17 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
   await page.getByRole('button', { name: 'Save Signal Sources' }).click()
-  await expect(page.getByTestId('signal-sources-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
+  await expect(page.getByTestId('signal-sources-saved-message')).toBeVisible()
   await page.locator('#geminiKey').fill('my-gemini-key')
   await page.getByRole('button', { name: 'Save AI Engine' }).click()
-  await expect(page.getByTestId('ai-engine-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
+  await expect(page.getByTestId('ai-engine-saved-message')).toBeVisible()
 
   // ── Step 3: Test Connection for each integration ────────────────────────────
   // Credentials are now saved. Click each "Test" button and assert the inline
   // "Connected" confirmation appears. This exercises the full probe path:
   //   browser → real Spring Boot backend → WireMock stubs.
-
-  await page.getByRole('button', { name: 'Test YNAB' }).click()
-  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
+  // Note: YNAB token validation is performed by the budget selector, not a
+  // dedicated probe button.
 
   await page.getByRole('button', { name: 'Test FastMail' }).click()
   await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
@@ -87,10 +86,10 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
   await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
-  await expect(page.getByTestId('schedule-warning-lamp')).toContainText(/not recommended for production/i)
+  await expect(page.getByTestId('schedule-warning-message')).toContainText(/not recommended for production/i)
   await page.getByTestId('schedule-param-n').fill('3')
   await page.getByRole('button', { name: 'Save processing settings' }).click()
-  await expect(page.getByTestId('processing-saved-lamp').locator('[data-lit="true"]')).toBeVisible()
+  await expect(page.getByTestId('processing-saved-message')).toBeVisible()
 
   // ── Step 5: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
@@ -146,7 +145,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Results show the predicted category for the TOTO Bidet order.
 
   await page.getByRole('link', { name: 'Configuration' }).click()
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
   // Override the dry-run start date so the historical test order is included
   await page.locator('#dryRunStartFrom').fill('2024-01-01')

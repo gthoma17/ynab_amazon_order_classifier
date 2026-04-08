@@ -44,7 +44,7 @@ export default function IndicatorPanel({
     <div className="cf-indicator-panel">
       <div className="cf-lamp-housing" data-state={state} aria-label={`${label} status lamp`} />
       <div className="cf-lamp-body">
-<span
+        <span
           className="cf-lamp-readout"
           data-placeholder={isPlaceholder ? 'true' : undefined}
           aria-label={readoutAriaLabel}
