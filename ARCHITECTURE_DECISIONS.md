@@ -28,13 +28,12 @@ This document is a quick-reference summary of the Architecture Decision Records 
 | 9 | Single-tenant v1, schema ready for v2 | No `tenant_id` in v1 but tables are designed to accept it. No global static state. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#9-tenancy--single-tenant-v1-schema-structured-for-v2) |
 | 10 | API keys stored plaintext in DB | Keys in `app_config` table, no encryption at rest in v1. The entire security posture assumes deployment behind a home router/DMZ; the management console is accessible only to the operator and is never internet-exposed. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#10-security--api-keys-in-db-plaintext-ui-not-internet-exposed) |
 | 11 | Multi-stage Docker, multi-arch | Three-stage Dockerfile (Node → Gradle → JRE). Published for `amd64`, `arm64`, `arm/v7`. | [ADR-0001](docs/ADRs/20260406_foundationalArchitecture.md#11-build-and-deployment--multi-stage-docker-multi-arch) |
-| 12 | Testing strategy (WireMock + Playwright) | Backend E2E uses WireMock unified stub for all external APIs. Frontend E2E uses Playwright against real stack via `E2EServer` (Spring Boot + WireMock). Dynamic base URLs via `@DynamicPropertySource`. | [ADR-0002](docs/ADRs/20260403_testingStrategy.md) |
-| 13 | Safety controls | Order cap (default 0=unlimited), start-from date (default=install date), dynamic schedule (`SyncScheduler` replaces `@Scheduled`), dry run (preview without YNAB writes). All persisted in `app_config`. | [ADR-0003](docs/ADRs/20260403_safetyControls.md) |
-| 14 | Logging architecture (Blacklite + dual datasource) | Separate SQLite files for data (`database.sqlite`) vs. logs (`logs.sqlite`) to avoid `SQLITE_BUSY`. Dual `DataSource` config with `@Primary` for main DB. Console output preserved for `docker logs`. Application logs queried via `JdbcTemplate`, not JPA. | [ADR-0004](docs/ADRs/20260405_loggingArchitecture.md) |
-| 15 | Code hygiene tooling | Spotless + ktlint 1.5.0 (pinned) for Kotlin, Prettier 3.5.3 (exact-pinned) for TypeScript, ESLint for React. Lefthook pre-commit hooks (format/lint) and pre-push hooks (tests). CI gates on format/lint. | [ADR-0005](docs/ADRs/20260406_codeHygieneTooling.md) |
-| 16 | Automated release pipeline | `workflow_run` on CI success on `prod` branch. Auto-patch-bump versioning (v1.0.0 → v1.0.1). Multi-arch Docker (`amd64`, `arm64`, `arm/v7`) to GHCR. BuildKit layer caching. `--platform=$BUILDPLATFORM` for build stages (QEMU only for runtime). | [ADR-0006](docs/ADRs/20260403_releasePipeline.md) |
-| 17 | Help/issue reporting system | "Get Help" page generates sanitized GitHub issue pre-fill. Server-side redaction (API keys → `[REDACTED]`, metadata preserved). Truncation at 4000 chars. `window.open` to GitHub new-issue URL. | [ADR-0007](docs/ADRs/20260403_helpIssueReporting.md) |
-| 18 | Configuration UX improvements | FastMail: single API token (removed username field). YNAB: budget dropdown (auto-populated from `GET /budgets`) instead of manual UUID entry. Budget ID remains UUID internally. | [ADR-0008](docs/ADRs/20260403_configurationUxImprovements.md) |
+| 12 | Testing strategy (WireMock + Playwright) | Backend E2E uses WireMock unified stub. Frontend E2E uses Playwright against real stack via `E2EServer`. Dynamic base URLs via `@DynamicPropertySource`. | [ADR-0002](docs/ADRs/20260403_testingStrategy.md) |
+| 13 | Dynamic scheduling with SyncScheduler | Replace `@Scheduled` with `ThreadPoolTaskScheduler` reading cron from DB. Runtime reschedule without restart. Pool size = 1 for Pi 3. | [ADR-0003](docs/ADRs/20260403_safetyControls.md) |
+| 14 | Logging (Blacklite + dual datasource) | Separate SQLite files for data vs. logs to avoid `SQLITE_BUSY`. Dual `DataSource` with `@Primary`. Console preserved for `docker logs`. | [ADR-0004](docs/ADRs/20260405_loggingArchitecture.md) |
+| 15 | Code hygiene (hooks + CI) | Spotless/ktlint, Prettier/ESLint, Lefthook pre-commit/pre-push hooks. CI gates on format/lint. | [ADR-0005](docs/ADRs/20260406_codeHygieneTooling.md) |
+| 16 | Release pipeline (multi-arch GHCR) | `workflow_run` on CI success. Auto-patch-bump. Multi-arch Docker with `--platform=$BUILDPLATFORM` for build stages. | [ADR-0006](docs/ADRs/20260403_releasePipeline.md) |
+| 17 | Help/issue reporting (security + data control) | Server-side credential sanitization. GitHub URL with query params (not API) for user data control. Truncation at 4000 chars. | [ADR-0007](docs/ADRs/20260403_helpIssueReporting.md) |
 
 ---
 
@@ -44,9 +43,8 @@ This document is a quick-reference summary of the Architecture Decision Records 
 |---|---|---|---|
 | [20260406_foundationalArchitecture.md](docs/ADRs/20260406_foundationalArchitecture.md) | Foundational Architecture Decisions | 2026-04-06 | Accepted |
 | [20260403_testingStrategy.md](docs/ADRs/20260403_testingStrategy.md) | Testing Strategy (WireMock + Playwright + E2EServer Pattern) | 2026-04-03 | Accepted |
-| [20260403_safetyControls.md](docs/ADRs/20260403_safetyControls.md) | Safety Controls (Order Cap, Schedule, Start-From Date, Dry Run) | 2026-04-03 | Accepted |
+| [20260403_safetyControls.md](docs/ADRs/20260403_safetyControls.md) | Dynamic Scheduling with SyncScheduler | 2026-04-03 | Accepted |
 | [20260405_loggingArchitecture.md](docs/ADRs/20260405_loggingArchitecture.md) | Logging Architecture (Blacklite SQLite + Dual DataSource + Console Preservation) | 2026-04-05 | Accepted |
-| [20260406_codeHygieneTooling.md](docs/ADRs/20260406_codeHygieneTooling.md) | Code Hygiene Tooling (Spotless, Prettier, ESLint, Lefthook Pre-Commit Hooks) | 2026-04-06 | Accepted |
+| [20260406_codeHygieneTooling.md](docs/ADRs/20260406_codeHygieneTooling.md) | Code Hygiene Tooling (Pre-Commit Hooks + CI Enforcement) | 2026-04-06 | Accepted |
 | [20260403_releasePipeline.md](docs/ADRs/20260403_releasePipeline.md) | Automated Release Pipeline (Multi-Arch Docker to GHCR) | 2026-04-03 | Accepted |
-| [20260403_helpIssueReporting.md](docs/ADRs/20260403_helpIssueReporting.md) | Help/Issue Reporting System (Sanitized GitHub Issue Pre-Fill) | 2026-04-03 | Accepted |
-| [20260403_configurationUxImprovements.md](docs/ADRs/20260403_configurationUxImprovements.md) | Configuration UX Improvements (FastMail Single Token, YNAB Budget Dropdown) | 2026-04-03 | Accepted |
+| [20260403_helpIssueReporting.md](docs/ADRs/20260403_helpIssueReporting.md) | Help/Issue Reporting Security and Data Control | 2026-04-03 | Accepted |
