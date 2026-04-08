@@ -143,7 +143,7 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
         setSecondInterval(sc.secondInterval ?? 10)
         setMinuteInterval(sc.minuteInterval ?? 30)
         setHourInterval(sc.hourInterval ?? 5)
-        setScheduleHour(sc.hour ?? 9)
+        setScheduleHour(sc.hour ?? 0)
         setScheduleMinute(sc.minute ?? 0)
         setScheduleDow(sc.dayOfWeek ?? 'MON')
       }
