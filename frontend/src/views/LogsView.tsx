@@ -16,7 +16,7 @@ function statusClass(status: string): string {
     case 'FAIL':
       return 'cf-status cf-status-fail'
     default:
-      return 'cf-status cf-status-matched'
+      return 'cf-status'
   }
 }
 
