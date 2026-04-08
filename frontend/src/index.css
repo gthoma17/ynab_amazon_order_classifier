@@ -1266,6 +1266,7 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-sync-warning .cf-splitflap {
   width: 100%;
+  max-width: none;
 }
 
 /* ── Radio group (indicator radio buttons) ───────────────── */
@@ -1368,7 +1369,7 @@ textarea[data-placeholder='true']::placeholder {
   padding: 8px;
   min-height: 32px;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .cf-radio-group--time .cf-radio-lamp {
@@ -1379,7 +1380,7 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-radio-group--time .cf-radio-label {
   margin-left: 0;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */

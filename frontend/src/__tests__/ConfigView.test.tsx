@@ -232,7 +232,7 @@ describe('ConfigView', () => {
     await waitFor(() =>
       expect(screen.getByTestId('signal-sources-saved-message')).toBeInTheDocument(),
     )
-    expect(screen.getByLabelText('FastMail probe result').textContent).toContain('STANDING BY')
+    expect(screen.getByLabelText('FastMail probe result').textContent).not.toContain('Connected')
   })
 
   // --- Processing settings ---

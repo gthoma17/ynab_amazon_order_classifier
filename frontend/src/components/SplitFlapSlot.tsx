@@ -43,7 +43,7 @@ export default function SplitFlapSlot({
       return
     }
 
-    const targetMessage = message.padEnd(20, ' ')
+    const targetMessage = message.padEnd(Math.max(20, message.length), ' ')
     const targetChars = targetMessage.split('')
 
     // Initialize every cell as blank — no character is visible until its flap completes
