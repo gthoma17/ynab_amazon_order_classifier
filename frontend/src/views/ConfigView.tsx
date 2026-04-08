@@ -92,7 +92,7 @@ export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
   const [signalSourcesMessage, setSignalSourcesMessage] = useState<string | null>(null)
   const [aiEngineMessage, setAiEngineMessage] = useState<string | null>(null)
-const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
+  const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
 
   const [budgets, setBudgets] = useState<Budget[]>([])
