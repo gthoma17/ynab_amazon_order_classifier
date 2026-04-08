@@ -162,9 +162,9 @@ A split-flap slot communicates two things simultaneously:
 - **Message:** flip animation (`rotateX`, `200ms`, `ease-in-out`) reveals
   message text. Color follows standard palette conventions (Green = success,
   Red = failure/warning, Amber = in-progress).
-- **Reset:** transient messages flip back to idle after a pair-determined
-  timeout (suggest 4–6s). Persistent messages (mode-triggered warnings) flip
-  back when the triggering condition clears.
+- **Reset:** transient messages flip back to idle after a 5 s timeout.
+  Persistent messages (mode-triggered warnings) flip back when the triggering
+  condition clears.
 
 **Rules:**
 - Container is always fixed height and width — no layout shift on any
