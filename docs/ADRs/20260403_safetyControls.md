@@ -19,32 +19,7 @@ PLAN.md specified `@Scheduled` cron annotations for email ingestion and YNAB syn
 
 ### Implementation
 
-```kotlin
-@Service
-class SyncScheduler(
-    private val emailIngestionService: EmailIngestionService,
-    private val ynabSyncService: YnabSyncService,
-    private val configService: ConfigService
-) {
-    private val scheduler = ThreadPoolTaskScheduler().apply {
-        poolSize = 1  // Pi 3 heap budget
-        initialize()
-    }
-
-    private var emailTask: ScheduledFuture<*>? = null
-    private var ynabTask: ScheduledFuture<*>? = null
-
-    fun reschedule() {
-        val config = configService.getScheduleConfig()
-        emailTask?.cancel(false)
-        ynabTask?.cancel(false)
-
-        val trigger = CronTrigger(config.toCron())
-        emailTask = scheduler.schedule({ emailIngestionService.ingest() }, trigger)
-        ynabTask = scheduler.schedule({ ynabSyncService.sync() }, trigger)
-    }
-}
-```
+`SyncScheduler` (see `src/main/kotlin/com/budgetsortbot/service/SyncScheduler.kt`) uses a single-thread `ThreadPoolTaskScheduler` (pool size = 1 for Pi 3 heap budget). The `reschedule()` method cancels existing tasks, reads cron config from the database, and schedules both `emailIngestionService.ingest()` and `ynabSyncService.sync()` with a `CronTrigger`.
 
 Schedule stored as JSON in `app_config`:
 

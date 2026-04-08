@@ -13,6 +13,50 @@ This document is a quick-reference summary of the Architecture Decision Records 
 
 ---
 
+## How to Write Good ADRs
+
+ADRs document **architecture decisions** (how the system is built), not product decisions (what features exist). Follow these principles:
+
+### Focus on Architecture, Not Product
+
+- **Architecture (HOW)**: Implementation patterns, technical tradeoffs, infrastructure choices
+- **Product (WHAT)**: Features, user flows, business requirements
+
+**Example**: ADR-0003 documents *how* dynamic scheduling is implemented (`ThreadPoolTaskScheduler` vs. `@Scheduled`), not *that* users can configure schedules.
+
+### Keep It Concise
+
+**Target**: Sum of `ARCHITECTURE_DECISIONS.md` + any given ADR < 10,000 characters
+
+- Write for developers who need to understand tradeoffs, not exhaustive tutorials
+- Each ADR should answer: "Why this approach instead of alternatives?"
+- If you find yourself writing pages, you're documenting the code, not the decision
+
+### Reference Code, Don't Copy It
+
+**Don't paste code blocks that will become stale.** Instead, reference source files:
+
+- ❌ "Here's the 50-line `SyncScheduler` implementation..."
+- ✅ "See `SyncScheduler.kt` — uses `ThreadPoolTaskScheduler` with pool size = 1"
+
+### Essential Structure
+
+Every ADR must include:
+
+1. **Context**: What problem existed? What constraints mattered?
+2. **Decision**: What approach was chosen? Key implementation details?
+3. **Consequences**: What does this force future developers to do (or avoid)?
+4. **Alternatives Not Chosen**: What was rejected and why?
+
+### Avoid Over-Detailed Configuration Examples
+
+Configuration lives in code. ADRs explain *why* a config structure was chosen, not the full schema.
+
+- ❌ 100-line GitHub Actions workflow YAML
+- ✅ "Uses `workflow_run` trigger to gate releases on CI success"
+
+---
+
 ## Decision Summary
 
 | # | Decision | Summary | ADR |
