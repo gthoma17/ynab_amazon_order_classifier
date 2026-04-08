@@ -34,6 +34,42 @@ pre-commit:
       fail_text: |
         TypeScript lint errors found. Fix the reported issues, then re-stage.
 
+    adr-check:
+      root: "."
+      run: |
+        STAGED=$(git diff --cached --name-only 2>/dev/null)
+        if [ -z "$STAGED" ]; then
+          exit 0
+        fi
+        # If every staged file is under docs/ADRs/ or is ARCHITECTURE_DECISIONS.md,
+        # this is an ADR-only commit — no check needed.
+        NON_ADR=$(echo "$STAGED" | grep -v '^docs/ADRs/' | grep -v '^ARCHITECTURE_DECISIONS\.md' || true)
+        if [ -z "$NON_ADR" ]; then
+          exit 0
+        fi
+        # Non-ADR files are staged. Check whether any ADR-related file is also staged.
+        ADR_CHANGED=$(echo "$STAGED" | grep -E '^(docs/ADRs/|ARCHITECTURE_DECISIONS\.md)' || true)
+        if [ -n "$ADR_CHANGED" ]; then
+          exit 0
+        fi
+        # No ADR changes detected alongside application changes.
+        # Allow an intentional bypass via SKIP_ADR=1.
+        if [ "${SKIP_ADR:-0}" = "1" ]; then
+          echo "[ADR-SKIP] Architecture Decision Record check bypassed intentionally." >&2
+          exit 0
+        fi
+        echo "" >&2
+        echo "⚠️  ADR check: this commit modifies application files but includes no Architecture Decision Record." >&2
+        echo "   If this commit introduces or changes an architectural decision, add or update:" >&2
+        echo "     docs/ADRs/YYYYMMDD_shortCamelCaseTitle.md" >&2
+        echo "     ARCHITECTURE_DECISIONS.md (add a summary row)" >&2
+        echo "   If no architecture change was made, bypass with:" >&2
+        echo "     SKIP_ADR=1 git commit ..." >&2
+        echo "" >&2
+        exit 1
+      fail_text: |
+        ADR check failed. Either add an ADR for your architectural change, or bypass with SKIP_ADR=1 git commit ...
+
 pre-push:
   commands:
     backend-tests:
