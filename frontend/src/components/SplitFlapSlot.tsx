@@ -9,8 +9,12 @@ interface SplitFlapSlotProps {
 
 interface CharState {
   char: string
-  phase: 'idle' | 'flipping' | 'shown'
+  phase: 'idle' | 'flip-out' | 'flip-in' | 'shown'
 }
+
+const CHAR_DELAY = 45 // ms between each character flip start
+const HALF_FLIP = 75 // ms for each half of the flip (out or in)
+const FULL_FLIP = HALF_FLIP * 2
 
 export default function SplitFlapSlot({
   message,
@@ -27,12 +31,10 @@ export default function SplitFlapSlot({
     if (message === prevMessageRef.current) return
     prevMessageRef.current = message
 
-    // Clear any existing animations
     animationRef.current.forEach(clearTimeout)
     animationRef.current = []
 
     if (message === null) {
-      // Flip back to idle state - schedule to avoid sync setState in effect
       const t = setTimeout(() => {
         setDisplayed(null)
         setCharStates([])
@@ -41,47 +43,52 @@ export default function SplitFlapSlot({
       return
     }
 
-    // Pad message to consistent width for better visual effect
     const targetMessage = message.padEnd(20, ' ')
     const targetChars = targetMessage.split('')
 
-    // Initialize all characters as idle
-    const initialStates: CharState[] = targetChars.map((char) => ({
-      char,
+    // Initialize every cell as blank — no character is visible until its flap completes
+    const initialStates: CharState[] = targetChars.map(() => ({
+      char: ' ',
       phase: 'idle',
     }))
 
-    // Schedule the state updates to avoid sync setState in effect
     const t0 = setTimeout(() => {
+      setDisplayed(targetMessage) // make display div (and its data-testid) visible
       setCharStates(initialStates)
-      setDisplayed(targetMessage)
     }, 0)
     animationRef.current.push(t0)
 
-    // Flip each character sequentially with mechanical timing
-    targetChars.forEach((_, index) => {
-      const flipDelay = index * 45 // 45ms between each character flip
-      const flipDuration = 150 // Each flip takes 150ms
+    targetChars.forEach((targetChar, index) => {
+      const flipStart = index * CHAR_DELAY
 
-      // Start flip
+      // Phase 1: blank char folds away (rotateX 0 → -90°)
       const t1 = setTimeout(() => {
         setCharStates((prev) => {
           const next = [...prev]
-          next[index] = { ...next[index], phase: 'flipping' }
+          next[index] = { char: ' ', phase: 'flip-out' }
           return next
         })
-      }, flipDelay)
+      }, flipStart)
 
-      // End flip
+      // Phase 2: element is edge-on and invisible — swap text, fold new char in (-90 → 0°)
       const t2 = setTimeout(() => {
         setCharStates((prev) => {
           const next = [...prev]
-          next[index] = { ...next[index], phase: 'shown' }
+          next[index] = { char: targetChar, phase: 'flip-in' }
           return next
         })
-      }, flipDelay + flipDuration)
+      }, flipStart + HALF_FLIP)
 
-      animationRef.current.push(t1, t2)
+      // Phase 3: animation complete, character is fully visible
+      const t3 = setTimeout(() => {
+        setCharStates((prev) => {
+          const next = [...prev]
+          next[index] = { char: targetChar, phase: 'shown' }
+          return next
+        })
+      }, flipStart + FULL_FLIP)
+
+      animationRef.current.push(t1, t2, t3)
     })
 
     return () => {
@@ -92,6 +99,12 @@ export default function SplitFlapSlot({
 
   const isIdle = displayed === null
 
+  const phaseClass = (phase: CharState['phase']) => {
+    if (phase === 'flip-out') return 'cf-splitflap-char--flip-out'
+    if (phase === 'flip-in') return 'cf-splitflap-char--flip-in'
+    return ''
+  }
+
   return (
     <div className="cf-splitflap" data-testid={testId}>
       {isIdle ? (
@@ -100,11 +113,15 @@ export default function SplitFlapSlot({
         </div>
       ) : (
         <div className="cf-splitflap-display" data-testid={messageTestId}>
+          {/* Visually-hidden span gives immediate accessible text and allows tests
+              to assert message content without waiting for the full animation */}
+          <span className="cf-visually-hidden">{displayed?.trim()}</span>
           {charStates.map((state, index) => (
             <div
               key={index}
-              className={`cf-splitflap-char ${state.phase === 'flipping' ? 'cf-splitflap-char--flipping' : ''}`}
+              className={`cf-splitflap-char ${phaseClass(state.phase)}`}
               data-color={color}
+              aria-hidden="true"
             >
               <span className="cf-splitflap-char-content">{state.char}</span>
               <div className="cf-splitflap-char-divider" aria-hidden="true" />

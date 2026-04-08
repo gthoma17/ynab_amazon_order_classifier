@@ -105,9 +105,8 @@ describe('ConfigView', () => {
 
     // Slot should show SAVED message after save
     await waitFor(() =>
-      expect(screen.getByTestId('signal-sources-saved-message')).toBeInTheDocument(),
+      expect(screen.getByTestId('signal-sources-saved-message')).toHaveTextContent(/saved/i),
     )
-    expect(screen.getByTestId('signal-sources-saved-message')).toHaveTextContent(/saved/i)
   })
 
   // --- Test Connection buttons ---
@@ -328,10 +327,9 @@ describe('ConfigView', () => {
     const nInput = screen.getByTestId('schedule-param-n')
     expect(nInput).not.toBeDisabled()
     expect(nInput).toHaveValue(3)
-    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument())
-    expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
+    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
       /not recommended for production/i,
-    )
+    ))
   })
 
   it('sends secondInterval in PUT body when EVERY_N_SECONDS is selected', async () => {
@@ -384,8 +382,7 @@ describe('ConfigView', () => {
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
     // Slot should show SAVED message after save
-    await waitFor(() => expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument())
-    expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i)
+    await waitFor(() => expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i))
   })
 
   // --- Sync schedule user journey ---
@@ -468,10 +465,9 @@ describe('ConfigView', () => {
 
     // Switch to Every N Seconds → warning message appears
     await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
-    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument())
-    expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
+    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
       /not recommended for production/i,
-    )
+    ))
 
     // Switch back → warning message disappears
     await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
