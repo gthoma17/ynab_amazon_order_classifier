@@ -39,8 +39,6 @@ All design decisions from this PR are documented in `UI_DESIGN_PRINCIPLES.md`. T
 
 **Rationale:** The split-flap display is a fitting metaphor for a system that processes items in batch: it communicates state transitions without adding or removing DOM elements. The housing is always present (persistent panel pattern); only the displayed message changes.
 
-A `DashboardLamp` component was introduced during development but was found to create dead code since the split-flap pattern was adopted for all save indicators. `DashboardLamp.tsx` is currently an empty module retained as a reserved namespace; if a lamp-based pattern is needed in the future, this file will be implemented then.
-
 **Timeout:** Transient messages (save confirmations) flip back to idle after a **5 second** timeout (`setTimeout(..., 5000)` in `ConfigView.tsx`). Persistent messages (warnings triggered by mode-based conditions) clear when the triggering condition clears.
 
 **Test IDs:** `SplitFlapSlot` exposes a `slotTestId` prop for the container and a `messageTestId` prop for the message span. E2E tests assert on the `messageTestId` element (present in DOM only when a message is displayed) rather than a `data-lit` attribute.
