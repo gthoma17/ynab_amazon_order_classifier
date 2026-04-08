@@ -75,7 +75,7 @@ export default function CategoryRulesView() {
       {loadStatus === 'loaded' && (
         <div data-testid="categories-loaded">
           <div className="cf-panel">
-            <span className="cf-panel-label">Ai Classification Rules</span>
+            <span className="cf-panel-label">AI Classification Rules</span>
             {categories.length === 0 ? (
               <div className="cf-crt">
                 <p className="cf-terminal-empty">No categories — connect YNAB first</p>

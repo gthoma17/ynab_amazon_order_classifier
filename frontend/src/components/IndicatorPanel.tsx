@@ -27,6 +27,7 @@ export default function IndicatorPanel({
     if (displayText === prevTextRef.current) return
     prevTextRef.current = displayText
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIncomingText(displayText)
     setAnimating(true)
 

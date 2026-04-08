@@ -23,6 +23,7 @@ export default function SplitFlapSlot({
     if (message === prevMessageRef.current) return
     prevMessageRef.current = message
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase('flip-out')
 
     const t1 = setTimeout(() => {

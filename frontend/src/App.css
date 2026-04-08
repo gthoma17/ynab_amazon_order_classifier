@@ -111,16 +111,6 @@
   margin: 0 auto;
 }
 
-/* ── Button row ───────────────────────────────────────────── */
-
-.cf-btn-row {
-  display: flex;
-  align-items: center;
-  gap: var(--cf-s2);
-  flex-wrap: wrap;
-  margin-top: var(--cf-s2);
-}
-
 /* ── Panel grid ───────────────────────────────────────────── */
 
 .cf-panel-grid {

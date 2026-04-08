@@ -825,6 +825,7 @@ textarea[data-placeholder='true']::placeholder {
   display: flex;
   align-items: center;
   gap: var(--cf-s2);
+  flex-wrap: wrap;
   margin-top: var(--cf-s2);
 }
 
@@ -1220,6 +1221,14 @@ textarea[data-placeholder='true']::placeholder {
 
 .cf-radio-option:hover:not(.cf-radio-option--selected) {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.cf-radio-option:focus-within {
+  border-color: var(--cf-amber);
+  box-shadow:
+    0 0 0 2px rgba(255, 179, 71, 0.2),
+    0 0 10px rgba(255, 179, 71, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .cf-radio-lamp {
