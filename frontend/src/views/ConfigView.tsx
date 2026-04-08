@@ -102,7 +102,7 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
 
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
-  const [scheduleType, setScheduleType] = useState<ScheduleType>('WEEKLY')
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('EVERY_N_HOURS')
   const [secondInterval, setSecondInterval] = useState(10)
   const [minuteInterval, setMinuteInterval] = useState(30)
   const [hourInterval, setHourInterval] = useState(5)
@@ -220,7 +220,6 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
       ynabToken: keys.ynabToken,
       ynabBudgetId: keys.ynabBudgetId,
       fastmailApiToken: keys.fastmailApiToken,
-      geminiKey: keys.geminiKey,
     }).then(() => {
       setSignalSourcesMessage('✓  SAVED')
       setFastmailProbe(idleProbe)
@@ -229,9 +228,6 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
 
   function handleSaveAiEngine() {
     apiPut('/api/config/keys', {
-      ynabToken: keys.ynabToken,
-      ynabBudgetId: keys.ynabBudgetId,
-      fastmailApiToken: keys.fastmailApiToken,
       geminiKey: keys.geminiKey,
     }).then(() => {
       setAiEngineMessage('✓  SAVED')
@@ -339,7 +335,15 @@ const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
                 role="listbox"
                 aria-labelledby="budget-selector-label"
                 aria-activedescendant={
-                  keys.ynabBudgetId ? `budget-option-${keys.ynabBudgetId}` : undefined
+                  displayBudgetsStatus === 'loaded'
+                    ? (() => {
+                        const activeBudgetId =
+                          highlightedBudgetIndex >= 0
+                            ? displayBudgets[highlightedBudgetIndex]?.id
+                            : keys.ynabBudgetId
+                        return activeBudgetId ? `budget-option-${activeBudgetId}` : undefined
+                      })()
+                    : undefined
                 }
                 tabIndex={
                   displayBudgetsStatus === 'loaded' && displayBudgets.length > 0 ? 0 : undefined
