@@ -45,9 +45,9 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#ynabToken').fill('my-ynab-token')
   // Wait for budget options to load in the terminal screen
-  await expect(
-    page.getByTestId('budget-selector-screen').getByRole('option').first(),
-  ).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('budget-selector-screen').getByRole('option').first()).toBeVisible({
+    timeout: 10_000,
+  })
   // Select the budget by clicking its option row
   await page.getByTestId('budget-option-my-budget-id').click()
   // Confirm selected state is reflected correctly
@@ -86,7 +86,9 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
   await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
-  await expect(page.getByTestId('schedule-warning-message')).toContainText(/not recommended for production/i)
+  await expect(page.getByTestId('schedule-warning-message')).toContainText(
+    /not recommended for production/i,
+  )
   await page.getByTestId('schedule-param-n').fill('3')
   await page.getByRole('button', { name: 'Save processing settings' }).click()
   await expect(page.getByTestId('processing-saved-message')).toBeVisible()

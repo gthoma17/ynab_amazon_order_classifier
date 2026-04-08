@@ -215,7 +215,9 @@ describe('ConfigView', () => {
   it('clears probe results after save', async () => {
     const user = userEvent.setup()
     render(<ConfigView />)
-    await waitFor(() => expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token'))
+    await waitFor(() =>
+      expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token'),
+    )
 
     // First run a probe to get a result
     await user.click(screen.getByRole('button', { name: /test fastmail/i }))
@@ -326,9 +328,7 @@ describe('ConfigView', () => {
     const nInput = screen.getByTestId('schedule-param-n')
     expect(nInput).not.toBeDisabled()
     expect(nInput).toHaveValue(3)
-    await waitFor(() =>
-      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument())
     expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
       /not recommended for production/i,
     )
@@ -384,9 +384,7 @@ describe('ConfigView', () => {
 
     await waitFor(() => expect(capturedBody).not.toBeNull())
     // Slot should show SAVED message after save
-    await waitFor(() =>
-      expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument())
     expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i)
   })
 
@@ -397,9 +395,7 @@ describe('ConfigView', () => {
     render(<ConfigView />)
 
     // Default mode is EVERY_N_HOURS — N active, others inactive
-    await waitFor(() =>
-      expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked(),
-    )
+    await waitFor(() => expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked())
     expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
     expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
@@ -410,9 +406,7 @@ describe('ConfigView', () => {
     // Switch to EVERY_N_SECONDS — N active, warning slot shows message
     await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
     expect(screen.getByTestId('schedule-param-n')).not.toBeDisabled()
-    await waitFor(() =>
-      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument())
 
     // Switch to WEEKLY — hour, min, day active; N inactive; warning slot idle
     await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
@@ -460,9 +454,7 @@ describe('ConfigView', () => {
 
   it('split-flap slot: idle on load, shows message after save, warning slot on Every N Seconds', async () => {
     const user = userEvent.setup()
-    server.use(
-      http.put('/api/config/processing', () => new HttpResponse(null, { status: 204 })),
-    )
+    server.use(http.put('/api/config/processing', () => new HttpResponse(null, { status: 204 })))
     render(<ConfigView />)
     await waitFor(() => screen.getByLabelText(/max orders per run/i))
 
@@ -476,9 +468,7 @@ describe('ConfigView', () => {
 
     // Switch to Every N Seconds → warning message appears
     await user.click(screen.getByRole('radio', { name: /every n seconds/i }))
-    await waitFor(() =>
-      expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByTestId('schedule-warning-message')).toBeInTheDocument())
     expect(screen.getByTestId('schedule-warning-message')).toHaveTextContent(
       /not recommended for production/i,
     )
@@ -491,9 +481,7 @@ describe('ConfigView', () => {
 
     // Save → processing slot shows SAVED
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
-    await waitFor(() =>
-      expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByTestId('processing-saved-message')).toBeInTheDocument())
     expect(screen.getByTestId('processing-saved-message')).toHaveTextContent(/saved/i)
   })
 
@@ -510,9 +498,7 @@ describe('ConfigView', () => {
       ),
     )
     render(<ConfigView />)
-    await waitFor(() =>
-      expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked(),
-    )
+    await waitFor(() => expect(screen.getByRole('radio', { name: /every n hours/i })).toBeChecked())
 
     // EVERY_N_HOURS: N lamp active, others inactive
     expect(screen.getByTestId('schedule-lamp-n')).toHaveAttribute('data-active', 'true')

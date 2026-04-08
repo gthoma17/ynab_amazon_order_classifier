@@ -49,13 +49,13 @@ export default function IndicatorPanel({
           data-placeholder={isPlaceholder ? 'true' : undefined}
           aria-label={readoutAriaLabel}
         >
-          <span className={animating ? 'cf-rotary-segment cf-rotary-segment--out' : 'cf-rotary-segment'}>
+          <span
+            className={animating ? 'cf-rotary-segment cf-rotary-segment--out' : 'cf-rotary-segment'}
+          >
             {visibleText}
           </span>
           {animating && incomingText !== null && (
-            <span className="cf-rotary-segment cf-rotary-segment--in">
-              {incomingText}
-            </span>
+            <span className="cf-rotary-segment cf-rotary-segment--in">{incomingText}</span>
           )}
         </span>
       </div>
