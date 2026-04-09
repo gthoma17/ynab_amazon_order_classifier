@@ -23,81 +23,146 @@ export default function SplitFlapSlot({
   messageTestId,
 }: SplitFlapSlotProps) {
   const [displayed, setDisplayed] = useState<string | null>(message)
+  const [displayedColor, setDisplayedColor] = useState<'green' | 'red'>(color)
   const [charStates, setCharStates] = useState<CharState[]>([])
   const prevMessageRef = useRef(message)
   const animationRef = useRef<number[]>([])
+  // Set to true by the cleanup function so StrictMode's cleanup→remount cycle is
+  // distinguished from a same-message re-render (e.g. colour-only change).
+  const cleanupCalledRef = useRef(false)
 
   useEffect(() => {
-    if (message === prevMessageRef.current) return
+    const wasCleanedUp = cleanupCalledRef.current
+    cleanupCalledRef.current = false
+
+    if (message === prevMessageRef.current && !wasCleanedUp) return
+
+    const oldMessage = prevMessageRef.current
     prevMessageRef.current = message
 
     animationRef.current.forEach(clearTimeout)
     animationRef.current = []
 
-    if (message === null) {
-      const t = setTimeout(() => {
-        setDisplayed(null)
-        setCharStates([])
+    const targetPadded =
+      message === null ? null : message.padEnd(Math.max(20, message.length), ' ')
+    const targetChars = targetPadded?.split('') ?? []
+
+    const oldPadded =
+      oldMessage === null ? '' : oldMessage.padEnd(Math.max(20, oldMessage.length), ' ')
+    const oldChars = oldPadded.split('')
+
+    const wasIdle = oldMessage === null
+    const numPositions = Math.max(oldChars.length, targetChars.length)
+
+    if (wasIdle) {
+      // ── Null → Message ─────────────────────────────────────────────────
+      // Initialize blank slots, then flip each char in (existing behaviour).
+      const blankStates: CharState[] = targetChars.map(() => ({ char: ' ', phase: 'idle' }))
+
+      const t0 = setTimeout(() => {
+        setDisplayed(targetPadded)
+        setDisplayedColor(color)
+        setCharStates(blankStates)
       }, 0)
-      animationRef.current.push(t)
-      return
-    }
+      animationRef.current.push(t0)
 
-    const targetMessage = message.padEnd(Math.max(20, message.length), ' ')
-    const targetChars = targetMessage.split('')
+      targetChars.forEach((newChar, index) => {
+        const flipStart = index * CHAR_DELAY
 
-    // Initialize every cell as blank — no character is visible until its flap completes
-    const initialStates: CharState[] = targetChars.map(() => ({
-      char: ' ',
-      phase: 'idle',
-    }))
+        const t1 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: ' ', phase: 'flip-out' }
+            return next
+          })
+        }, flipStart)
 
-    const t0 = setTimeout(() => {
-      setDisplayed(targetMessage) // make display div (and its data-testid) visible
+        const t2 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: newChar, phase: 'flip-in' }
+            return next
+          })
+        }, flipStart + HALF_FLIP)
+
+        const t3 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: newChar, phase: 'shown' }
+            return next
+          })
+        }, flipStart + FULL_FLIP)
+
+        animationRef.current.push(t1, t2, t3)
+      })
+    } else {
+      // ── Message → Message  or  Message → Null ──────────────────────────
+      // Reset each position to the committed old char so the flip-out starts
+      // from a clean 'shown' state even if a previous animation was interrupted.
+      const initialStates: CharState[] = Array.from({ length: numPositions }, (_, i) => ({
+        char: oldChars[i] ?? ' ',
+        phase: 'shown',
+      }))
       setCharStates(initialStates)
-    }, 0)
-    animationRef.current.push(t0)
 
-    targetChars.forEach((targetChar, index) => {
-      const flipStart = index * CHAR_DELAY
+      // Update accessible text and colour for the incoming message immediately.
+      setDisplayed(targetPadded)
+      if (targetPadded !== null) setDisplayedColor(color)
 
-      // Phase 1: blank char folds away (rotateX 0 → -90°)
-      const t1 = setTimeout(() => {
-        setCharStates((prev) => {
-          const next = [...prev]
-          next[index] = { char: ' ', phase: 'flip-out' }
-          return next
-        })
-      }, flipStart)
+      for (let index = 0; index < numPositions; index++) {
+        const oldChar = oldChars[index] ?? ' '
+        const newChar = targetChars[index] ?? ' '
+        const flipStart = index * CHAR_DELAY
 
-      // Phase 2: element is edge-on and invisible — swap text, fold new char in (-90 → 0°)
-      const t2 = setTimeout(() => {
-        setCharStates((prev) => {
-          const next = [...prev]
-          next[index] = { char: targetChar, phase: 'flip-in' }
-          return next
-        })
-      }, flipStart + HALF_FLIP)
+        // Phase 1 — old char folds away
+        const t1 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: oldChar, phase: 'flip-out' }
+            return next
+          })
+        }, flipStart)
 
-      // Phase 3: animation complete, character is fully visible
-      const t3 = setTimeout(() => {
-        setCharStates((prev) => {
-          const next = [...prev]
-          next[index] = { char: targetChar, phase: 'shown' }
-          return next
-        })
-      }, flipStart + FULL_FLIP)
+        // Phase 2 — new char (or space) folds in
+        const t2 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: newChar, phase: 'flip-in' }
+            return next
+          })
+        }, flipStart + HALF_FLIP)
 
-      animationRef.current.push(t1, t2, t3)
-    })
+        // Phase 3 — animation complete
+        const t3 = setTimeout(() => {
+          setCharStates((prev) => {
+            const next = [...prev]
+            next[index] = { char: newChar, phase: 'shown' }
+            return next
+          })
+        }, flipStart + FULL_FLIP)
+
+        animationRef.current.push(t1, t2, t3)
+      }
+
+      // If transitioning to idle, clear the char grid once the last flip finishes.
+      if (targetPadded === null) {
+        const lastFlipEnd = (numPositions - 1) * CHAR_DELAY + FULL_FLIP
+        const tClear = setTimeout(() => {
+          setCharStates([])
+        }, lastFlipEnd)
+        animationRef.current.push(tClear)
+      }
+    }
 
     return () => {
       animationRef.current.forEach(clearTimeout)
       animationRef.current = []
+      cleanupCalledRef.current = true
     }
-  }, [message])
+  }, [message, color])
 
-  const isIdle = displayed === null
+  // Show idle dashes only when there are no character slots to render.
+  const isIdle = charStates.length === 0
 
   const phaseClass = (phase: CharState['phase']) => {
     if (phase === 'flip-out') return 'cf-splitflap-char--flip-out'
@@ -112,7 +177,7 @@ export default function SplitFlapSlot({
           <span className="cf-splitflap-idle" aria-hidden="true" />
         </div>
       ) : (
-        <div className="cf-splitflap-display" data-testid={messageTestId}>
+        <div className="cf-splitflap-display" data-testid={displayed !== null ? messageTestId : undefined}>
           {/* Visually-hidden span gives immediate accessible text and allows tests
               to assert message content without waiting for the full animation */}
           <span className="cf-visually-hidden">{displayed?.trim()}</span>
@@ -120,7 +185,7 @@ export default function SplitFlapSlot({
             <div
               key={index}
               className={`cf-splitflap-char ${phaseClass(state.phase)}`}
-              data-color={color}
+              data-color={displayedColor}
               aria-hidden="true"
             >
               <span className="cf-splitflap-char-content">{state.char}</span>

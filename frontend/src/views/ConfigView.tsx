@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
+import CrtPanel from '../components/CrtPanel'
 import IndicatorPanel from '../components/IndicatorPanel'
 import RadioGroup from '../components/RadioGroup'
 import SplitFlapSlot from '../components/SplitFlapSlot'
@@ -340,8 +341,8 @@ export default function ConfigView() {
             </div>
             <div className="cf-form-row">
               <label id="budget-selector-label">Budget</label>
-              <div
-                className="cf-crt cf-budget-selector"
+              <CrtPanel
+                className="cf-budget-selector"
                 data-testid="budget-selector-screen"
                 role="listbox"
                 aria-labelledby="budget-selector-label"
@@ -426,7 +427,7 @@ export default function ConfigView() {
                     </div>
                   </>
                 )}
-              </div>
+              </CrtPanel>
             </div>
           </section>
         </div>
@@ -759,7 +760,10 @@ export default function ConfigView() {
 
           {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
 
-          <div className="cf-crt" aria-live="polite" style={{ marginTop: 'var(--cf-s3)' }}>
+          <CrtPanel
+            aria-live="polite"
+            style={{ marginTop: 'var(--cf-s3)', minHeight: '320px', overflowY: 'auto' }}
+          >
             {dryRunStatus === 'idle' && dryRunResults.length === 0 ? (
               <p className="cf-terminal-standby">-- STANDING BY --</p>
             ) : (
@@ -803,7 +807,7 @@ export default function ConfigView() {
                 )}
               </>
             )}
-          </div>
+          </CrtPanel>
         </section>
       </div>
     </div>

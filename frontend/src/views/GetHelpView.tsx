@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { apiPostWithBody } from '../api'
+import IndicatorButton from '../components/IndicatorButton'
+import SplitFlapSlot from '../components/SplitFlapSlot'
 
 const GITHUB_ISSUES_URL = 'https://github.com/gthoma17/budget-sortbot/issues/new'
 const GITHUB_BASE_URL = `${GITHUB_ISSUES_URL}?body=`
@@ -153,19 +155,15 @@ export default function GetHelpView() {
           </label>
         </div>
 
-        {logsRequested && (
-          <div className="cf-btn-row">
-            <button
-              className="cf-btn-secondary"
-              onClick={handleInsertLogs}
-              disabled={isInsertDisabled}
-              aria-disabled={isInsertDisabled}
-            >
-              {loading ? 'Fetching logs…' : 'Insert Logs'}
-            </button>
-            {logsInserted && <span role="status"> ✓ Logs inserted</span>}
-          </div>
-        )}
+        <div className="cf-btn-row">
+          <IndicatorButton
+            onClick={handleInsertLogs}
+            disabled={!logsRequested || isInsertDisabled}
+          >
+            {loading ? 'Fetching logs…' : 'Insert Logs'}
+          </IndicatorButton>
+          <SplitFlapSlot message={logsInserted ? 'LOGS INSERTED' : null} />
+        </div>
 
         <div className="cf-form-row" style={{ marginTop: 'var(--cf-s2)' }}>
           <label htmlFor="reportPreview">
@@ -184,9 +182,7 @@ export default function GetHelpView() {
           />
         </div>
 
-        {sanitized && (
-          <p role="status">Sensitive values (API keys, tokens) were removed from your report.</p>
-        )}
+        <SplitFlapSlot message={sanitized ? 'SENSITIVE VALUES REDACTED' : null} />
 
         {error && <p role="alert">{error}</p>}
       </div>

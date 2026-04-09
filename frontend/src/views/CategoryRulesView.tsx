@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPut } from '../api'
+import CrtPanel from '../components/CrtPanel'
 
 interface YnabCategory {
   id: string
@@ -55,58 +56,72 @@ export default function CategoryRulesView() {
   }
 
   return (
-    <div>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <h1>Category Rules</h1>
 
       {loadStatus === 'loading' && (
-        <div className="cf-panel" data-testid="categories-loading">
-          <div className="cf-loading">Loading categories…</div>
-        </div>
+        <CrtPanel data-testid="categories-loading" style={{ flex: 1 }}>
+          <div className="cf-budget-standby" aria-label="categories loading">
+            <span>
+              <span aria-hidden="true">&gt; </span>LOADING CATEGORIES...
+            </span>
+            <span className="cf-budget-cursor" aria-hidden="true">
+              _
+            </span>
+          </div>
+        </CrtPanel>
       )}
 
       {loadStatus === 'error' && (
-        <div className="cf-panel" data-testid="categories-error">
-          <div className="cf-error-panel" role="alert">
-            ✗ {loadError}
+        <CrtPanel data-testid="categories-error" style={{ flex: 1 }}>
+          <div className="cf-budget-error" role="alert">
+            <span>
+              <span aria-hidden="true">&gt; </span>LOAD FAILED
+            </span>
+            <span>&nbsp;</span>
+            <span>&nbsp;&nbsp;{loadError}</span>
+            <span>&nbsp;&nbsp;CHECK CONNECTION AND RETRY</span>
           </div>
-        </div>
+        </CrtPanel>
       )}
 
       {loadStatus === 'loaded' && (
-        <div data-testid="categories-loaded">
-          <div className="cf-panel">
+        <div data-testid="categories-loaded" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div className="cf-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span className="cf-panel-label">AI Classification Rules</span>
             {categories.length === 0 ? (
-              <div className="cf-crt">
+              <CrtPanel style={{ flex: 1 }}>
                 <p className="cf-terminal-empty">No categories — connect YNAB first</p>
-              </div>
+              </CrtPanel>
             ) : (
-              <table className="cf-data-table">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Group</th>
-                    <th>AI hint description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((cat) => (
-                    <tr key={cat.id}>
-                      <td>{cat.name}</td>
-                      <td>{cat.categoryGroupName}</td>
-                      <td>
-                        <input
-                          aria-label={`Description for ${cat.name}`}
-                          value={descriptions[cat.id] ?? ''}
-                          onChange={(e) =>
-                            setDescriptions({ ...descriptions, [cat.id]: e.target.value })
-                          }
-                        />
-                      </td>
+              <CrtPanel style={{ flex: 1, overflowY: 'auto' }}>
+                <table className="cf-data-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Group</th>
+                      <th>AI hint description</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {categories.map((cat) => (
+                      <tr key={cat.id}>
+                        <td>{cat.name}</td>
+                        <td>{cat.categoryGroupName}</td>
+                        <td>
+                          <input
+                            aria-label={`Description for ${cat.name}`}
+                            value={descriptions[cat.id] ?? ''}
+                            onChange={(e) =>
+                              setDescriptions({ ...descriptions, [cat.id]: e.target.value })
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CrtPanel>
             )}
           </div>
           <div className="cf-btn-row">

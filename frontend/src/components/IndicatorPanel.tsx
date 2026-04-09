@@ -21,7 +21,7 @@ export default function IndicatorPanel({
   return (
     <div className="cf-indicator-panel">
       <div className="cf-lamp-housing" data-state={state} aria-label={`${label} status lamp`} />
-      <div aria-label={readoutAriaLabel}>
+      <div aria-label={readoutAriaLabel} style={{ flex: 1, minWidth: 0 }}>
         <SplitFlapSlot message={slotMessage} color={slotColor} />
       </div>
     </div>

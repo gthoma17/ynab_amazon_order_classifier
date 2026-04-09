@@ -232,7 +232,14 @@ describe('ConfigView', () => {
     await waitFor(() =>
       expect(screen.getByTestId('signal-sources-saved-message')).toBeInTheDocument(),
     )
-    expect(screen.getByLabelText('FastMail probe result').textContent).not.toContain('Connected')
+    // The old chars animate out over ~1 s; wait for the flip-out to complete
+    await waitFor(
+      () =>
+        expect(screen.getByLabelText('FastMail probe result').textContent).not.toContain(
+          'Connected',
+        ),
+      { timeout: 2000 },
+    )
   })
 
   // --- Processing settings ---

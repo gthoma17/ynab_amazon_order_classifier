@@ -69,11 +69,11 @@ describe('GetHelpView', () => {
     expect(screen.getByRole('button', { name: /insert logs/i })).toBeInTheDocument()
   })
 
-  it('hides Insert Logs button when neither logs checkbox is checked', async () => {
+  it('disables Insert Logs button when neither logs checkbox is checked', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.click(screen.getByRole('checkbox', { name: /include recent sync log entries/i }))
-    expect(screen.queryByRole('button', { name: /insert logs/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /insert logs/i })).toBeDisabled()
   })
 
   it('shows a warning modal when Open Issue is clicked with logs checked but not inserted', async () => {
@@ -109,7 +109,7 @@ describe('GetHelpView', () => {
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/✓ logs inserted/i))
+    await waitFor(() => expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument())
     await user.click(screen.getByRole('button', { name: /open issue/i }))
 
     await waitFor(() => {
@@ -171,10 +171,7 @@ describe('GetHelpView', () => {
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
 
     await waitFor(() => {
-      const statuses = screen.getAllByRole('status')
-      expect(statuses.some((el) => /sensitive values.*removed/i.test(el.textContent ?? ''))).toBe(
-        true,
-      )
+      expect(screen.getByText('SENSITIVE VALUES REDACTED')).toBeInTheDocument()
     })
   })
 
@@ -192,8 +189,7 @@ describe('GetHelpView', () => {
     // Insert logs so truncated flag is received from the API
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
     await waitFor(() => {
-      const statuses = screen.getAllByRole('status')
-      expect(statuses.some((el) => /✓ logs inserted/i.test(el.textContent ?? ''))).toBe(true)
+      expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument()
     })
     await user.click(screen.getByRole('button', { name: /open issue/i }))
 
