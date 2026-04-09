@@ -31,6 +31,7 @@ The palette is drawn from **Faber Birren's 1944 industrial color safety code** �
 
 **Rules:**
 - Never use pure `#FFFFFF` or `#000000` — everything carries a slight green or gray cast
+- **Panels, bezels, and housings are always neutral** — Machinery Gray `#1E221E` / Industrial Gray `#4A524A` only. Never tint these surfaces Seafoam/green; reserve green for screens, walls, and active states.
 - **Fire Red is reserved for danger only** — never use it decoratively (Birren's code: fire protection, emergency stops, errors)
 - **Solar Yellow is reserved for caution** — in-progress states, non-critical warnings
 - **Seafoam is the primary accent** — glow effects use Seafoam only; never amber, blue, or purple

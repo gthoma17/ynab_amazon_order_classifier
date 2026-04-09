@@ -12,7 +12,7 @@
   /* ── Palette (Faber Birren industrial safety code) ───────── */
   --cf-bg: #0d0f0d; /* Reactor Black   — primary surface */
   --cf-panel: #1e221e; /* Machinery Gray  — raised housings */
-  --cf-panel-hi: #262c26; /* Hover tint on panels */
+  --cf-panel-hi: #2b2f2b; /* Hover tint on panels (neutral gray, no green) */
   --cf-bezel: #4a524a; /* Industrial Gray — bezels / trim */
   --cf-amber: #c8a84b; /* Solar Yellow    — caution / in-progress */
   --cf-amber-dim: rgba(200, 168, 75, 0.16);
@@ -23,7 +23,7 @@
   --cf-text: #e8f0e8; /* Phosphor White  — body text */
   --cf-text-dim: #7a8e7a; /* Faded Green     — labels / metadata */
   --cf-tape: #4a2c0a; /* Oxide Brown     — decorative tape */
-  --cf-border: #5b7a5b; /* Dado Green      — panel dividers */
+  --cf-border: #4a524a; /* Industrial Gray — panel dividers / rails */
 
   /* ── Typography ─────────────────────────────────────────── */
   --cf-font-display: 'Share Tech Mono', 'VT323', ui-monospace, Consolas, monospace;
@@ -187,7 +187,7 @@ label:not(.cf-toggle-label) {
    API Token, Gemini Key). Uses an opaque background so appearance is
    identical regardless of panel nesting depth. */
 .cf-credential-input {
-  background: #101310;
+  background: var(--cf-bezel);
   border: 1px solid var(--cf-border);
   border-radius: 2px;
   color: var(--cf-text);
