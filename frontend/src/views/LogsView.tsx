@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiGet } from '../api'
+import SequencePrinter, { type ColumnDef } from '../components/SequencePrinter.tsx'
 
 interface SyncLog {
   id: number
@@ -9,57 +10,31 @@ interface SyncLog {
   message: string | null
 }
 
-function statusClass(status: string): string {
-  switch (status.toUpperCase()) {
-    case 'SUCCESS':
-      return 'cf-status cf-status-success'
-    case 'FAIL':
-      return 'cf-status cf-status-fail'
-    default:
-      return 'cf-status'
-  }
-}
+const columns: ColumnDef<SyncLog>[] = [
+  { key: 'source', header: 'Source', width: 100 },
+  { key: 'lastRun', header: 'Last Run', width: 152 },
+  {
+    key: 'status',
+    header: 'Status',
+    width: 72,
+    render: (row) => (
+      <span data-status={row.status.toUpperCase()}>{row.status.toUpperCase()}</span>
+    ),
+  },
+  { key: 'message', header: 'Message' },
+]
 
 export default function LogsView() {
   const [logs, setLogs] = useState<SyncLog[]>([])
 
   useEffect(() => {
-    apiGet<SyncLog[]>('/api/logs').then(setLogs)
+    apiGet<SyncLog[]>('/api/logs').then((data) => setLogs([...data].reverse()))
   }, [])
 
   return (
     <div>
       <h1>Sync Logs</h1>
-      <div className="cf-crt" data-testid="logs-table">
-        {logs.length === 0 ? (
-          <p className="cf-terminal-empty">No logs</p>
-        ) : (
-          <table className="cf-data-table">
-            <thead>
-              <tr>
-                <th>Source</th>
-                <th>Last Run</th>
-                <th>Status</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} data-testid="log-row">
-                  <td>
-                    <span className="cf-source-badge">{log.source}</span>
-                  </td>
-                  <td>{log.lastRun}</td>
-                  <td>
-                    <span className={statusClass(log.status)}>{log.status}</span>
-                  </td>
-                  <td>{log.message}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <SequencePrinter columns={columns} entries={logs} data-testid="logs-table" />
     </div>
   )
 }

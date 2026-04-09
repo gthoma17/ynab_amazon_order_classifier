@@ -59,7 +59,7 @@ describe('LogsView', () => {
     server.use(http.get('/api/logs', () => HttpResponse.json([])))
     render(<LogsView />)
     await waitFor(() => {
-      expect(screen.getByText(/no logs/i)).toBeInTheDocument()
+      expect(screen.getByText(/no entries/i)).toBeInTheDocument()
     })
   })
 })

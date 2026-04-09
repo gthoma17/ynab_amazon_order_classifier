@@ -1441,6 +1441,208 @@ textarea[data-placeholder='true']::placeholder {
   letter-spacing: 0.04em;
 }
 
+/* ── SER (Sequence of Events Recorder) ────────────────────── */
+
+.cf-ser {
+  display: flex;
+  flex-direction: column;
+  background: var(--cf-panel);
+  /* Brush-grain panel texture */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.055) 2px,
+    rgba(0, 0, 0, 0.055) 3px
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 6px 24px rgba(0, 0, 0, 0.85),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+  border: 2px solid #1e1e1c;
+  border-top-color: #2e2e2c;
+  border-radius: 2px;
+  padding: 12px 16px 16px;
+}
+
+/* Metal label strip mounted on panel face above the paper slot.
+   Left/right padding (26px = 18px tractor + 8px print margin) keeps
+   column headers aligned with the print area inside the paper. */
+.cf-ser-label-strip {
+  display: flex;
+  align-items: center;
+  padding: 5px 26px 4px;
+  background: #0e0e0c;
+  border: 1px solid #282826;
+  border-bottom: 2px solid #080806;
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--cf-text-dim);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* The mechanical paper slot — fixed height prevents layout jump on load */
+.cf-ser-slot {
+  position: relative;
+  background: #0d0b06;
+  box-shadow:
+    inset 0 0 0 1px #161410,
+    inset 0 5px 16px rgba(0, 0, 0, 0.95),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.7),
+    inset 4px 0 12px rgba(0, 0, 0, 0.6),
+    inset -4px 0 12px rgba(0, 0, 0, 0.6);
+  height: 320px;
+  overflow: hidden;
+}
+
+/* Top depth gradient — paper emerging from behind the panel face */
+.cf-ser-slot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Bottom fade gradient */
+.cf-ser-slot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Scrollable paper strip.
+   Tractor-feed margins are pure CSS background layers with mixed attachment:
+     - strip colour and score lines: attachment:scroll  → fixed to element, never moves
+     - perforation holes:           attachment:local   → scrolls with content
+     - horizontal rules:            attachment:local   → scrolls with content
+   This makes holes track alongside printed text at all scroll positions. */
+.cf-ser-paper {
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f5edd6;
+  background-image:
+    /* Tractor holes — local so they scroll with content */
+    radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
+    radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
+    /* Score lines separating margin from print area — fixed to element */
+    linear-gradient(to right, transparent 17px, rgba(0, 0, 0, 0.14) 17px, rgba(0, 0, 0, 0.14) 18px, transparent 18px),
+    linear-gradient(to left,  transparent 17px, rgba(0, 0, 0, 0.14) 17px, rgba(0, 0, 0, 0.14) 18px, transparent 18px),
+    /* Tractor strip colour — fixed to element */
+    linear-gradient(to right, #e8dfc0 18px, transparent 18px),
+    linear-gradient(to left,  #e8dfc0 18px, transparent 18px),
+    /* Horizontal ruled lines — local so they stay locked to text rows */
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 23px,
+      rgba(0, 0, 0, 0.065) 23px,
+      rgba(0, 0, 0, 0.065) 24px
+    );
+  background-size:
+    18px 16px,  /* left holes tile  */
+    18px 16px,  /* right holes tile */
+    100% 100%,  /* left score line  */
+    100% 100%,  /* right score line */
+    100% 100%,  /* left strip       */
+    100% 100%,  /* right strip      */
+    100% 24px;  /* rules tile       */
+  background-position:
+    left top,
+    right top,
+    0 0, 0 0, 0 0, 0 0, 0 0;
+  background-repeat:
+    repeat-y, repeat-y,
+    no-repeat, no-repeat, no-repeat, no-repeat,
+    repeat;
+  background-attachment:
+    local,  local,   /* holes  */
+    scroll, scroll,  /* scores */
+    scroll, scroll,  /* strips */
+    local;           /* rules  */
+  padding-bottom: 16px;
+}
+
+/* Paper-advance animation: the feed wrapper starts with entries above
+   the viewport and the spacer ("NO ENTRIES") visible. It translates
+   DOWN so entries scroll in from the top and the spacer exits the bottom.
+   --cf-ser-offset is set as an inline style (entries × line-height). */
+@keyframes cf-ser-print {
+  from { transform: translateY(calc(var(--cf-ser-offset) * -1)); }
+  to   { transform: translateY(0); }
+}
+
+.cf-ser-feed--printing {
+  animation: cf-ser-print 1.1s ease-in-out both;
+}
+
+/* Lock the scroll container during the advance so the user can't
+   interfere with the transform animation */
+.cf-ser-paper--printing {
+  overflow: hidden;
+}
+
+/* Spacer: same height as the slot so it fills the viewport when idle.
+   During animation it rides the feed wrapper out the bottom. */
+.cf-ser-spacer {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 26px;
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #9a8c70;
+  letter-spacing: 0.1em;
+  user-select: none;
+}
+
+/* Log entry row — 26px side padding keeps text in the print area */
+.cf-ser-entry {
+  display: flex;
+  align-items: baseline;
+  padding: 0 26px;
+  line-height: 24px;
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #1c1408;
+}
+
+/* Shared column base — applied in both label strip and entry rows */
+.cf-ser-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Typewritten status codes — minimal ink, on-paper colours.
+   Applied via data-status on the render prop's inner <span>. */
+[data-status='SUCCESS'] {
+  color: #1a5a1a;
+  font-weight: 700;
+}
+
+[data-status='FAIL'],
+[data-status='ERROR'] {
+  color: #8c2020;
+  font-weight: 700;
+}
+
+
 /* ── Scrollbar ────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
