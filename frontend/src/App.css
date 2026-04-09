@@ -31,8 +31,8 @@
   font-size: 11px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: var(--cf-amber);
-  text-shadow: 0 0 8px rgba(255, 179, 71, 0.4);
+  color: var(--cf-green);
+  text-shadow: 0 0 8px rgba(126, 200, 160, 0.4);
   padding: 13px var(--cf-s3) 13px 0;
   border-right: 1px solid var(--cf-border);
   display: flex;
@@ -80,14 +80,14 @@
 
 .cf-nav-links a:hover {
   color: var(--cf-text);
-  background: rgba(255, 179, 71, 0.04);
+  background: rgba(126, 200, 160, 0.05);
 }
 
-/* Active view — Phosphor Amber glow + bottom indicator bar */
+/* Active view — Seafoam glow + bottom indicator bar */
 .cf-nav-links a[aria-current='page'] {
-  color: var(--cf-amber);
-  background: var(--cf-amber-dim);
-  text-shadow: 0 0 6px rgba(255, 179, 71, 0.45);
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+  text-shadow: 0 0 6px rgba(126, 200, 160, 0.45);
 }
 
 .cf-nav-links a[aria-current='page']::after {
@@ -97,8 +97,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--cf-amber);
-  box-shadow: 0 0 6px rgba(255, 179, 71, 0.8);
+  background: var(--cf-green);
+  box-shadow: 0 0 6px rgba(126, 200, 160, 0.8);
 }
 
 /* ── Main content area ────────────────────────────────────── */
