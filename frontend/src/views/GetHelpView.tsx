@@ -37,6 +37,7 @@ export default function GetHelpView() {
   }
 
   const handleInsertLogs = async () => {
+    if (loading) return
     setLoading(true)
     setError(null)
     try {
@@ -84,8 +85,8 @@ export default function GetHelpView() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  const isInsertDisabled = !description.trim() || loading
-  const isOpenDisabled = !description.trim() || loading
+  const isInsertDisabled = !description.trim()
+  const isOpenDisabled = !description.trim()
 
   return (
     <div>
@@ -159,6 +160,7 @@ export default function GetHelpView() {
           <IndicatorButton
             onClick={handleInsertLogs}
             disabled={!logsRequested || isInsertDisabled}
+            loading={loading}
           >
             {loading ? 'Fetching logs…' : 'Insert Logs'}
           </IndicatorButton>
