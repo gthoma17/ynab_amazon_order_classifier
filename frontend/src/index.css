@@ -298,48 +298,90 @@ button {
   position: relative;
 }
 
-/* Primary — seafoam outline, convex feel */
-button:not(.cf-btn-secondary):not(.cf-btn-danger) {
-  background: var(--cf-panel-hi);
-  color: var(--cf-green);
-  border: 1px solid rgba(126, 200, 160, 0.6);
+/* Primary — Seafoam face, black label */
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger) {
+  background: var(--cf-green);
+  color: var(--cf-bg);
+  border: 1px solid #6bb58d;
   box-shadow: var(--cf-btn-shadow);
 }
 
-button:not(.cf-btn-secondary):not(.cf-btn-danger):hover:not(:disabled) {
-  background: var(--cf-green-dim);
-  border-color: var(--cf-green);
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger):hover:not(:disabled) {
+  background: #8ad4b0;
+  border-color: #8ad4b0;
   box-shadow:
     var(--cf-btn-shadow),
-    0 0 8px rgba(126, 200, 160, 0.2);
+    0 0 8px rgba(126, 200, 160, 0.25);
 }
 
-button:not(.cf-btn-secondary):not(.cf-btn-danger):active:not(:disabled) {
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger):active:not(:disabled) {
   box-shadow: var(--cf-btn-active);
   transform: translateY(1px);
 }
 
-button:not(.cf-btn-secondary):not(.cf-btn-danger):disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+/* Caution / irreversible — Solar Yellow face, black label */
+button.cf-btn-caution {
+  background: var(--cf-amber);
+  color: var(--cf-bg);
+  border: 1px solid #b1923b;
+  box-shadow: var(--cf-btn-shadow);
 }
 
-/* Secondary — neutral */
+button.cf-btn-caution:hover:not(:disabled) {
+  background: #d2b76a;
+  border-color: #d2b76a;
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(200, 168, 75, 0.3);
+}
+
+button.cf-btn-caution:active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+/* Destructive / emergency — Fire Red face, phosphor label */
+button.cf-btn-danger {
+  background: var(--cf-red);
+  color: var(--cf-text);
+  border: 1px solid #a22e26;
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button.cf-btn-danger:hover:not(:disabled) {
+  background: #d45146;
+  border-color: #d45146;
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(196, 57, 47, 0.3);
+}
+
+button.cf-btn-danger:active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+/* Neutral / secondary — Industrial Gray face, phosphor label */
 button.cf-btn-secondary {
-  background: var(--cf-panel);
-  color: var(--cf-text-dim);
-  border: 1px solid var(--cf-border);
+  background: var(--cf-bezel);
+  color: var(--cf-text);
+  border: 1px solid #3d443d;
   box-shadow: var(--cf-btn-shadow);
 }
 
 button.cf-btn-secondary:hover:not(:disabled) {
-  color: var(--cf-text);
-  border-color: var(--cf-text-dim);
+  background: #566056;
+  border-color: #566056;
 }
 
-button.cf-btn-secondary:disabled {
-  opacity: 0.3;
+/* Disabled — Birren Beige recessive */
+button:disabled {
+  background: rgba(212, 197, 169, 0.3);
+  color: rgba(232, 240, 232, 0.6);
+  border: 1px solid rgba(212, 197, 169, 0.3);
+  box-shadow: none;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ── Toggle switch ────────────────────────────────────────── */
