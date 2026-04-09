@@ -18,7 +18,8 @@ The palette is drawn from **Faber Birren's 1944 industrial color safety code** �
 
 | Role | Name | Hex | Usage |
 |---|---|---|---|
-| Background | **Reactor Black** | `#0D0F0D` | Primary surface — dark with a faint green cast |
+| Background | **Wall Seafoam** | `#63827A` | Body background — all pages. Direct colormeter sample of physical seafoam paint. No text is ever rendered directly on this surface. |
+| Primary Surface | **Reactor Black** | `#0D0F0D` | Deep recesses, control faces, button labels — not used for the body background |
 | Panel | **Machinery Gray** | `#1E221E` | Raised hardware panels, equipment housings |
 | Surface / Bezel | **Industrial Gray** | `#4A524A` | Bezels, knob surrounds, structural trim |
 | Inactive Surface | **Birren Beige** | `#D4C5A9` | Interiors without natural light; inactive/disabled surfaces |
@@ -31,6 +32,7 @@ The palette is drawn from **Faber Birren's 1944 industrial color safety code** �
 
 **Rules:**
 - Never use pure `#FFFFFF` or `#000000` — everything carries a slight green or gray cast
+- Never place text directly on Wall Seafoam; all readable content lives on panels, placards, or bezel strips
 - **Panels, bezels, and housings are always neutral** — Machinery Gray `#1E221E` / Industrial Gray `#4A524A` only. Never tint these surfaces Seafoam/green; reserve green for screens, walls, and active states.
 - **Fire Red is reserved for danger only** — never use it decoratively (Birren's code: fire protection, emergency stops, errors)
 - **Solar Yellow is reserved for caution** — in-progress states, non-critical warnings

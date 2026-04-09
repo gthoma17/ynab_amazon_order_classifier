@@ -10,7 +10,8 @@
 
 :root {
   /* ── Palette (Faber Birren industrial safety code) ───────── */
-  --cf-bg: #0d0f0d; /* Reactor Black   — primary surface */
+  --cf-wall: #63827a; /* Wall Seafoam    — wall background (no text on wall) */
+  --cf-bg: #0d0f0d; /* Reactor Black   — deep recess / control faces */
   --cf-panel: #1e221e; /* Machinery Gray  — raised housings */
   --cf-panel-hi: #2b2f2b; /* Hover tint on panels (neutral gray, no green) */
   --cf-bezel: #4a524a; /* Industrial Gray — bezels / trim */
@@ -57,7 +58,7 @@
 
 body {
   margin: 0;
-  background: var(--cf-bg);
+  background: var(--cf-wall);
   color: var(--cf-text);
   font-family: var(--cf-font-body);
   font-size: 14px;
