@@ -888,21 +888,13 @@ textarea[data-placeholder='true']::placeholder {
   min-height: 48px;
 }
 
-.cf-test-btn-label--hidden {
-  visibility: hidden;
-}
-
-.cf-test-btn-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .cf-test-control .cf-indicator-panel {
   flex: 1;
   margin-top: 0;
+}
+
+.cf-test-control .cf-splitflap {
+  max-width: none;
 }
 
 /* ── Indicator lamp panel ─────────────────────────────────── */

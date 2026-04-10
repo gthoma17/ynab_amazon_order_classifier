@@ -453,16 +453,7 @@ export default function ConfigView() {
                 onClick={() => handleTest('fastmail', setFastmailProbe)}
                 disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
               >
-                <span
-                  className={
-                    fastmailProbe.status === 'testing' ? 'cf-test-btn-label--hidden' : undefined
-                  }
-                >
-                  Test FastMail
-                </span>
-                {fastmailProbe.status === 'testing' && (
-                  <span className="cf-test-btn-overlay">Testing…</span>
-                )}
+                Test FastMail
               </button>
               <IndicatorPanel
                 label="FastMail"
@@ -504,16 +495,7 @@ export default function ConfigView() {
               onClick={() => handleTest('gemini', setGeminiProbe)}
               disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
             >
-              <span
-                className={
-                  geminiProbe.status === 'testing' ? 'cf-test-btn-label--hidden' : undefined
-                }
-              >
-                Test Gemini
-              </span>
-              {geminiProbe.status === 'testing' && (
-                <span className="cf-test-btn-overlay">Testing…</span>
-              )}
+              Test Gemini
             </button>
             <IndicatorPanel
               label="Gemini"
