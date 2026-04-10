@@ -34,7 +34,9 @@ export default function PendingOrdersView() {
 
   return (
     <div>
-      <h1>Pending Orders</h1>
+      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
+        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Pending Orders</h1>
+      </div>
       <div className="cf-crt" data-testid="orders-table">
         {orders.length === 0 ? (
           <p className="cf-terminal-empty">No pending orders</p>

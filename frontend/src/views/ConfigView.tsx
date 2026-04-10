@@ -314,12 +314,14 @@ export default function ConfigView() {
 
   return (
     <div>
-      <h1>Configuration</h1>
-      <p style={{ marginBottom: 'var(--cf-s3)' }}>
-        <em>
-          &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
-        </em>
-      </p>
+      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
+        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Configuration</h1>
+        <p style={{ margin: 'var(--cf-s1) 0 0', color: 'var(--cf-text-dim)', fontSize: '12px' }}>
+          <em>
+            &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
+          </em>
+        </p>
+      </div>
 
       {/* ── SIGNAL SOURCES panel ──────────────────────────────────────────── */}
       <div className="cf-panel">

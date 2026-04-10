@@ -97,10 +97,9 @@ export default function GetHelpView() {
 
   return (
     <div>
-      <h1>Get Help</h1>
-
       <div className="cf-panel">
         <span className="cf-panel-label">Issue Report</span>
+        <h1 style={{ marginBottom: 'var(--cf-s2)' }}>Get Help</h1>
 
         <p style={{ marginBottom: 'var(--cf-s2)' }}>
           Something not working? Open a pre-filled GitHub issue and we&apos;ll help.
@@ -195,24 +194,24 @@ export default function GetHelpView() {
         <SplitFlapSlot message={sanitized ? 'SENSITIVE VALUES REDACTED' : null} />
 
         {error && <p role="alert">{error}</p>}
-      </div>
 
-      <div className="cf-btn-row">
-        <IndicatorAndMessageButton
-          onClick={handleOpenIssue}
-          disabled={isOpenDisabled}
-          message={openMessage}
-        >
-          Open Issue
-        </IndicatorAndMessageButton>
-      </div>
+        <div className="cf-btn-row" style={{ marginTop: 'var(--cf-s3)' }}>
+          <IndicatorAndMessageButton
+            onClick={handleOpenIssue}
+            disabled={isOpenDisabled}
+            message={openMessage}
+          >
+            Open Issue
+          </IndicatorAndMessageButton>
+        </div>
 
-      <p style={{ marginTop: 'var(--cf-s2)' }}>
-        <small>
-          No data is sent anywhere by this app. Clicking &ldquo;Open Issue&rdquo; opens GitHub in
-          your browser with a pre-filled issue — you control final submission.
-        </small>
-      </p>
+        <p style={{ marginTop: 'var(--cf-s2)', marginBottom: 0 }}>
+          <small>
+            No data is sent anywhere by this app. Clicking &ldquo;Open Issue&rdquo; opens GitHub in
+            your browser with a pre-filled issue — you control final submission.
+          </small>
+        </p>
+      </div>
     </div>
   )
 }
