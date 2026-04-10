@@ -54,6 +54,13 @@ tasks.register<JavaExec>("runE2EServer") {
     mainClass.set("com.budgetsortbot.e2e.E2EServerKt")
 }
 
+tasks.register<JavaExec>("runDevServer") {
+    group = "application"
+    description = "Start the Spring Boot app with auth-checking WireMock stubs for manual UI testing. See scripts/dev-wiremock.sh"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.budgetsortbot.e2e.ManualDevServerKt")
+}
+
 spotless {
     kotlin {
         // Use ktlint 1.x for formatting; pinned for deterministic output
