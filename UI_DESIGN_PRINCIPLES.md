@@ -26,6 +26,8 @@ The palette is drawn from **Faber Birren's 1944 industrial color safety code** �
 | Primary Accent | **Seafoam** | `#7EC8A0` | Active states, selected indicators, primary glow — the signature color |
 | Secondary Accent | **Solar Yellow** | `#C8A84B` | Caution states, in-progress indicators, secondary highlights |
 | Danger | **Fire Red** | `#C4392F` | Warnings, errors, peak indicators — **reserved exclusively for danger** |
+| Lamp — Lit | **Neon Green** | `#39FF14` | Physical indicator lamps when fully illuminated (success / active / selected) |
+| Lamp — Dim | **Neon Green (dim)** | `rgba(57,255,20,0.12)` | Same lamp, unlit/idle state — faint tint indicates the bulb's hue |
 | Text Primary | **Phosphor White** | `#E8F0E8` | Body text on dark surfaces — cool white with a green cast |
 | Text Secondary | **Faded Green** | `#7A8E7A` | Labels, metadata, inactive text |
 | Dado Green | **Medium Green** | `#5B7A5B` | Lower panel borders, dado rails, structural dividers |
@@ -36,7 +38,8 @@ The palette is drawn from **Faber Birren's 1944 industrial color safety code** �
 - **Panels, bezels, and housings are always neutral** — Machinery Gray `#1E221E` / Industrial Gray `#4A524A` only. Never tint these surfaces Seafoam/green; reserve green for screens, walls, and active states.
 - **Fire Red is reserved for danger only** — never use it decoratively (Birren's code: fire protection, emergency stops, errors)
 - **Solar Yellow is reserved for caution** — in-progress states, non-critical warnings
-- **Seafoam is the primary accent** — glow effects use Seafoam only; never amber, blue, or purple
+- **Seafoam is the primary accent** — text glows, UI highlights, and screen tints use Seafoam only; never amber, blue, or purple
+- **Indicator lamps use Neon Green (`#39FF14`)** — physical lamps (radio selectors, param lights, dashboard bulbs, test-result housings) are lit with Neon Green (`#39FF14`) and glow `rgba(57,255,20,…)`. Their unlit/dim state is `rgba(57,255,20,0.12)`. Do **not** use Seafoam for lamp backgrounds; do **not** use Neon Green outside lamp elements.
 - Limit active accent colors to 2 per screen
 - Inactive/disabled surfaces use Birren Beige, not a darkened version of the active color
 
@@ -240,7 +243,7 @@ If the product includes UI sounds:
 ### ❌ Don't
 - Use flat, shadow-free surfaces
 - Use amber, blue, purple, or neon pink as accent colors
-- Use neon/saturated greens (`#39FF14` etc.) — the palette is muted and industrial, not cyberpunk
+- Use neon/saturated greens (`#39FF14` etc.) outside of physical indicator lamps — the general palette is muted and industrial, not cyberpunk; Neon Green is reserved exclusively for lamp elements
 - Use smooth, springy animations
 - Use sans-serif proportional fonts as the primary typeface
 - Use iOS/Material-style components (pill toggles, FABs, bottom sheets)
@@ -298,5 +301,6 @@ The guiding principle: a user should be able to read the entire panel and unders
 | Text glow | Amber `#FFB347` | Seafoam `#7EC8A0` |
 | VU meter progression | Green → Amber → Red | Seafoam → Solar Yellow → Fire Red |
 | Screen tint | Green or amber | Seafoam green |
-| Indicator lamps | Amber | Seafoam |
+| Indicator lamps (lit) | Amber | Neon Green `#39FF14` |
+| Indicator lamps (dim) | *(none)* | `rgba(57,255,20,0.12)` |
 | Color philosophy | Aesthetic/warm | Functional/Birren — each color has a reserved semantic role |
