@@ -50,10 +50,12 @@ describe('GetHelpView', () => {
     expect(screen.getByRole('button', { name: /open issue/i })).toBeDisabled()
   })
 
-  it('enables the Open Issue button once description has text', async () => {
+  it('enables the Open Issue button once description has text and logs are inserted', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
+    await waitFor(() => expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument())
     expect(screen.getByRole('button', { name: /open issue/i })).not.toBeDisabled()
   })
 
@@ -76,12 +78,12 @@ describe('GetHelpView', () => {
     expect(screen.getByRole('button', { name: /insert logs/i })).toBeDisabled()
   })
 
-  it('shows a warning modal when Open Issue is clicked with logs checked but not inserted', async () => {
+  it('disables Open Issue when logs are checked but not yet inserted', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
-    await user.click(screen.getByRole('button', { name: /open issue/i }))
-    expect(screen.getByRole('dialog', { name: /logs not inserted warning/i })).toBeInTheDocument()
+    // sync logs checkbox is checked by default — button should be disabled until logs are inserted
+    expect(screen.getByRole('button', { name: /open issue/i })).toBeDisabled()
   })
 
   it('opens issue directly when Open Issue is clicked with no logs checkboxes checked', async () => {

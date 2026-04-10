@@ -24,7 +24,11 @@ export default function SplitFlapSlot({
 }: SplitFlapSlotProps) {
   const [displayed, setDisplayed] = useState<string | null>(message)
   const [displayedColor, setDisplayedColor] = useState<'green' | 'red'>(color)
-  const [charStates, setCharStates] = useState<CharState[]>([])
+  const [charStates, setCharStates] = useState<CharState[]>(() => {
+    if (message === null) return []
+    const padded = message.padEnd(Math.max(20, message.length), ' ')
+    return padded.split('').map((char) => ({ char, phase: 'shown' as const }))
+  })
   const prevMessageRef = useRef(message)
   const animationRef = useRef<number[]>([])
   // Set to true by the cleanup function so StrictMode's cleanup→remount cycle is

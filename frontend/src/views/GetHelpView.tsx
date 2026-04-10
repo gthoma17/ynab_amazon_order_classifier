@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { apiPostWithBody } from '../api'
-import IndicatorButton from '../components/IndicatorButton'
+import IndicatorAndMessageButton from '../components/IndicatorAndMessageButton'
 import SplitFlapSlot from '../components/SplitFlapSlot'
 
 const GITHUB_ISSUES_URL = 'https://github.com/gthoma17/budget-sortbot/issues/new'
@@ -24,7 +24,6 @@ export default function GetHelpView() {
   const [sanitized, setSanitized] = useState(false)
   const [truncated, setTruncated] = useState(false)
   const [logsInserted, setLogsInserted] = useState(false)
-  const [showWarning, setShowWarning] = useState(false)
 
   const logsRequested = includeSyncLogs || includeAppLogs
 
@@ -58,14 +57,6 @@ export default function GetHelpView() {
   }
 
   const handleOpenIssue = () => {
-    if (logsRequested && !logsInserted) {
-      setShowWarning(true)
-      return
-    }
-    openGithubIssue()
-  }
-
-  const openGithubIssue = () => {
     const body = reportBody ?? `## Problem Description\n\n${description.trim()}\n`
     const encodedBody = encodeURIComponent(body)
     const encodedNote = encodeURIComponent(TRUNCATION_NOTE)
@@ -85,8 +76,24 @@ export default function GetHelpView() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  const isInsertDisabled = !description.trim()
-  const isOpenDisabled = !description.trim()
+  const noDescription = !description.trim()
+  const insertInactive = !logsRequested
+  const isInsertDisabled = insertInactive || noDescription
+  const isOpenDisabled = noDescription || (logsRequested && !logsInserted)
+
+  const insertMessage: string | null = insertInactive
+    ? null
+    : noDescription
+      ? 'ENTER DESCRIPTION FIRST'
+      : logsInserted
+        ? 'LOGS INSERTED'
+        : null
+
+  const openMessage: string | null = noDescription
+    ? 'ENTER DESCRIPTION FIRST'
+    : logsRequested && !logsInserted
+      ? 'INSERT LOGS FIRST'
+      : null
 
   return (
     <div>
@@ -157,14 +164,15 @@ export default function GetHelpView() {
         </div>
 
         <div className="cf-btn-row">
-          <IndicatorButton
+          <IndicatorAndMessageButton
             onClick={handleInsertLogs}
-            disabled={!logsRequested || isInsertDisabled}
+            disabled={isInsertDisabled}
             loading={loading}
+            inactive={insertInactive}
+            message={insertMessage}
           >
-            {loading ? 'Fetching logs…' : 'Insert Logs'}
-          </IndicatorButton>
-          <SplitFlapSlot message={logsInserted ? 'LOGS INSERTED' : null} />
+            Insert Logs
+          </IndicatorAndMessageButton>
         </div>
 
         <div className="cf-form-row" style={{ marginTop: 'var(--cf-s2)' }}>
@@ -189,39 +197,14 @@ export default function GetHelpView() {
         {error && <p role="alert">{error}</p>}
       </div>
 
-      {showWarning && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Logs not inserted warning"
-          className="cf-panel"
-        >
-          <span className="cf-panel-label">Warning</span>
-          <p>
-            You&apos;ve selected log options but haven&apos;t clicked &ldquo;Insert Logs&rdquo; yet.
-            Click &ldquo;Insert Logs&rdquo; first to preview and confirm that sensitive information
-            has been redacted, then open the issue.
-          </p>
-          <div className="cf-btn-row">
-            <button className="cf-btn-secondary" onClick={() => setShowWarning(false)}>
-              Go Back
-            </button>
-            <button
-              onClick={() => {
-                setShowWarning(false)
-                openGithubIssue()
-              }}
-            >
-              Open Anyway
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="cf-btn-row">
-        <button onClick={handleOpenIssue} disabled={isOpenDisabled} aria-disabled={isOpenDisabled}>
-          {loading ? 'Preparing…' : 'Open Issue'}
-        </button>
+        <IndicatorAndMessageButton
+          onClick={handleOpenIssue}
+          disabled={isOpenDisabled}
+          message={openMessage}
+        >
+          Open Issue
+        </IndicatorAndMessageButton>
       </div>
 
       <p style={{ marginTop: 'var(--cf-s2)' }}>
