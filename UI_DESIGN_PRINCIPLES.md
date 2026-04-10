@@ -151,7 +151,7 @@ Use a split-flap message slot for any transient status message — save confirma
 
 **States:**
 - **Idle:** fixed-size panel filled with hatched or horizontal-rule texture in Faded Green at low opacity. Always present, never empty-looking.
-- **Message:** flip animation (`rotateX`, `200ms`, `ease-in-out`) reveals message text. Color follows standard palette conventions (Seafoam = success, Fire Red = failure/warning, Solar Yellow = in-progress).
+- **Message:** flip animation (`rotateX`, `200ms`, `ease-in-out`) reveals message text. Color follows standard palette conventions (Neon Green `#39FF14` = success/active via `data-color="green"`, Fire Red `#C4392F` = failure/warning via `data-color="red"`, Solar Yellow `#C8A84B` = in-progress). **Note:** `data-color="green"` uses Neon Green (`#39FF14`), not Seafoam — this aligns with the lamp token, since the split flap is acting as an output indicator.
 - **Reset:** transient messages flip back to idle after a 5s timeout. Persistent messages flip back when the triggering condition clears.
 
 **Rules:**
