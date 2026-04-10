@@ -1,4 +1,4 @@
-# UI Design Principles: Skeuomorphic Cassette Futurism
+# UI Design Principles: Skeuomorphic Industrial Control
 
 **Version 1.1 — Internal Design Reference**
 
@@ -6,7 +6,9 @@
 
 ## 1. Vision & Aesthetic Philosophy
 
-This UI lives at the intersection of **analog warmth** and **retro-futurist optimism** — a world where the future was imagined through the lens of 1970s–80s hardware. Think Alien (1979) ship terminals, Blade Runner data readouts, NASA mission control panels, and consumer electronics from the Walkman era. Every element should feel like it was **manufactured**, not rendered.
+This UI borrows its visual language from **mid-century industrial control rooms** — the facilities where Faber Birren's functional color code painted every surface, where every indicator had exactly one meaning, and where misreading a panel had consequences. Think the X-10 Graphite Reactor control room, NASA mission control during Apollo, a 1970s municipal water treatment SCADA station. Every element should feel like it was **manufactured**, not rendered — like institutional equipment bolted to a wall behind a locked door, maintained by technicians, never marketed to anyone.
+
+The cassette futurism of *Alien* and *Blade Runner* is a downstream cousin: those films cribbed from real industrial design to make their sets feel credible. We draw from the same well they did, but without the Hollywood layer. The design principles that governed those control rooms — functional color, labeled panels, information density, physical material honesty — are genuinely good principles for a monitoring tool, and we apply them directly.
 
 The guiding question for every design decision: *"Could this exist as a physical object?"*
 
@@ -256,12 +258,22 @@ If the product includes UI sounds:
 
 ## 11. Reference Touchstones
 
-Use these as visual anchors when making decisions:
+Use these as visual anchors when making decisions. They are organized by lineage — primary references are where the design principles actually come from; secondary references are useful for communicating mood but are not the source of truth.
 
+### Primary — Industrial Control & Color Theory
+These are the direct ancestors. The design language originates here.
+- **Color theory**: Faber Birren's 1944 Industrial Color Safety Code — the system that painted every mid-century control room, reactor facility, and factory floor. This is the foundation of the entire palette.
+- **Facilities**: X-10 Graphite Reactor control room, Hanford Site B-Reactor panels, NASA Apollo/mission control panels, 1970s–80s SCADA monitoring stations, municipal water treatment control rooms
+- **Design philosophy**: institutional equipment — the hardware bolted to walls, behind locked doors, maintained by technicians. Not consumer electronics, not military field equipment, not sci-fi props.
+
+### Secondary — Film & Games
+These are downstream of the industrial control rooms above — their set designers and art directors studied the same facilities. Useful as mood references, especially for the CRT screen and terminal components.
 - **Film**: *Alien* (1979) — Nostromo computer terminals; *Blade Runner* (1982) — Voight-Kampff machine; *WarGames* (1983)
-- **Hardware**: NASA Apollo/mission control panels, X-10 Graphite Reactor control room, Hanford Site B-Reactor, Tascam 4-track cassette recorders, Ampex reel-to-reel machines, Commodore PET
 - **Games**: *Fallout* series (Pip-Boy UI), *Alien: Isolation* (motion tracker, ship terminals)
-- **Color theory**: Faber Birren's 1944 Industrial Color Safety Code — functional color, not decorative
+
+### Tertiary — Hardware & Consumer Electronics
+These contribute texture and material references but are not the primary voice of the aesthetic.
+- **Hardware**: Commodore PET, Tascam 4-track cassette recorders, Ampex reel-to-reel machines, NASA Apollo DSKY interface
 
 ---
 
@@ -292,6 +304,12 @@ The guiding principle: a user should be able to read the entire panel and unders
 
 | What changed | v1.0 | v1.1 |
 |---|---|---|
+| Aesthetic name | Skeuomorphic Cassette Futurism | Skeuomorphic Industrial Control |
+| Vision framing | Retro-futurist optimism; film/consumer electronics as primary references | Industrial control rooms as primary lineage; film references are secondary |
+| Core metaphor | "The future imagined through 1970s–80s hardware" | "The design principles that governed mid-century control rooms, applied directly" |
+| Reference touchstones | Flat list | Tiered: Primary (Birren, facilities), Secondary (film/games), Tertiary (consumer hardware) |
+| Birren's role | Named in color palette section | Elevated to vision statement; recognized as the foundation of the entire aesthetic |
+| Color philosophy | Aesthetic/warm | Functional/Birren — each color has a reserved semantic role |
 | Primary accent | Phosphor Amber `#FFB347` | Seafoam `#7EC8A0` |
 | Secondary accent | CRT Green `#39FF14` | Solar Yellow `#C8A84B` |
 | Background tint | Warm black `#0D0D0B` | Cool green-black `#0D0F0D` |
@@ -303,4 +321,3 @@ The guiding principle: a user should be able to read the entire panel and unders
 | Screen tint | Green or amber | Seafoam green |
 | Indicator lamps (lit) | Amber | Neon Green `#39FF14` |
 | Indicator lamps (dim) | *(none)* | `rgba(57,255,20,0.12)` |
-| Color philosophy | Aesthetic/warm | Functional/Birren — each color has a reserved semantic role |
