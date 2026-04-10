@@ -314,9 +314,9 @@ export default function ConfigView() {
 
   return (
     <div>
-      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
-        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Configuration</h1>
-        <p style={{ margin: 'var(--cf-s1) 0 0', color: 'var(--cf-text-dim)', fontSize: '12px' }}>
+      <div className="cf-panel cf-view-header">
+        <h1>Configuration</h1>
+        <p>
           <em>
             &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
           </em>

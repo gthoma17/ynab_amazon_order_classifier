@@ -34,8 +34,8 @@ export default function PendingOrdersView() {
 
   return (
     <div>
-      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
-        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Pending Orders</h1>
+      <div className="cf-panel cf-view-header">
+        <h1>Pending Orders</h1>
       </div>
       <div className="cf-crt" data-testid="orders-table">
         {orders.length === 0 ? (

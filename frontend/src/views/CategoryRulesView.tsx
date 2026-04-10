@@ -57,8 +57,8 @@ export default function CategoryRulesView() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
-        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Category Rules</h1>
+      <div className="cf-panel cf-view-header">
+        <h1>Category Rules</h1>
       </div>
 
       {loadStatus === 'loading' && (

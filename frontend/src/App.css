@@ -119,6 +119,24 @@
   position: relative;
 }
 
+/* ── View header panel — page title lives inside a panel, never on the wall ── */
+
+.cf-view-header {
+  margin-bottom: var(--cf-s3);
+}
+
+.cf-view-header h1 {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cf-view-header p {
+  margin: var(--cf-s1) 0 0;
+  color: var(--cf-text-dim);
+  font-size: 12px;
+}
+
 /* ── Panel grid ───────────────────────────────────────────── */
 
 .cf-panel-grid {

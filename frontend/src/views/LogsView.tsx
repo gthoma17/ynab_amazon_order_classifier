@@ -33,8 +33,8 @@ export default function LogsView() {
 
   return (
     <div>
-      <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
-        <h1 style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Sync Logs</h1>
+      <div className="cf-panel cf-view-header">
+        <h1>Sync Logs</h1>
       </div>
       <SequencePrinter columns={columns} entries={logs} data-testid="logs-table" />
     </div>

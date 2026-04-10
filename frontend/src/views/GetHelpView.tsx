@@ -99,7 +99,7 @@ export default function GetHelpView() {
     <div>
       <div className="cf-panel">
         <span className="cf-panel-label">Issue Report</span>
-        <h1 style={{ marginBottom: 'var(--cf-s2)' }}>Get Help</h1>
+        <h1>Get Help</h1>
 
         <p style={{ marginBottom: 'var(--cf-s2)' }}>
           Something not working? Open a pre-filled GitHub issue and we&apos;ll help.
