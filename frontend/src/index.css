@@ -1341,6 +1341,11 @@ textarea[data-placeholder='true']::placeholder {
   text-shadow: 0 0 4px rgba(196, 57, 47, 0.5);
 }
 
+.cf-splitflap-char[data-color='yellow'] .cf-splitflap-char-content {
+  color: var(--cf-amber);
+  text-shadow: 0 0 4px rgba(200, 168, 75, 0.5);
+}
+
 /* ── Sync schedule panel ─────────────────────────────────── */
 
 .cf-sync-schedule {

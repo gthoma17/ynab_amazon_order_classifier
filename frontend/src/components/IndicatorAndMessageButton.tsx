@@ -18,6 +18,9 @@ export default function IndicatorAndMessageButton({
   children,
 }: IndicatorAndMessageButtonProps) {
   const lampColor = inactive ? undefined : loading ? 'yellow' : disabled ? 'red' : 'green'
+  // Map lamp color to split-flap text color; inactive → default green (dim slot)
+  const flapColor: 'green' | 'red' | 'yellow' =
+    lampColor === 'red' ? 'red' : lampColor === 'yellow' ? 'yellow' : 'green'
 
   return (
     <div className="cf-ind-msg-btn">
@@ -35,7 +38,7 @@ export default function IndicatorAndMessageButton({
         />
         {children}
       </button>
-      <SplitFlapSlot message={message ?? null} />
+      <SplitFlapSlot message={message ?? null} color={flapColor} />
     </div>
   )
 }
