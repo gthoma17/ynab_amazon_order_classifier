@@ -1,7 +1,7 @@
-# ADR-0003: Cassette Futurism UI Design System
+# ADR-0003: Skeuomorphic Industrial Control UI Design System
 
 **Date:** 2026-04-08  
-**Status:** Accepted  
+**Status:** Accepted (updated 2026-04-11 to reflect v1.1 changes)  
 **Deciders:** Greg Thomas  
 **Source:** PR #54 — UI Polish: Cassette Futurism Design System + Layout Overhaul
 
@@ -11,9 +11,11 @@
 
 The initial Budget Sortbot UI was functional but visually generic — unstyled HTML inputs, plain buttons, and `<select>` dropdowns. As the product matured, a decision was made to introduce a cohesive visual language that reflected the app's personality: a self-hosted, low-power, always-on appliance.
 
-The "Cassette Futurism" aesthetic — inspired by industrial control panels, CRT monitors, and retro-futurist hardware interfaces — was chosen as the design direction. The core principle is that the UI should feel like physical hardware: switches and indicators are always visible, panels never grow or shrink on state change, and status is communicated through lamp states rather than appearing and disappearing UI elements.
+The design direction is **Skeuomorphic Industrial Control** — drawn from mid-century industrial control rooms, Faber Birren's 1944 functional color safety code, and institutions like the X-10 Graphite Reactor control room and NASA Apollo mission control. The core principle is that the UI should feel like physical hardware: switches and indicators are always visible, panels never grow or shrink on state change, and status is communicated through lamp states rather than appearing and disappearing UI elements.
 
-All design decisions from this PR are documented in `UI_DESIGN_PRINCIPLES.md`. This ADR captures the architectural decisions embedded in the implementation.
+> **Note:** Early commits and some PR titles use the name "Cassette Futurism." This was renamed to "Skeuomorphic Industrial Control" in v1.1 to better reflect that the lineage runs through Birren and real control facilities — not film props. The ADR filename is preserved for traceability.
+
+All design decisions are documented in `UI_DESIGN_PRINCIPLES.md`. This ADR captures the architectural decisions embedded in the implementation.
 
 ---
 
@@ -47,7 +49,7 @@ All design decisions from this PR are documented in `UI_DESIGN_PRINCIPLES.md`. T
 
 ### 3. Indicator Radio Group for Mode Selection
 
-**Decision:** `<select>` dropdown elements must not be used for mode/frequency selection. Use a `RadioGroup` component where all options are always visible, the selected option has its amber lamp lit and surface inset, and unselected options have their lamp dark and surface convex.
+**Decision:** `<select>` dropdown elements must not be used for mode/frequency selection. Use a `RadioGroup` component where all options are always visible, the selected option has its **Neon Green lamp** (`#39FF14`) lit and surface inset, and unselected options have their lamp dark (`rgba(57,255,20,0.12)` tint only) and surface convex.
 
 **Rationale:** A `<select>` dropdown hides options behind an interaction, which is inconsistent with the always-visible physical panel metaphor. All available modes should be scannable at a glance, the same way a physical selector switch presents all positions on the face of a panel.
 
@@ -103,9 +105,63 @@ All design decisions from this PR are documented in `UI_DESIGN_PRINCIPLES.md`. T
 
 ---
 
+### 9. Wall Seafoam Body Background — No Text on the Wall
+
+**Decision:** The `body` background is `#63827A` (Wall Seafoam) on all pages. No text, labels, or readable content may be rendered directly on this surface.
+
+**Rationale:** Wall Seafoam sits in a mid-value dead zone — no palette color achieves WCAG AA contrast against it. This is a hard constraint, not a tuning problem. The physical metaphor reinforces it: in a real control room, nothing is painted on the wall. Content lives on panels, placards, and bezels. `#63827A` is a direct colormeter reading from a physical seafoam-painted wall; it is the canonical wall reference.
+
+**Implementation:** Every page header (e.g., "Configuration", "Category Rules") and every navigational label must be wrapped in a `.cf-panel` or `.cf-view-header` container with Machinery Gray backing. The layout structure ensures no `<h1>` or explanatory text floats on the raw `body` background.
+
+---
+
+### 10. Panel and Bezel Surfaces Must Be Neutral Gray — Never Green-Tinted
+
+**Decision:** All panel surfaces (`#1E221E` Machinery Gray) and bezels (`#4A524A` Industrial Gray) must be neutral. Green tints are prohibited on panel/bezel surfaces.
+
+**Rationale:** The entire contrast mechanism of the design system depends on a recessive, neutral panel substrate against which Seafoam and Neon Green controls can fire with maximum pre-attentive signal strength. If the panel carries a green tint and the primary accent is also green, controls disappear into the background — the system is inverted. Machinery Gray and Industrial Gray are structurally neutral by definition; Seafoam/green belongs to screens, walls, and active control states only.
+
+**Rule:** If a surface is a panel, bezel, or equipment housing and it has any green cast, it is wrong. Use `#1E221E` or `#4A524A` exactly.
+
+---
+
+### 11. Button Semantic Color Roles
+
+**Decision:** Button face colors encode semantic meaning using Birren's functional color hierarchy. A button's color must match its semantic role — not the section's accent.
+
+| Role | Face | Label |
+|---|---|---|
+| Primary / confirm | Seafoam `#7EC8A0` | Reactor Black `#0D0F0D` |
+| Caution / irreversible | Solar Yellow `#C8A84B` | Reactor Black `#0D0F0D` |
+| Destructive / emergency | Fire Red `#C4392F` | Phosphor White `#E8F0E8` |
+| Neutral / secondary | Industrial Gray `#4A524A` | Phosphor White `#E8F0E8` |
+| Disabled / inactive | Birren Beige `#D4C5A9` at 30% opacity | — |
+
+**Rationale:** Buttons that are close in value to the panel surface cannot be pre-attentively scanned — the operator must read the panel to find the control. Functional color rules ensure every active control has a genuine brightness and hue jump against the `#1E221E` panel. Only disabled buttons may be panel-adjacent (signaling non-interactivity).
+
+---
+
+### 12. Neon Green (`#39FF14`) for Lamps; Seafoam (`#7EC8A0`) for Accents — Two Distinct Tokens
+
+**Decision:** Physical indicator lamps (lit state) use `--cf-lamp-success: #39FF14` with glow `rgba(57,255,20,…)`. Their unlit/dim state is `--cf-lamp-success-dim: rgba(57,255,20,0.12)`. The Seafoam accent token `--cf-green: #7EC8A0` is reserved for text glows, UI highlights, and screen tints — never lamp backgrounds.
+
+**Rationale:** Sharing a single green token for both lamps and accents created semantic confusion: a "success" UI element (a label glow) and a "success" lamp (a physical bulb) looked identical but carried different meanings and used different contrast targets. Splitting the tokens makes each usage explicit and prevents Neon Green from leaking outside lamp elements (the Don't rule in `UI_DESIGN_PRINCIPLES.md` Section 10).
+
+**Applies to:** `SplitFlapSlot` with `data-color="green"` and all CRT terminal text use `#39FF14`. Radio lamp selected state, param lamp active, dashboard lamp bulb lit all use `#39FF14`.
+
+---
+
+### 13. Rocker Toggles — iOS Pill Toggles Prohibited
+
+**Decision:** Toggle inputs (e.g., "Include sync logs", "Include app logs") must use a rectangular OFF|ON rocker switch, not an iOS-style pill slider.
+
+**Rationale:** Pill toggles are explicitly listed under Don'ts in `UI_DESIGN_PRINCIPLES.md` Section 10. They are iOS/Material-style components that contradict the industrial hardware metaphor. A two-section rocker with visible position states (unchecked = OFF half pressed/inset, ON half raised; checked = ON half pressed) matches breaker-panel and vintage amp toggle language.
+
+---
+
 ## Consequences
 
-- `UI_DESIGN_PRINCIPLES.md` is the living specification for the Cassette Futurism design system and must be updated whenever a new pattern is introduced or an existing rule changes.
+- `UI_DESIGN_PRINCIPLES.md` is the living specification for the Skeuomorphic Industrial Control design system and must be updated whenever a new pattern is introduced or an existing rule changes.
 - All future UI additions should follow the persistent panel pattern — no conditionally mounted major components.
 - `<select>` dropdowns are prohibited for mode selection; use `RadioGroup` instead.
 - External font or resource CDNs are prohibited.
