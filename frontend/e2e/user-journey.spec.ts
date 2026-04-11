@@ -125,20 +125,25 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('link', { name: 'Logs' }).click()
   await expect(page.getByRole('heading', { name: 'Sync Logs' })).toBeVisible()
 
+  // Logs are rendered by SequencePrinter as <div data-testid="ser-entry"> rows,
+  // not as <table> cells — use testid + text filter instead of getByRole('cell').
+  // After each reload we must wait for the /api/logs fetch to complete before
+  // counting, otherwise count() races the useEffect and always returns 0.
   await expect
     .poll(
       async () => {
         await page.reload()
-        return await page.getByRole('cell', { name: 'YNAB' }).count()
+        await page.waitForLoadState('networkidle')
+        return await page.getByTestId('ser-entry').filter({ hasText: 'YNAB' }).count()
       },
       { timeout: 30_000, intervals: [2000, 3000, 4000] },
     )
     .toBeGreaterThan(0)
 
   // Both EMAIL and YNAB sync succeeded — the full pipeline ran against WireMock
-  await expect(page.getByRole('cell', { name: 'EMAIL' }).first()).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'YNAB' }).first()).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'SUCCESS' }).first()).toBeVisible()
+  await expect(page.getByTestId('ser-entry').filter({ hasText: 'EMAIL' }).first()).toBeVisible()
+  await expect(page.getByTestId('ser-entry').filter({ hasText: 'YNAB' }).first()).toBeVisible()
+  await expect(page.locator('[data-status="SUCCESS"]').first()).toBeVisible()
 
   // ── Step 7: Dry Run ────────────────────────────────────────────────────────
   // Navigate back to Configuration, set the dry-run start date to 2024-01-01
@@ -204,8 +209,8 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Insert logs — this calls the backend, sanitizes, and returns the preview body
   await page.getByRole('button', { name: /insert logs/i }).click()
 
-  // Wait for "Logs inserted" status indicator to appear
-  await expect(page.getByText(/✓ logs inserted/i)).toBeVisible({ timeout: 10_000 })
+  // Wait for "Logs inserted" status indicator to appear (shown in SplitFlapSlot)
+  await expect(page.getByText(/logs inserted/i)).toBeVisible({ timeout: 10_000 })
 
   // The preview textarea must be visible so the user can review before submitting
   await expect(page.getByRole('textbox', { name: /report body preview/i })).toBeVisible()
