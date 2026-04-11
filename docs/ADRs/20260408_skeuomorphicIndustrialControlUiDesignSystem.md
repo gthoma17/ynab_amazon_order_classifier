@@ -13,7 +13,7 @@ The initial Budget Sortbot UI was functional but visually generic — unstyled H
 
 The design direction is **Skeuomorphic Industrial Control** — drawn from mid-century industrial control rooms, Faber Birren's 1944 functional color safety code, and institutions like the X-10 Graphite Reactor control room and NASA Apollo mission control. The core principle is that the UI should feel like physical hardware: switches and indicators are always visible, panels never grow or shrink on state change, and status is communicated through lamp states rather than appearing and disappearing UI elements.
 
-> **Note:** Early commits and some PR titles use the name "Cassette Futurism." This was renamed to "Skeuomorphic Industrial Control" in v1.1 to better reflect that the lineage runs through Birren and real control facilities — not film props. The ADR filename is preserved for traceability.
+> **Note:** Early commits and some PR titles use the name "Cassette Futurism." This was renamed to "Skeuomorphic Industrial Control" in v1.1 to better reflect that the lineage runs through Birren and real control facilities — not film props.
 
 All design decisions are documented in `UI_DESIGN_PRINCIPLES.md`. This ADR captures the architectural decisions embedded in the implementation.
 
