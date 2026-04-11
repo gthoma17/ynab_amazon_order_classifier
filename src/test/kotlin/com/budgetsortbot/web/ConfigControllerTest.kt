@@ -142,22 +142,59 @@ class ConfigControllerTest {
 
     @Test
     fun `POST api config probe fastmail returns probe result`() {
-        every { connectionProbeService.probeFastMail() } returns ProbeResult(success = true, message = "Connected")
+        every { connectionProbeService.probeFastMail(any()) } returns ProbeResult(success = true, message = "Connected")
 
         mockMvc
-            .perform(post("/api/config/probe/fastmail"))
+            .perform(
+                post("/api/config/probe/fastmail")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"fastmailApiToken":"fmjt_test"}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
     }
 
     @Test
-    fun `POST api config probe fastmail returns failure result`() {
-        every { connectionProbeService.probeFastMail() } returns
-            ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
+    fun `POST api config probe fastmail forwards token from request body to service`() {
+        every { connectionProbeService.probeFastMail(eq("my-unsaved-token")) } returns
+            ProbeResult(success = true, message = "Connected")
+
+        mockMvc
+            .perform(
+                post("/api/config/probe/fastmail")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"fastmailApiToken":"my-unsaved-token"}"""),
+            )
+            .andExpect(status().isOk)
+
+        verify { connectionProbeService.probeFastMail(eq("my-unsaved-token")) }
+    }
+
+    @Test
+    fun `POST api config probe fastmail falls back when no body provided`() {
+        every { connectionProbeService.probeFastMail(isNull()) } returns
+            ProbeResult(success = false, message = "FastMail API token not configured")
 
         mockMvc
             .perform(post("/api/config/probe/fastmail"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(false))
+
+        verify { connectionProbeService.probeFastMail(isNull()) }
+    }
+
+    @Test
+    fun `POST api config probe fastmail returns failure result`() {
+        every { connectionProbeService.probeFastMail(any()) } returns
+            ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
+
+        mockMvc
+            .perform(
+                post("/api/config/probe/fastmail")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"fastmailApiToken":"bad-token"}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.message").value("401 Unauthorized — check your credentials"))
@@ -165,24 +202,64 @@ class ConfigControllerTest {
 
     @Test
     fun `POST api config probe ynab returns probe result`() {
-        every { connectionProbeService.probeYnab() } returns ProbeResult(success = true, message = "Connected")
+        every { connectionProbeService.probeYnab(any()) } returns ProbeResult(success = true, message = "Connected")
 
         mockMvc
-            .perform(post("/api/config/probe/ynab"))
+            .perform(
+                post("/api/config/probe/ynab")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"ynabToken":"my-ynab-token"}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
     }
 
     @Test
-    fun `POST api config probe gemini returns probe result`() {
-        every { connectionProbeService.probeGemini() } returns ProbeResult(success = true, message = "Connected")
+    fun `POST api config probe ynab forwards token from request body to service`() {
+        every { connectionProbeService.probeYnab(eq("my-unsaved-ynab-token")) } returns
+            ProbeResult(success = true, message = "Connected")
 
         mockMvc
-            .perform(post("/api/config/probe/gemini"))
+            .perform(
+                post("/api/config/probe/ynab")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"ynabToken":"my-unsaved-ynab-token"}"""),
+            )
+            .andExpect(status().isOk)
+
+        verify { connectionProbeService.probeYnab(eq("my-unsaved-ynab-token")) }
+    }
+
+    @Test
+    fun `POST api config probe gemini returns probe result`() {
+        every { connectionProbeService.probeGemini(any()) } returns ProbeResult(success = true, message = "Connected")
+
+        mockMvc
+            .perform(
+                post("/api/config/probe/gemini")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"geminiKey":"my-gemini-key"}"""),
+            )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
+    }
+
+    @Test
+    fun `POST api config probe gemini forwards key from request body to service`() {
+        every { connectionProbeService.probeGemini(eq("my-unsaved-gemini-key")) } returns
+            ProbeResult(success = true, message = "Connected")
+
+        mockMvc
+            .perform(
+                post("/api/config/probe/gemini")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"geminiKey":"my-unsaved-gemini-key"}"""),
+            )
+            .andExpect(status().isOk)
+
+        verify { connectionProbeService.probeGemini(eq("my-unsaved-gemini-key")) }
     }
 
     // --- processing config ---

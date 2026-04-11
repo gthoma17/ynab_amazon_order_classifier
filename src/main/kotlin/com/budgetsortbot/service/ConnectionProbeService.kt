@@ -12,9 +12,10 @@ import org.springframework.web.client.RestClient
 /**
  * Provides lightweight read-only connection probes for each external integration.
  *
- * Each probe tests the **saved** credentials (read from [ConfigService]).
- * If credentials have been edited in the UI but not yet saved, the probe reflects
- * the previously-saved values. Users should save before testing new credentials.
+ * Each probe accepts an optional credential override. When an override is supplied
+ * (non-blank), it is used directly. Otherwise the credential is read from
+ * [ConfigService] (the persisted store). This allows the UI to test unsaved
+ * field values without requiring a save-first workflow.
  *
  * Probes never modify remote data:
  *  - FastMail: GET /.well-known/jmap
@@ -37,8 +38,9 @@ class ConnectionProbeService(
 
     private val client = restClientBuilder.build()
 
-    fun probeFastMail(): ProbeResult {
-        val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+    fun probeFastMail(tokenOverride: String? = null): ProbeResult {
+        val token = tokenOverride?.takeIf { it.isNotBlank() }
+            ?: configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "FastMail API token not configured")
         }
@@ -53,8 +55,9 @@ class ConnectionProbeService(
         }
     }
 
-    fun probeYnab(): ProbeResult {
-        val token = configService.getValue(ConfigService.YNAB_TOKEN)
+    fun probeYnab(tokenOverride: String? = null): ProbeResult {
+        val token = tokenOverride?.takeIf { it.isNotBlank() }
+            ?: configService.getValue(ConfigService.YNAB_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "YNAB credentials not configured")
         }
@@ -69,8 +72,9 @@ class ConnectionProbeService(
         }
     }
 
-    fun probeGemini(): ProbeResult {
-        val key = configService.getValue(ConfigService.GEMINI_KEY)
+    fun probeGemini(keyOverride: String? = null): ProbeResult {
+        val key = keyOverride?.takeIf { it.isNotBlank() }
+            ?: configService.getValue(ConfigService.GEMINI_KEY)
         if (key.isNullOrBlank()) {
             return ProbeResult(success = false, message = "Gemini API key not configured")
         }

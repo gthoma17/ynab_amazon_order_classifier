@@ -214,6 +214,76 @@ describe('ConfigView', () => {
     expect(screen.getByLabelText('YNAB probe result').textContent).toContain('Connected')
   })
 
+  it('sends current (unsaved) YNAB token in probe request body', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.post('/api/config/probe/ynab', async ({ request }) => {
+        capturedBody = await request.json()
+        return HttpResponse.json({ success: true, message: 'Connected' })
+      }),
+    )
+
+    render(<ConfigView />)
+    await waitFor(() => expect(screen.getByLabelText(/ynab token/i)).toHaveValue('tok-123'))
+
+    // Type a new token without saving first
+    const tokenInput = screen.getByLabelText(/ynab token/i)
+    await user.clear(tokenInput)
+    await user.type(tokenInput, 'new-unsaved-token')
+
+    await user.click(screen.getByRole('button', { name: /test ynab/i }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    expect((capturedBody as Record<string, string>).ynabToken).toBe('new-unsaved-token')
+  })
+
+  it('sends current (unsaved) FastMail token in probe request body', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.post('/api/config/probe/fastmail', async ({ request }) => {
+        capturedBody = await request.json()
+        return HttpResponse.json({ success: true, message: 'Connected' })
+      }),
+    )
+
+    render(<ConfigView />)
+    await waitFor(() =>
+      expect(screen.getByLabelText(/fastmail api token/i)).toHaveValue('fmjt_test-token'),
+    )
+
+    const tokenInput = screen.getByLabelText(/fastmail api token/i)
+    await user.clear(tokenInput)
+    await user.type(tokenInput, 'new-unsaved-fm-token')
+
+    await user.click(screen.getByRole('button', { name: /test fastmail/i }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    expect((capturedBody as Record<string, string>).fastmailApiToken).toBe('new-unsaved-fm-token')
+  })
+
+  it('sends current (unsaved) Gemini key in probe request body', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.post('/api/config/probe/gemini', async ({ request }) => {
+        capturedBody = await request.json()
+        return HttpResponse.json({ success: true, message: 'Connected' })
+      }),
+    )
+
+    render(<ConfigView />)
+    // geminiKey is null by default — type directly without waiting for existing value
+    const geminiInput = screen.getByLabelText(/gemini key/i)
+    await user.type(geminiInput, 'new-unsaved-gemini-key')
+
+    await user.click(screen.getByRole('button', { name: /test gemini/i }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    expect((capturedBody as Record<string, string>).geminiKey).toBe('new-unsaved-gemini-key')
+  })
+
   it('shows error result when YNAB test connection fails', async () => {
     const user = userEvent.setup()
     server.use(

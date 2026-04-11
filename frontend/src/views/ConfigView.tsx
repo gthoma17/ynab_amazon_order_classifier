@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
+import { apiGet, apiPostWithBody, apiPut } from '../api'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -236,9 +236,13 @@ export default function ConfigView() {
     })
   }
 
-  function handleTest(endpoint: string, setProbe: (state: ProbeState) => void) {
+  function handleTest(
+    endpoint: string,
+    body: Record<string, string>,
+    setProbe: (state: ProbeState) => void,
+  ) {
     setProbe({ status: 'testing', message: '' })
-    apiPost<ProbeResult>(`/api/config/probe/${endpoint}`)
+    apiPostWithBody<ProbeResult>(`/api/config/probe/${endpoint}`, body)
       .then((result) =>
         setProbe({
           status: result.success ? 'success' : 'error',
@@ -273,7 +277,7 @@ export default function ConfigView() {
     <div>
       <h1>API Keys</h1>
       <p>
-        <em>"Test Connection" checks saved credentials. Save before testing new values.</em>
+        <em>"Test Connection" tests the credentials currently in the fields.</em>
       </p>
 
       <section>
@@ -317,7 +321,7 @@ export default function ConfigView() {
           </select>
         </div>
         <button
-          onClick={() => handleTest('ynab', setYnabProbe)}
+          onClick={() => handleTest('ynab', { ynabToken: keys.ynabToken }, setYnabProbe)}
           disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
         >
           {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
@@ -342,7 +346,9 @@ export default function ConfigView() {
           />
         </div>
         <button
-          onClick={() => handleTest('fastmail', setFastmailProbe)}
+          onClick={() =>
+            handleTest('fastmail', { fastmailApiToken: keys.fastmailApiToken }, setFastmailProbe)
+          }
           disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
         >
           {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
@@ -366,7 +372,7 @@ export default function ConfigView() {
           />
         </div>
         <button
-          onClick={() => handleTest('gemini', setGeminiProbe)}
+          onClick={() => handleTest('gemini', { geminiKey: keys.geminiKey }, setGeminiProbe)}
           disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
         >
           {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}

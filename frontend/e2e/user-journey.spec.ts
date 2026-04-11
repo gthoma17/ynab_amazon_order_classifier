@@ -9,8 +9,9 @@ import { test, expect } from '@playwright/test'
  *
  * Steps:
  *  1. Open the app — API Keys page shows empty fields (fresh installation).
- *  2. Enter all five API credentials and save.
- *  3. Test Connection for each integration — YNAB, FastMail, and Gemini all show "Connected".
+ *  2. Enter all five API credentials and test connection (before saving) — YNAB, FastMail, and
+ *     Gemini all show "Connected" using the unsaved field values, proving AC4 (test before save).
+ *  3. Save the credentials.
  *  4. Configure Processing Settings — set start-from date, order cap, and change the
  *     schedule to "Every N seconds / 3" so the full pipeline fires quickly during the test.
  *     The production warning for EVERY_N_SECONDS is asserted.
@@ -41,7 +42,10 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
 
-  // ── Step 2: Enter credentials and save ─────────────────────────────────────
+  // ── Step 2: Enter credentials and test before saving ───────────────────────
+  // AC4: "test before save" — credentials are in the form but not yet persisted.
+  // The probe request now carries the current field values in the body, so
+  // Test Connection works without a prior save.
 
   await page.locator('#ynabToken').fill('my-ynab-token')
   // Wait for the budget dropdown to be populated from the API, then select the budget
@@ -49,14 +53,8 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.locator('#ynabBudgetId').selectOption({ value: 'my-budget-id' })
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
   await page.locator('#geminiKey').fill('my-gemini-key')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Saved')).toBeVisible()
 
-  // ── Step 3: Test Connection for each integration ────────────────────────────
-  // Credentials are now saved. Click each "Test" button and assert the inline
-  // "Connected" confirmation appears. This exercises the full probe path:
-  //   browser → real Spring Boot backend → WireMock stubs.
-
+  // Test connections before saving — credentials are unsaved but should still work
   await page.getByRole('button', { name: 'Test YNAB' }).click()
   await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
 
@@ -65,6 +63,11 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Test Gemini' }).click()
   await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
+
+  // ── Step 3: Save credentials ────────────────────────────────────────────────
+
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('Saved')).toBeVisible()
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
