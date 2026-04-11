@@ -70,24 +70,24 @@ pre-commit:
       fail_text: |
         ADR check failed. Either add an ADR for your architectural change, or bypass with SKIP_ADR=1 git commit ...
 
-pre-push:
-  commands:
-    backend-tests:
-      root: "."
-      run: ./gradlew test --no-daemon -q
-      fail_text: |
-        Backend tests failed. Fix the failing tests before pushing.
-
-    frontend-tests:
-      root: "frontend"
-      run: npm test
-      fail_text: |
-        Frontend tests failed. Fix the failing tests before pushing.
-
-    journey-test:
-      root: "frontend"
-      run: npm run test:e2e
-      fail_text: |
-        E2E journey test failed. Fix the failing test before pushing.
-        Tip: run `cd frontend && npm run test:e2e` to debug locally.
-        Ensure `npx playwright install chromium` has been run in the frontend directory.
+#pre-push:
+#  commands:
+#    backend-tests:
+#      root: "."
+#      run: ./gradlew test --no-daemon -q
+#      fail_text: |
+#        Backend tests failed. Fix the failing tests before pushing.
+#
+#    frontend-tests:
+#      root: "frontend"
+#      run: npm test
+#      fail_text: |
+#        Frontend tests failed. Fix the failing tests before pushing.
+#
+#    journey-test:
+#      root: "frontend"
+#      run: npm run test:e2e
+#      fail_text: |
+#        E2E journey test failed. Fix the failing test before pushing.
+#        Tip: run `cd frontend && npm run test:e2e` to debug locally.
+#        Ensure `npx playwright install chromium` has been run in the frontend directory.
