@@ -88,7 +88,10 @@ export default function CategoryRulesView() {
       )}
 
       {loadStatus === 'loaded' && (
-        <div data-testid="categories-loaded" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div
+          data-testid="categories-loaded"
+          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="cf-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span className="cf-panel-label">AI Classification Rules</span>
             {categories.length === 0 ? (

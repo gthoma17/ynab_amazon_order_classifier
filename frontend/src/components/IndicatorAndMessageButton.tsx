@@ -31,11 +31,7 @@ export default function IndicatorAndMessageButton({
         aria-disabled={disabled || loading}
         aria-busy={loading || undefined}
       >
-        <span
-          className="cf-ind-msg-btn__lamp"
-          data-color={lampColor}
-          aria-hidden="true"
-        />
+        <span className="cf-ind-msg-btn__lamp" data-color={lampColor} aria-hidden="true" />
         {children}
       </button>
       <SplitFlapSlot message={message ?? null} color={flapColor} />

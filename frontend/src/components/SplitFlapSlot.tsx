@@ -120,7 +120,10 @@ export default function SplitFlapSlot({
 
   return (
     <div className="cf-splitflap" data-testid={testId}>
-      <div className="cf-splitflap-display" data-testid={message !== null ? messageTestId : undefined}>
+      <div
+        className="cf-splitflap-display"
+        data-testid={message !== null ? messageTestId : undefined}
+      >
         {/* Visually-hidden span gives immediate accessible text and allows tests
             to assert message content without waiting for the full animation */}
         <span className="cf-visually-hidden">{displayed.trim()}</span>

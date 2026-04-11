@@ -321,9 +321,7 @@ export default function ConfigView() {
       <div className="cf-panel cf-view-header">
         <h1>Configuration</h1>
         <p>
-          <em>
-            &ldquo;Test Connection&rdquo; tests the credentials currently in the fields.
-          </em>
+          <em>&ldquo;Test Connection&rdquo; tests the credentials currently in the fields.</em>
         </p>
       </div>
 
@@ -454,7 +452,13 @@ export default function ConfigView() {
             </div>
             <div className="cf-test-control">
               <button
-                onClick={() => handleTest('fastmail', { fastmailApiToken: keys.fastmailApiToken }, setFastmailProbe)}
+                onClick={() =>
+                  handleTest(
+                    'fastmail',
+                    { fastmailApiToken: keys.fastmailApiToken },
+                    setFastmailProbe,
+                  )
+                }
                 disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
               >
                 Test FastMail

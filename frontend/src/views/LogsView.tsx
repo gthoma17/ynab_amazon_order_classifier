@@ -17,9 +17,7 @@ const columns: ColumnDef<SyncLog>[] = [
     key: 'status',
     header: 'Status',
     width: 72,
-    render: (row) => (
-      <span data-status={row.status.toUpperCase()}>{row.status.toUpperCase()}</span>
-    ),
+    render: (row) => <span data-status={row.status.toUpperCase()}>{row.status.toUpperCase()}</span>,
   },
   { key: 'message', header: 'Message' },
 ]
