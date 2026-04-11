@@ -27,8 +27,7 @@ export default function IndicatorAndMessageButton({
       <button
         className="cf-ind-msg-btn__btn"
         onClick={onClick}
-        disabled={disabled}
-        aria-disabled={disabled || loading}
+        disabled={disabled || loading}
         aria-busy={loading || undefined}
       >
         <span className="cf-ind-msg-btn__lamp" data-color={lampColor} aria-hidden="true" />

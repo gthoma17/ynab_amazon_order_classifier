@@ -8,7 +8,7 @@
 
 This UI borrows its visual language from **mid-century industrial control rooms** — the facilities where Faber Birren's functional color code painted every surface, where every indicator had exactly one meaning, and where misreading a panel had consequences. Think the X-10 Graphite Reactor control room, NASA mission control during Apollo, a 1970s municipal water treatment SCADA station. Every element should feel like it was **manufactured**, not rendered — like institutional equipment bolted to a wall behind a locked door, maintained by technicians, never marketed to anyone.
 
-The cassette futurism of *Alien* and *Blade Runner* is a downstream cousin: those films cribbed from real industrial design to make their sets feel credible. We draw from the same well they did, but without the Hollywood layer. The design principles that governed those control rooms — functional color, labeled panels, information density, physical material honesty — are genuinely good principles for a monitoring tool, and we apply them directly.
+The skeuomorphic industrial aesthetic of *Alien* and *Blade Runner* is a downstream cousin: those films cribbed from real industrial design to make their sets feel credible. We draw from the same well they did, but without the Hollywood layer. The design principles that governed those control rooms — functional color, labeled panels, information density, physical material honesty — are genuinely good principles for a monitoring tool, and we apply them directly.
 
 The guiding question for every design decision: *"Could this exist as a physical object?"*
 
@@ -304,7 +304,7 @@ The guiding principle: a user should be able to read the entire panel and unders
 
 | What changed | v1.0 | v1.1 |
 |---|---|---|
-| Aesthetic name | Skeuomorphic Cassette Futurism | Skeuomorphic Industrial Control |
+| Aesthetic name | Skeuomorphic Industrial Control (v1.0) | Skeuomorphic Industrial Control |
 | Vision framing | Retro-futurist optimism; film/consumer electronics as primary references | Industrial control rooms as primary lineage; film references are secondary |
 | Core metaphor | "The future imagined through 1970s–80s hardware" | "The design principles that governed mid-century control rooms, applied directly" |
 | Reference touchstones | Flat list | Tiered: Primary (Birren, facilities), Secondary (film/games), Tertiary (consumer hardware) |

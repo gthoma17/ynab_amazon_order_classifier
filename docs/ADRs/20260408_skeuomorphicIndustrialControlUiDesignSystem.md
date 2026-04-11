@@ -1,9 +1,9 @@
-# ADR-0003: Skeuomorphic Industrial Control UI Design System
+# ADR-0008: Skeuomorphic Industrial Control UI Design System
 
 **Date:** 2026-04-08  
 **Status:** Accepted (updated 2026-04-11 to reflect v1.1 changes)  
 **Deciders:** Greg Thomas  
-**Source:** PR #54 — UI Polish: Cassette Futurism Design System + Layout Overhaul
+**Source:** PR #54 — Skeuomorphic Industrial Control UI Design System
 
 ---
 
@@ -13,7 +13,7 @@ The initial Budget Sortbot UI was functional but visually generic — unstyled H
 
 The design direction is **Skeuomorphic Industrial Control** — drawn from mid-century industrial control rooms, Faber Birren's 1944 functional color safety code, and institutions like the X-10 Graphite Reactor control room and NASA Apollo mission control. The core principle is that the UI should feel like physical hardware: switches and indicators are always visible, panels never grow or shrink on state change, and status is communicated through lamp states rather than appearing and disappearing UI elements.
 
-> **Note:** Early commits and some PR titles use the name "Cassette Futurism." This was renamed to "Skeuomorphic Industrial Control" in v1.1 to better reflect that the lineage runs through Birren and real control facilities — not film props.
+> **Note:** Early commits and some PR titles used a different working name before the design system was fully articulated. The canonical name is **Skeuomorphic Industrial Control** — reflecting that the lineage runs through Birren and real control facilities, not film props.
 
 All design decisions are documented in `UI_DESIGN_PRINCIPLES.md`. This ADR captures the architectural decisions embedded in the implementation.
 
@@ -43,7 +43,7 @@ All design decisions are documented in `UI_DESIGN_PRINCIPLES.md`. This ADR captu
 
 **Timeout:** Transient messages (save confirmations) flip back to idle after a **5 second** timeout (`setTimeout(..., 5000)` in `ConfigView.tsx`). Persistent messages (warnings triggered by mode-based conditions) clear when the triggering condition clears.
 
-**Test IDs:** `SplitFlapSlot` exposes a `slotTestId` prop for the container and a `messageTestId` prop for the message span. E2E tests assert on the `messageTestId` element (present in DOM only when a message is displayed) rather than a `data-lit` attribute.
+**Test IDs:** `SplitFlapSlot` exposes a `testId` prop for the slot container and a `messageTestId` prop for the `.cf-splitflap-display` element. E2E tests assert on the `messageTestId` element rather than a `data-lit` attribute.
 
 ---
 

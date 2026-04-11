@@ -42,7 +42,11 @@ export default function SplitFlapSlot({
 
     const resolvedMessage = message ?? ''
 
-    if (resolvedMessage === prevMessageRef.current && !wasCleanedUp) return
+    if (resolvedMessage === prevMessageRef.current && !wasCleanedUp) {
+      // Color-only change: update displayedColor without re-running the flip animation.
+      setDisplayedColor(color)
+      return
+    }
 
     const oldMessage = prevMessageRef.current
     prevMessageRef.current = resolvedMessage

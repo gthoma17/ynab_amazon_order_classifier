@@ -1,11 +1,9 @@
 /* =============================================================
-   CASSETTE FUTURISM — Design Tokens & Global Styles
-   Font strategy: Google Fonts CDN (Share Tech Mono, VT323,
-   Courier Prime, IBM Plex Mono, Stardos Stencil).
-   Fallback stack is monospace-only so Pi offline use
-   still reads as intentionally typewriter-style.
-   Numeric readout: VT323 (DSEG7/Digital-7 licensing unclear;
-   VT323 provides adequate dot-matrix character).
+   SKEUOMORPHIC INDUSTRIAL CONTROL — Design Tokens & Global Styles
+   Font strategy: system monospace fallbacks only; no external CDN
+   font loads to preserve offline use and privacy guarantees.
+   Numeric readout: VT323 remains the preferred data-display face
+   when available (loaded via local @font-face if needed).
    ============================================================= */
 
 :root {

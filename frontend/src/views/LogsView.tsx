@@ -26,7 +26,14 @@ export default function LogsView() {
   const [logs, setLogs] = useState<SyncLog[]>([])
 
   useEffect(() => {
-    apiGet<SyncLog[]>('/api/logs').then((data) => setLogs([...data].reverse()))
+    apiGet<SyncLog[]>('/api/logs').then((data) =>
+      setLogs(
+        [...data].sort((left, right) => {
+          const lastRunDifference = Date.parse(right.lastRun) - Date.parse(left.lastRun)
+          return lastRunDifference !== 0 ? lastRunDifference : right.id - left.id
+        }),
+      ),
+    )
   }, [])
 
   return (
