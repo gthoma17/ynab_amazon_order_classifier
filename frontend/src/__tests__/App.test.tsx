@@ -49,7 +49,7 @@ describe('App navigation', () => {
   })
 
   it.each([
-    ['/', /api keys/i],
+    ['/', /configuration/i],
     ['/categories', /category rules/i],
     ['/orders', /pending orders/i],
     ['/logs', /sync logs/i],

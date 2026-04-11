@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { apiPostWithBody } from '../api'
+import IndicatorAndMessageButton from '../components/IndicatorAndMessageButton'
+import SplitFlapSlot from '../components/SplitFlapSlot'
 
 const GITHUB_ISSUES_URL = 'https://github.com/gthoma17/budget-sortbot/issues/new'
 const GITHUB_BASE_URL = `${GITHUB_ISSUES_URL}?body=`
@@ -22,14 +24,11 @@ export default function GetHelpView() {
   const [sanitized, setSanitized] = useState(false)
   const [truncated, setTruncated] = useState(false)
   const [logsInserted, setLogsInserted] = useState(false)
-  const [showWarning, setShowWarning] = useState(false)
 
   const logsRequested = includeSyncLogs || includeAppLogs
 
   const handleDescriptionChange = (value: string) => {
     setDescription(value)
-    // Reset inserted state when the description is edited so the user re-inserts
-    // with fresh content if the description changes after insertion.
     setLogsInserted(false)
     setReportBody(null)
     setSanitized(false)
@@ -37,6 +36,7 @@ export default function GetHelpView() {
   }
 
   const handleInsertLogs = async () => {
+    if (loading) return
     setLoading(true)
     setError(null)
     try {
@@ -57,25 +57,15 @@ export default function GetHelpView() {
   }
 
   const handleOpenIssue = () => {
-    if (logsRequested && !logsInserted) {
-      setShowWarning(true)
-      return
-    }
-    openGithubIssue()
-  }
-
-  const openGithubIssue = () => {
     const body = reportBody ?? `## Problem Description\n\n${description.trim()}\n`
     const encodedBody = encodeURIComponent(body)
     const encodedNote = encodeURIComponent(TRUNCATION_NOTE)
 
     let url: string
     if (truncated) {
-      // Backend already truncated the body to fit the URL budget (leaving room for the note)
       url = GITHUB_BASE_URL + encodedBody + encodedNote
     } else {
       url = GITHUB_BASE_URL + encodedBody
-      // Fallback: if somehow the URL is still too long, truncate the encoded body
       if (url.length > MAX_GITHUB_URL_LENGTH) {
         const maxEncodedBodyLen =
           MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - encodedNote.length
@@ -86,127 +76,142 @@ export default function GetHelpView() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  const isInsertDisabled = !description.trim() || loading
-  const isOpenDisabled = !description.trim() || loading
+  const noDescription = !description.trim()
+  const insertInactive = !logsRequested
+  const isInsertDisabled = insertInactive || noDescription
+  const isOpenDisabled = noDescription || (logsRequested && !logsInserted)
+
+  const insertMessage: string | null = insertInactive
+    ? null
+    : noDescription
+      ? 'ENTER DESCRIPTION FIRST'
+      : logsInserted
+        ? 'LOGS INSERTED'
+        : null
+
+  const openMessage: string | null = noDescription
+    ? 'ENTER DESCRIPTION FIRST'
+    : logsRequested && !logsInserted
+      ? 'INSERT LOGS FIRST'
+      : null
 
   return (
     <div>
-      <h1>Get Help</h1>
-      <p>Something not working? Open a pre-filled GitHub issue and we&apos;ll help.</p>
+      <div className="cf-panel">
+        <span className="cf-panel-label">Issue Report</span>
+        <h1>Get Help</h1>
 
-      <div role="note" aria-label="Redaction notice">
-        <strong>Privacy:</strong> Sensitive values in the generated report are redacted when you
-        click &ldquo;Insert Logs.&rdquo; Use that step to preview the sanitized content before
-        submitting.
-      </div>
+        <p style={{ marginBottom: 'var(--cf-s2)' }}>
+          Something not working? Open a pre-filled GitHub issue and we&apos;ll help.
+        </p>
 
-      <div>
-        <label htmlFor="description">
-          Describe the problem <span aria-hidden="true">*</span>
-        </label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => handleDescriptionChange(e.target.value)}
-          rows={6}
-          placeholder="Describe what happened and what you expected to happen"
-        />
-      </div>
+        <div
+          role="note"
+          aria-label="Redaction notice"
+          className="cf-panel"
+          style={{ marginBottom: 'var(--cf-s3)' }}
+        >
+          <span className="cf-panel-label">Privacy</span>
+          <p style={{ margin: 0, fontSize: '12px' }}>
+            <strong style={{ color: 'var(--cf-text)' }}>Sensitive values</strong> in the generated
+            report are redacted when you click &ldquo;Insert Logs.&rdquo; Use that step to preview
+            the sanitized content before submitting.
+          </p>
+        </div>
 
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={includeSyncLogs}
-            onChange={(e) => {
-              setIncludeSyncLogs(e.target.checked)
-              setLogsInserted(false)
-              setReportBody(null)
-            }}
-          />{' '}
-          Include recent sync log entries (recommended)
-        </label>
-      </div>
+        <div className="cf-form-row">
+          <label htmlFor="description">
+            Describe the problem <span aria-hidden="true">*</span>
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
+            rows={6}
+            placeholder="Describe what happened and what you expected to happen"
+          />
+        </div>
 
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={includeAppLogs}
-            onChange={(e) => {
-              setIncludeAppLogs(e.target.checked)
-              setLogsInserted(false)
-              setReportBody(null)
-            }}
-          />{' '}
-          Include full application logs
-        </label>
-      </div>
-
-      {logsRequested && (
         <div>
-          <button
+          <label className="cf-toggle-label" data-testid="toggle-sync-logs">
+            <input
+              type="checkbox"
+              checked={includeSyncLogs}
+              onChange={(e) => {
+                setIncludeSyncLogs(e.target.checked)
+                setLogsInserted(false)
+                setReportBody(null)
+              }}
+            />
+            Include recent sync log entries (recommended)
+          </label>
+        </div>
+
+        <div>
+          <label className="cf-toggle-label" data-testid="toggle-app-logs">
+            <input
+              type="checkbox"
+              checked={includeAppLogs}
+              onChange={(e) => {
+                setIncludeAppLogs(e.target.checked)
+                setLogsInserted(false)
+                setReportBody(null)
+              }}
+            />
+            Include full application logs
+          </label>
+        </div>
+
+        <div className="cf-btn-row">
+          <IndicatorAndMessageButton
             onClick={handleInsertLogs}
             disabled={isInsertDisabled}
-            aria-disabled={isInsertDisabled}
+            loading={loading}
+            inactive={insertInactive}
+            message={insertMessage}
           >
-            {loading ? 'Fetching logs…' : 'Insert Logs'}
-          </button>
-          {logsInserted && <span role="status"> ✓ Logs inserted</span>}
+            Insert Logs
+          </IndicatorAndMessageButton>
         </div>
-      )}
 
-      {reportBody !== null && (
-        <div>
+        <div className="cf-form-row" style={{ marginTop: 'var(--cf-s2)' }}>
           <label htmlFor="reportPreview">
-            Issue body preview{sanitized ? ' — sensitive values redacted' : ''}
-            {truncated ? ' — content truncated to fit GitHub URL limit' : ''}
+            Issue body preview
+            {reportBody !== null && sanitized ? ' — sensitive values redacted' : ''}
+            {reportBody !== null && truncated ? ' — content truncated to fit GitHub URL limit' : ''}
           </label>
           <textarea
             id="reportPreview"
             aria-label="Report body preview"
-            value={reportBody}
+            value={reportBody ?? ''}
             readOnly
             rows={12}
+            data-placeholder={reportBody === null ? 'true' : undefined}
+            placeholder="-- STANDING BY --"
           />
         </div>
-      )}
 
-      {sanitized && (
-        <p role="status">Sensitive values (API keys, tokens) were removed from your report.</p>
-      )}
+        <SplitFlapSlot message={sanitized ? 'SENSITIVE VALUES REDACTED' : null} />
 
-      {error && <p role="alert">{error}</p>}
+        {error && <p role="alert">{error}</p>}
 
-      {showWarning && (
-        <div role="dialog" aria-modal="true" aria-label="Logs not inserted warning">
-          <p>
-            You&apos;ve selected log options but haven&apos;t clicked &ldquo;Insert Logs&rdquo; yet.
-            Click &ldquo;Insert Logs&rdquo; first to preview and confirm that sensitive information
-            has been redacted, then open the issue.
-          </p>
-          <button onClick={() => setShowWarning(false)}>Go Back</button>
-          <button
-            onClick={() => {
-              setShowWarning(false)
-              openGithubIssue()
-            }}
+        <div className="cf-btn-row" style={{ marginTop: 'var(--cf-s3)' }}>
+          <IndicatorAndMessageButton
+            onClick={handleOpenIssue}
+            disabled={isOpenDisabled}
+            message={openMessage}
           >
-            Open Anyway
-          </button>
+            Open Issue
+          </IndicatorAndMessageButton>
         </div>
-      )}
 
-      <button onClick={handleOpenIssue} disabled={isOpenDisabled} aria-disabled={isOpenDisabled}>
-        {loading ? 'Preparing…' : 'Open Issue'}
-      </button>
-
-      <p>
-        <small>
-          No data is sent anywhere by this app. Clicking &ldquo;Open Issue&rdquo; opens GitHub in
-          your browser with a pre-filled issue — you control final submission.
-        </small>
-      </p>
+        <p style={{ marginTop: 'var(--cf-s2)', marginBottom: 0 }}>
+          <small>
+            No data is sent anywhere by this app. Clicking &ldquo;Open Issue&rdquo; opens GitHub in
+            your browser with a pre-filled issue — you control final submission.
+          </small>
+        </p>
+      </div>
     </div>
   )
 }

@@ -8,10 +8,11 @@ import { test, expect } from '@playwright/test'
  *   Browser → Vite proxy → real Spring Boot API → WireMock stubs for FastMail, YNAB, Gemini
  *
  * Steps:
- *  1. Open the app — API Keys page shows empty fields (fresh installation).
- *  2. Enter all five API credentials and test connection (before saving) — YNAB, FastMail, and
- *     Gemini all show "Connected" using the unsaved field values, proving AC4 (test before save).
- *  3. Save the credentials.
+ *  1. Open the app — Configuration page shows empty fields (fresh installation).
+ *  2. Enter credentials and test before saving (AC4: "test before save") — FastMail and
+ *     Gemini show "Connected" using the unsaved field values. YNAB token is validated
+ *     implicitly by the budget selector CRT terminal (no separate Test YNAB button).
+ *  3. Save credentials (Signal Sources then AI Engine).
  *  4. Configure Processing Settings — set start-from date, order cap, and change the
  *     schedule to "Every N seconds / 3" so the full pipeline fires quickly during the test.
  *     The production warning for EVERY_N_SECONDS is asserted.
@@ -40,34 +41,39 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // ── Step 1: Open the app — API Keys page ──────────────────────────────────
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
-  // ── Step 2: Enter credentials and test before saving ───────────────────────
-  // AC4: "test before save" — credentials are in the form but not yet persisted.
-  // The probe request now carries the current field values in the body, so
-  // Test Connection works without a prior save.
+  // ── Step 2: Enter credentials and test before saving (AC4) ────────────────
+  // Fill credentials. Test FastMail and Gemini BEFORE saving to prove the probe
+  // uses the current field values, not persisted credentials.
+  // YNAB validation is implicit via the budget selector CRT (no Test YNAB button).
 
   await page.locator('#ynabToken').fill('my-ynab-token')
-  // Wait for the budget dropdown to be populated from the API, then select the budget
-  await expect(page.locator('#ynabBudgetId')).not.toBeDisabled({ timeout: 10_000 })
-  await page.locator('#ynabBudgetId').selectOption({ value: 'my-budget-id' })
+  // Wait for budget options to load in the terminal screen
+  await expect(page.getByTestId('budget-selector-screen').getByRole('option').first()).toBeVisible({
+    timeout: 10_000,
+  })
+  // Select the budget by clicking its option row
+  await page.getByTestId('budget-option-my-budget-id').click()
+  // Confirm selected state is reflected correctly
+  await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
-  await page.locator('#geminiKey').fill('my-gemini-key')
 
-  // Test connections before saving — credentials are unsaved but should still work
-  await page.getByRole('button', { name: 'Test YNAB' }).click()
-  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
-
+  // Test FastMail BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test FastMail' }).click()
   await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
 
+  // Save Signal Sources — step 3
+  await page.getByRole('button', { name: 'Save Signal Sources' }).click()
+  await expect(page.getByTestId('signal-sources-saved-message')).toBeVisible()
+  await page.locator('#geminiKey').fill('my-gemini-key')
+
+  // Test Gemini BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test Gemini' }).click()
   await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
 
-  // ── Step 3: Save credentials ────────────────────────────────────────────────
-
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Saved')).toBeVisible()
+  await page.getByRole('button', { name: 'Save AI Engine' }).click()
+  await expect(page.getByTestId('ai-engine-saved-message')).toBeVisible()
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
@@ -82,11 +88,13 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
-  await page.locator('#scheduleType').selectOption('EVERY_N_SECONDS')
-  await expect(page.getByRole('alert')).toContainText(/not recommended for production/i)
-  await page.locator('#secondInterval').fill('3')
+  await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
+  await expect(page.getByTestId('schedule-warning-message')).toContainText(
+    /not recommended for production/i,
+  )
+  await page.getByTestId('schedule-param-n').fill('3')
   await page.getByRole('button', { name: 'Save processing settings' }).click()
-  await expect(page.getByText('Processing settings saved')).toBeVisible()
+  await expect(page.getByTestId('processing-saved-message')).toBeVisible()
 
   // ── Step 5: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
@@ -142,7 +150,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Results show the predicted category for the TOTO Bidet order.
 
   await page.getByRole('link', { name: 'Configuration' }).click()
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
   // Override the dry-run start date so the historical test order is included
   await page.locator('#dryRunStartFrom').fill('2024-01-01')
