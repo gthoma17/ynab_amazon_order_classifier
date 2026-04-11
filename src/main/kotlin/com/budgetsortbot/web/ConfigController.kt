@@ -14,10 +14,13 @@ import com.budgetsortbot.web.dto.CategoryRuleRequest
 import com.budgetsortbot.web.dto.CategoryRuleResponse
 import com.budgetsortbot.web.dto.DryRunRequest
 import com.budgetsortbot.web.dto.DryRunResultResponse
+import com.budgetsortbot.web.dto.FastMailProbeRequest
+import com.budgetsortbot.web.dto.GeminiProbeRequest
 import com.budgetsortbot.web.dto.ProbeResult
 import com.budgetsortbot.web.dto.ProcessingConfigRequest
 import com.budgetsortbot.web.dto.ProcessingConfigResponse
 import com.budgetsortbot.web.dto.ScheduleConfigDto
+import com.budgetsortbot.web.dto.YnabProbeRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -87,13 +90,19 @@ class ConfigController(
         )
 
     @PostMapping("/probe/fastmail")
-    fun probeFastMail(): ProbeResult = connectionProbeService.probeFastMail()
+    fun probeFastMail(
+        @RequestBody(required = false) request: FastMailProbeRequest?,
+    ): ProbeResult = connectionProbeService.probeFastMail(request?.fastmailApiToken)
 
     @PostMapping("/probe/ynab")
-    fun probeYnab(): ProbeResult = connectionProbeService.probeYnab()
+    fun probeYnab(
+        @RequestBody(required = false) request: YnabProbeRequest?,
+    ): ProbeResult = connectionProbeService.probeYnab(request?.ynabToken)
 
     @PostMapping("/probe/gemini")
-    fun probeGemini(): ProbeResult = connectionProbeService.probeGemini()
+    fun probeGemini(
+        @RequestBody(required = false) request: GeminiProbeRequest?,
+    ): ProbeResult = connectionProbeService.probeGemini(request?.geminiKey)
 
     // ── Processing guardrails ──────────────────────────────────────────────────
 

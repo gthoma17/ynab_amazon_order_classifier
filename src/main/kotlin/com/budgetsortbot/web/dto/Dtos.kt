@@ -63,6 +63,18 @@ data class ProbeResult(
     val message: String,
 )
 
+data class FastMailProbeRequest(
+    val fastmailApiToken: String? = null,
+)
+
+data class YnabProbeRequest(
+    val ynabToken: String? = null,
+)
+
+data class GeminiProbeRequest(
+    val geminiKey: String? = null,
+)
+
 // ── Processing guardrails ──────────────────────────────────────────────────────
 
 data class ProcessingConfigResponse(
