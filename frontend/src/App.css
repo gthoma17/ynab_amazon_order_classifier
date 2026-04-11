@@ -1,0 +1,158 @@
+/* =============================================================
+   App chrome — navigation shell
+   ============================================================= */
+
+/* ── App shell ────────────────────────────────────────────── */
+
+.cf-app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: var(--cf-wall);
+}
+
+/* ── Navigation bar ───────────────────────────────────────── */
+
+.cf-nav {
+  background: var(--cf-panel);
+  border-bottom: 2px solid var(--cf-border);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: stretch;
+  padding: 0 var(--cf-s3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.cf-nav-brand {
+  font-family: var(--cf-font-display);
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--cf-green);
+  text-shadow: 0 0 8px rgba(126, 200, 160, 0.4);
+  padding: 13px var(--cf-s3) 13px 0;
+  border-right: 1px solid var(--cf-border);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cf-nav-brand span {
+  color: var(--cf-text-dim);
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.cf-nav-links {
+  display: flex;
+  align-items: stretch;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.cf-nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 13px var(--cf-s2);
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  text-decoration: none;
+  border-right: 1px solid var(--cf-border);
+  position: relative;
+  transition:
+    color 80ms ease-out,
+    background 80ms ease-out;
+  white-space: nowrap;
+}
+
+.cf-nav-links li:first-child a {
+  border-left: 1px solid var(--cf-border);
+}
+
+.cf-nav-links a:hover {
+  color: var(--cf-text);
+  background: rgba(126, 200, 160, 0.05);
+}
+
+/* Active view — Seafoam glow + bottom indicator bar */
+.cf-nav-links a[aria-current='page'] {
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+  text-shadow: 0 0 6px rgba(126, 200, 160, 0.45);
+}
+
+.cf-nav-links a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cf-green);
+  box-shadow: 0 0 6px rgba(126, 200, 160, 0.8);
+}
+
+/* ── Main content area ────────────────────────────────────── */
+
+.cf-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--cf-s4);
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--cf-bezel);
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  box-shadow: var(--cf-panel-shadow);
+  position: relative;
+}
+
+/* ── View header panel — page title lives inside a panel, never on the wall ── */
+
+.cf-view-header {
+  margin-bottom: var(--cf-s3);
+}
+
+.cf-view-header h1 {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cf-view-header p {
+  margin: var(--cf-s1) 0 0;
+  color: var(--cf-text-dim);
+  font-size: 12px;
+}
+
+/* ── Panel grid ───────────────────────────────────────────── */
+
+.cf-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cf-s3);
+}
+
+@media (max-width: 720px) {
+  .cf-panel-grid {
+    grid-template-columns: 1fr;
+  }
+  .cf-main {
+    padding: var(--cf-s2);
+  }
+  .cf-nav {
+    padding: 0 var(--cf-s2);
+  }
+}

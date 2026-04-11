@@ -1,0 +1,20 @@
+# Build output
+build/
+
+# React build output (copied by Gradle task at build time)
+src/main/resources/static/assets/
+src/main/resources/static/index.html
+
+# Gradle wrapper
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+
+# Runtime data directory (SQLite database)
+data/

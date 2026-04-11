@@ -1,0 +1,1840 @@
+/* =============================================================
+   CASSETTE FUTURISM — Design Tokens & Global Styles
+   Font strategy: Google Fonts CDN (Share Tech Mono, VT323,
+   Courier Prime, IBM Plex Mono, Stardos Stencil).
+   Fallback stack is monospace-only so Pi offline use
+   still reads as intentionally typewriter-style.
+   Numeric readout: VT323 (DSEG7/Digital-7 licensing unclear;
+   VT323 provides adequate dot-matrix character).
+   ============================================================= */
+
+:root {
+  /* ── Palette (Faber Birren industrial safety code) ───────── */
+  --cf-wall: #63827a; /* Wall Seafoam    — wall background (no text on wall) */
+  --cf-bg: #0d0f0d; /* Reactor Black   — deep recess / control faces */
+  --cf-panel: #1e221e; /* Machinery Gray  — raised housings */
+  --cf-panel-hi: #2b2f2b; /* Hover tint on panels (neutral gray, no green) */
+  --cf-bezel: #4a524a; /* Industrial Gray — bezels / trim */
+  --cf-amber: #c8a84b; /* Solar Yellow    — caution / in-progress */
+  --cf-amber-dim: rgba(200, 168, 75, 0.16);
+  --cf-green: #7ec8a0; /* Seafoam         — primary accent */
+  --cf-green-dim: rgba(126, 200, 160, 0.16);
+  --cf-lamp-success: #39ff14; /* Neon Green      — success / active lamp (lit) */
+  --cf-lamp-success-dim: rgba(57, 255, 20, 0.12); /* dim / unlit success lamp */
+  --cf-red: #c4392f; /* Fire Red        — danger / errors */
+  --cf-red-dim: rgba(196, 57, 47, 0.16);
+  --cf-text: #e8f0e8; /* Phosphor White  — body text */
+  --cf-text-dim: #7a8e7a; /* Faded Green     — labels / metadata */
+  --cf-tape: #4a2c0a; /* Oxide Brown     — decorative tape */
+  --cf-border: #4a524a; /* Industrial Gray — panel dividers / rails */
+
+  /* ── Typography ─────────────────────────────────────────── */
+  --cf-font-display: 'Share Tech Mono', 'VT323', ui-monospace, Consolas, monospace;
+  --cf-font-body: 'Courier Prime', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --cf-font-stencil: 'Stardos Stencil', ui-monospace, Consolas, monospace;
+  --cf-font-data: 'VT323', ui-monospace, Consolas, monospace;
+
+  /* ── Spacing (8px base grid) ─────────────────────────────── */
+  --cf-s1: 8px;
+  --cf-s2: 16px;
+  --cf-s3: 24px;
+  --cf-s4: 32px;
+  --cf-s5: 40px;
+  --cf-s6: 48px;
+
+  /* ── Shadows / Bevels ────────────────────────────────────── */
+  /* Panel: 4-edge bevel — top/left highlight (catches light), bottom/right shadow (falls away) */
+  --cf-panel-shadow:
+    inset 1px 1px 0 rgba(232, 240, 232, 0.06), inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.7);
+  --cf-inset-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(0, 0, 0, 0.9);
+  /* Button: convex bevel — top/left specular, bottom drop-shadow → inverts on press */
+  --cf-btn-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.07),
+    inset -1px 0 0 rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 rgba(0, 0, 0, 0.7);
+  --cf-btn-active: inset 0 3px 6px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ── Reset & base ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cf-wall);
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 400;
+  margin: 0 0 var(--cf-s2);
+}
+
+h1 {
+  font-family: var(--cf-font-display);
+  font-size: 22px;
+  color: var(--cf-green);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(126, 200, 160, 0.35);
+  padding-bottom: var(--cf-s2);
+  border-bottom: 1px solid var(--cf-border);
+  margin-bottom: var(--cf-s3);
+}
+
+h2 {
+  font-family: var(--cf-font-stencil);
+  font-size: 11px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: var(--cf-s2);
+}
+
+h3 {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: var(--cf-s1);
+}
+
+p,
+small {
+  color: var(--cf-text-dim);
+  font-family: var(--cf-font-body);
+}
+
+em {
+  font-style: normal;
+  color: var(--cf-text-dim);
+}
+
+/* ── Panel ────────────────────────────────────────────────── */
+
+.cf-panel {
+  background: var(--cf-panel);
+  border: 1px solid var(--cf-border);
+  border-radius: 3px;
+  box-shadow: var(--cf-panel-shadow);
+  padding: var(--cf-s3);
+  margin-bottom: var(--cf-s3);
+  position: relative;
+}
+
+/* Subtle horizontal grain — reads as brushed metal */
+.cf-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.025) 3px,
+    rgba(0, 0, 0, 0.025) 4px
+  );
+}
+
+/* Stencil label positioned at top-left of panel border */
+.cf-panel-label {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  background: var(--cf-panel);
+  position: absolute;
+  top: -8px;
+  left: var(--cf-s2);
+  padding: 0 6px;
+  z-index: 1;
+}
+
+/* ── Form controls ────────────────────────────────────────── */
+
+label:not(.cf-toggle-label) {
+  display: block;
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  margin-bottom: 4px;
+}
+
+.cf-form-row {
+  margin-bottom: var(--cf-s2);
+}
+
+/* Shared class for the three API credential inputs (YNAB Token, FastMail
+   API Token, Gemini Key). Uses an opaque background so appearance is
+   identical regardless of panel nesting depth. */
+.cf-credential-input {
+  background: var(--cf-bezel);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  height: 34px;
+  padding: 7px 10px;
+  width: 100%;
+  display: block;
+  box-shadow: var(--cf-inset-shadow);
+  outline: none;
+  transition: border-color 0.08s ease;
+}
+
+.cf-credential-input:focus {
+  border-color: var(--cf-green);
+  box-shadow:
+    var(--cf-inset-shadow),
+    0 0 0 1px rgba(126, 200, 160, 0.25);
+}
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='date'],
+input[type='email'],
+select,
+textarea {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  color: var(--cf-text);
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  padding: 7px 10px;
+  width: 100%;
+  display: block;
+  box-shadow: var(--cf-inset-shadow);
+  outline: none;
+  transition: border-color 0.08s ease;
+}
+
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='number']:focus,
+input[type='date']:focus,
+input[type='email']:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--cf-green);
+  box-shadow:
+    var(--cf-inset-shadow),
+    0 0 0 1px rgba(126, 200, 160, 0.25);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A8E7A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+fieldset {
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  padding: var(--cf-s2);
+  margin: var(--cf-s2) 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(232, 240, 232, 0.04),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+legend {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  padding: 0 6px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+
+button {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 8px 16px;
+  transition:
+    box-shadow 50ms ease-in,
+    background-color 50ms ease-in;
+  position: relative;
+}
+
+/* Primary — Seafoam face, black label */
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger) {
+  background: var(--cf-green);
+  color: var(--cf-bg);
+  border: 1px solid #6bb58d;
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger):hover:not(:disabled) {
+  background: #8ad4b0;
+  border-color: #8ad4b0;
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(126, 200, 160, 0.25);
+}
+
+button:not(.cf-btn-secondary):not(.cf-btn-caution):not(.cf-btn-danger):active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+/* Caution / irreversible — Solar Yellow face, black label */
+button.cf-btn-caution {
+  background: var(--cf-amber);
+  color: var(--cf-bg);
+  border: 1px solid #b1923b;
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button.cf-btn-caution:hover:not(:disabled) {
+  background: #d2b76a;
+  border-color: #d2b76a;
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(200, 168, 75, 0.3);
+}
+
+button.cf-btn-caution:active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+/* Destructive / emergency — Fire Red face, phosphor label */
+button.cf-btn-danger {
+  background: var(--cf-red);
+  color: var(--cf-text);
+  border: 1px solid #a22e26;
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button.cf-btn-danger:hover:not(:disabled) {
+  background: #d45146;
+  border-color: #d45146;
+  box-shadow:
+    var(--cf-btn-shadow),
+    0 0 8px rgba(196, 57, 47, 0.3);
+}
+
+button.cf-btn-danger:active:not(:disabled) {
+  box-shadow: var(--cf-btn-active);
+  transform: translateY(1px);
+}
+
+/* Neutral / secondary — Industrial Gray face, phosphor label */
+button.cf-btn-secondary {
+  background: var(--cf-bezel);
+  color: var(--cf-text);
+  border: 1px solid #3d443d;
+  box-shadow: var(--cf-btn-shadow);
+}
+
+button.cf-btn-secondary:hover:not(:disabled) {
+  background: #566056;
+  border-color: #566056;
+}
+
+/* Disabled — Birren Beige recessive */
+button:disabled {
+  background: rgba(212, 197, 169, 0.3);
+  color: rgba(232, 240, 232, 0.6);
+  border: 1px solid rgba(212, 197, 169, 0.3);
+  box-shadow: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Toggle switch (rocker / flip-switch style) ───────────── */
+/*
+ * Rocker switch: a rectangular housing with OFF | ON halves.
+ * OFF half (left): pressed/dark when unchecked; raised when checked.
+ * ON  half (right): raised when unchecked; pressed/lit when checked.
+ * Matches the breaker-panel / vintage-amp power-toggle design language.
+ */
+
+.cf-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+  cursor: pointer;
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  user-select: none;
+  margin-bottom: var(--cf-s2);
+}
+
+.cf-toggle-label input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 72px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  /* Vertical centre divider */
+  background-image: linear-gradient(
+    to right,
+    transparent calc(50% - 1px),
+    var(--cf-bezel) calc(50% - 1px),
+    var(--cf-bezel) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  transition: border-color 50ms ease-in;
+}
+
+/* OFF label — left half */
+.cf-toggle-label input[type='checkbox']::before {
+  content: 'OFF';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-family: var(--cf-font-stencil);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--cf-text-dim);
+  /* Unchecked: OFF is pressed down */
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 0, 0, 0.6);
+  border-radius: 1px 0 0 1px;
+}
+
+/* ON label — right half */
+.cf-toggle-label input[type='checkbox']::after {
+  content: 'ON';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-family: var(--cf-font-stencil);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: rgba(232, 240, 232, 0.25);
+  /* Unchecked: ON is raised */
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-radius: 0 1px 1px 0;
+}
+
+/* Checked state: ON is pressed, OFF is raised */
+.cf-toggle-label input[type='checkbox']:checked {
+  border-color: rgba(57, 255, 20, 0.35);
+}
+
+.cf-toggle-label input[type='checkbox']:checked::before {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: rgba(232, 240, 232, 0.25);
+}
+
+.cf-toggle-label input[type='checkbox']:checked::after {
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 0, 0, 0.6);
+  color: var(--cf-lamp-success);
+  text-shadow: 0 0 4px rgba(57, 255, 20, 0.6);
+}
+
+/* ── CRT Screen wrapper ───────────────────────────────────── */
+
+.cf-crt {
+  background: #0c0f0c;
+  border: 2px solid var(--cf-bezel);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.85),
+    0 0 0 4px var(--cf-panel),
+    0 4px 16px rgba(0, 0, 0, 0.9);
+  position: relative;
+  overflow: hidden;
+  padding: var(--cf-s3);
+  min-height: 120px;
+  /* Neon green CRT phosphor text */
+  color: var(--cf-lamp-success);
+}
+
+/* Scanline overlay */
+.cf-crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Vignette */
+.cf-crt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
+  pointer-events: none;
+  z-index: 11;
+}
+
+/* ── Budget Selector Terminal ────────────────────────────── */
+
+.cf-budget-selector {
+  height: 160px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  outline: none;
+  cursor: default;
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  user-select: none;
+}
+
+.cf-budget-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.cf-budget-selector:focus {
+  border-color: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.85),
+    0 0 0 4px var(--cf-panel),
+    0 4px 16px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(57, 255, 20, 0.3);
+}
+
+@keyframes cf-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.cf-budget-standby {
+  color: var(--cf-lamp-success);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-cursor {
+  animation: cf-cursor-blink 1s step-end infinite;
+  color: var(--cf-lamp-success);
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-error {
+  color: var(--cf-red);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-empty {
+  color: var(--cf-lamp-success);
+  opacity: 0.6;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-header {
+  color: var(--cf-lamp-success);
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-divider {
+  color: var(--cf-lamp-success);
+  opacity: 0.4;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cf-budget-list {
+  position: relative;
+  z-index: 1;
+}
+
+.cf-budget-option {
+  display: flex;
+  align-items: baseline;
+  padding: 2px 0;
+  color: rgba(57, 255, 20, 0.45);
+  cursor: pointer;
+}
+
+.cf-budget-option:hover,
+.cf-budget-option--highlighted {
+  color: var(--cf-lamp-success);
+  background: rgba(57, 255, 20, 0.08);
+}
+
+.cf-budget-option--selected {
+  color: var(--cf-lamp-success);
+  filter: brightness(1.15);
+}
+
+.cf-budget-prompt {
+  display: inline-block;
+  width: 1.4em;
+  flex-shrink: 0;
+}
+
+.cf-budget-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf-budget-sel {
+  margin-left: 8px;
+  font-size: 11px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+/* ── Data table ───────────────────────────────────────────── */
+
+.cf-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-data-table th {
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cf-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cf-data-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(58, 58, 56, 0.35);
+  color: var(--cf-text);
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.cf-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Status / Source badges ───────────────────────────────── */
+
+.cf-status {
+  display: inline-block;
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.cf-status-pending {
+  color: var(--cf-amber);
+  background: var(--cf-amber-dim);
+}
+.cf-status-matched {
+  color: var(--cf-text-dim);
+  background: rgba(122, 142, 122, 0.12);
+  border-color: var(--cf-text-dim);
+}
+.cf-status-completed {
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+}
+.cf-status-discarded {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+}
+.cf-status-success {
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+}
+.cf-status-fail {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+}
+
+.cf-source-badge {
+  display: inline-block;
+  font-family: var(--cf-font-stencil);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(58, 58, 56, 0.5);
+  border: 1px solid var(--cf-border);
+  color: var(--cf-text-dim);
+  white-space: nowrap;
+}
+
+/* ── Probe results ────────────────────────────────────────── */
+
+.cf-probe-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-green);
+  background: var(--cf-green-dim);
+  border: 1px solid rgba(126, 200, 160, 0.3);
+  border-radius: 2px;
+  padding: 5px 10px;
+  margin-top: 6px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.cf-probe-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(196, 57, 47, 0.4);
+  border-radius: 2px;
+  padding: 5px 10px;
+  margin-top: 6px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* ── Terminal empty state ─────────────────────────────────── */
+
+.cf-terminal-empty {
+  text-align: center;
+  padding: var(--cf-s5) var(--cf-s3);
+  font-family: var(--cf-font-data);
+  font-size: 22px;
+  color: rgba(57, 255, 20, 0.25);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.cf-terminal-standby {
+  text-align: center;
+  padding: var(--cf-s5) var(--cf-s3);
+  font-family: var(--cf-font-data);
+  font-size: 16px;
+  color: rgba(57, 255, 20, 0.25);
+  letter-spacing: 0.2em;
+  position: relative;
+  z-index: 1;
+}
+
+textarea[data-placeholder='true']::placeholder {
+  color: rgba(57, 255, 20, 0.25);
+  font-family: var(--cf-font-data);
+  letter-spacing: 0.1em;
+}
+
+/* ── Status / success indicators ─────────────────────────── */
+
+.cf-saved {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-green);
+  text-shadow: 0 0 5px rgba(126, 200, 160, 0.4);
+  margin-left: var(--cf-s2);
+}
+
+/* ── Role-based overrides ─────────────────────────────────── */
+
+[role='alert'] {
+  color: var(--cf-red);
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(196, 57, 47, 0.35);
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+[role='status'] {
+  font-family: var(--cf-font-stencil);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--cf-green);
+}
+
+/* ── Error panel (loading/fetch fail states) ──────────────── */
+
+.cf-error-panel {
+  background: var(--cf-red-dim);
+  border: 1px solid rgba(196, 57, 47, 0.35);
+  border-radius: 2px;
+  padding: var(--cf-s2);
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-red);
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s1);
+}
+
+/* ── Loading state ────────────────────────────────────────── */
+
+.cf-loading {
+  font-family: var(--cf-font-data);
+  font-size: 18px;
+  color: var(--cf-text-dim);
+  letter-spacing: 0.3em;
+  text-align: center;
+  padding: var(--cf-s4);
+  animation: cf-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cf-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cf-rotary-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes cf-rotary-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── Button row ───────────────────────────────────────────── */
+
+.cf-btn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+  flex-wrap: wrap;
+  margin-top: var(--cf-s2);
+}
+
+/* Expand split flap to fill all remaining width next to the button */
+.cf-btn-row .cf-splitflap {
+  flex: 1;
+  max-width: none;
+}
+
+/* ── Test control row (button + indicator on same line) ──── */
+
+.cf-test-control {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cf-s2);
+  margin-top: var(--cf-s2);
+}
+
+.cf-test-control button {
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.cf-test-control .cf-indicator-panel {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* Expand split flap to fill full indicator panel width */
+.cf-test-control .cf-splitflap {
+  flex: 1;
+  max-width: none;
+}
+
+/* ── Indicator lamp panel ─────────────────────────────────── */
+
+.cf-indicator-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+  padding: var(--cf-s1) var(--cf-s2);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  margin-top: var(--cf-s2);
+  min-height: 48px;
+  box-shadow:
+    inset 1px 1px 0 rgba(232, 240, 232, 0.04),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.cf-lamp-housing {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+  background: #2a2a28;
+  transition:
+    background 100ms ease-in,
+    box-shadow 100ms ease-in;
+}
+
+.cf-lamp-housing[data-state='testing'] {
+  background: var(--cf-amber);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 6px rgba(200, 168, 75, 0.7);
+  animation: cf-pulse 1.2s ease-in-out infinite;
+}
+
+.cf-lamp-housing[data-state='success'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(57, 255, 20, 0.8);
+}
+
+.cf-lamp-housing[data-state='error'] {
+  background: var(--cf-red);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(196, 57, 47, 0.8);
+}
+
+/* ── Indicator+Message button (lamp inside button + split-flap) */
+
+.cf-ind-msg-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+}
+
+.cf-ind-msg-btn__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-ind-msg-btn__lamp {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #2a2a28;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    background 50ms,
+    box-shadow 50ms;
+}
+
+.cf-ind-msg-btn__lamp[data-color='green'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(57, 255, 20, 0.7);
+}
+
+.cf-ind-msg-btn__lamp[data-color='red'] {
+  background: var(--cf-red);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(232, 52, 26, 0.7);
+}
+
+.cf-ind-msg-btn__lamp[data-color='yellow'] {
+  background: var(--cf-amber);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(255, 179, 71, 0.7);
+  animation: cf-lamp-pulse 0.8s ease-in-out infinite alternate;
+}
+
+/* ── Indicator button (lamp + action button) ──────────────── */
+
+.cf-indicator-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-s2);
+}
+
+.cf-indicator-btn__lamp {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #2a2a28;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    background 50ms,
+    box-shadow 50ms;
+}
+
+.cf-indicator-btn__lamp[data-active='true'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(57, 255, 20, 0.7);
+}
+
+.cf-indicator-btn--loading .cf-indicator-btn__lamp {
+  background: var(--cf-amber);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(200, 168, 75, 0.7);
+  animation: cf-lamp-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.cf-indicator-btn--loading button {
+  pointer-events: none;
+  cursor: wait;
+}
+
+@keyframes cf-lamp-pulse {
+  from {
+    opacity: 0.5;
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.3),
+      0 0 3px rgba(200, 168, 75, 0.4);
+  }
+  to {
+    opacity: 1;
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.3),
+      0 0 8px rgba(200, 168, 75, 0.9);
+  }
+}
+
+.cf-lamp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cf-lamp-readout {
+  font-family: var(--cf-font-body);
+  font-size: 11px;
+  color: var(--cf-text);
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  height: 1.4em;
+}
+
+.cf-lamp-readout[data-placeholder='true'] {
+  color: rgba(122, 142, 122, 0.35);
+  font-family: var(--cf-font-data);
+  letter-spacing: 0.1em;
+}
+
+.cf-rotary-segment {
+  display: block;
+  position: absolute;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-rotary-segment--out {
+  animation: cf-rotary-out 150ms ease-in forwards;
+}
+
+.cf-rotary-segment--in {
+  animation: cf-rotary-in 150ms ease-out forwards;
+}
+
+/* ── Dashboard lamp (always-visible check light) ───────── */
+
+.cf-dashboard-lamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-dashboard-lamp-bulb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cf-lamp-success-dim);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+  transition:
+    background 100ms ease-in,
+    box-shadow 100ms ease-in;
+}
+
+.cf-dashboard-lamp-bulb[data-lit='true'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(57, 255, 20, 0.9);
+}
+
+.cf-dashboard-lamp-label {
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-text-dim);
+}
+
+.cf-dashboard-lamp-bulb[data-lit='true'] + .cf-dashboard-lamp-label {
+  color: var(--cf-green);
+  text-shadow: 0 0 4px rgba(126, 200, 160, 0.4);
+}
+
+/* ── Visually hidden (screen-reader / test accessible) ────── */
+
+.cf-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Split-flap message slot ─────────────────────────────── */
+
+/* ── Split-flap display animations ───────────────────────── */
+
+/* Fold the current (blank) flap away — becomes edge-on at -90° */
+@keyframes cf-flip-out {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+
+/* Fold the new character in — starts from edge-on, returns to face-forward */
+@keyframes cf-flip-in {
+  from {
+    transform: rotateX(-90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes cf-flip-reduced {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ── Split-flap display container ────────────────────────── */
+
+.cf-splitflap {
+  perspective: 600px;
+  height: 32px;
+  width: 100%;
+  max-width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--cf-border);
+  border-radius: 3px;
+  box-shadow: var(--cf-inset-shadow);
+  padding: 4px 6px;
+  overflow: hidden;
+}
+
+.cf-splitflap-idle-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cf-splitflap-idle {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(122, 142, 122, 0.2) 0px,
+    rgba(122, 142, 122, 0.2) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  border-radius: 1px;
+}
+
+/* ── Character display grid ──────────────────────────────── */
+
+.cf-splitflap-display {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  align-items: center;
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.cf-splitflap-char {
+  position: relative;
+  width: 11px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 1px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  flex-shrink: 0;
+}
+
+/* Split-flap halves using pseudo-elements for visual split */
+.cf-splitflap-char::before,
+.cf-splitflap-char::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cf-splitflap-char::before {
+  top: 0;
+  height: 50%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.cf-splitflap-char::after {
+  bottom: 0;
+  height: 50%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.cf-splitflap-char-content {
+  display: block;
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Horizontal divider line (mechanical split) ──────────── */
+
+.cf-splitflap-char-divider {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.95) 15%,
+    rgba(0, 0, 0, 0.95) 85%,
+    transparent
+  );
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.8);
+  transform: translateY(-0.5px);
+  z-index: 10;
+}
+
+/* ── Flipping animation ──────────────────────────────────── */
+
+/* Phase 1: blank char folds away; forwards keeps it edge-on until flip-in starts */
+.cf-splitflap-char--flip-out {
+  animation: cf-flip-out 75ms ease-in forwards;
+}
+
+/* Phase 2: new character folds in from edge-on to face-forward */
+.cf-splitflap-char--flip-in {
+  animation: cf-flip-in 75ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-splitflap-char--flip-out {
+    animation: none;
+  }
+  .cf-splitflap-char--flip-in {
+    animation: cf-flip-reduced 75ms ease-out;
+  }
+}
+
+/* ── Color variants ──────────────────────────────────────── */
+
+.cf-splitflap-char[data-color='green'] .cf-splitflap-char-content {
+  color: var(--cf-lamp-success);
+  text-shadow: 0 0 4px rgba(57, 255, 20, 0.5);
+}
+
+.cf-splitflap-char[data-color='red'] .cf-splitflap-char-content {
+  color: var(--cf-red);
+  text-shadow: 0 0 4px rgba(196, 57, 47, 0.5);
+}
+
+.cf-splitflap-char[data-color='yellow'] .cf-splitflap-char-content {
+  color: var(--cf-amber);
+  text-shadow: 0 0 4px rgba(200, 168, 75, 0.5);
+}
+
+/* ── Sync schedule panel ─────────────────────────────────── */
+
+.cf-sync-schedule {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--cf-s3);
+  align-items: stretch;
+}
+
+.cf-sync-mode {
+  width: max-content;
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-sync-mode .cf-radio-group {
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+  margin-top: 0;
+  flex: 1;
+}
+
+.cf-sync-mode .cf-radio-option {
+  align-items: center;
+}
+
+.cf-sync-params {
+  padding-top: 2px;
+}
+
+.cf-sync-param--active > label {
+  color: var(--cf-text);
+}
+
+.cf-sync-param-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--cf-s2);
+}
+
+.cf-sync-param-row > .cf-form-row {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.cf-param-lamp {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cf-lamp-success-dim);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    background 50ms,
+    box-shadow 50ms;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.cf-param-lamp[data-active='true'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(57, 255, 20, 0.7);
+}
+
+.cf-sync-warning {
+  margin-top: var(--cf-s1);
+  padding-left: var(--cf-s2); /* align with inputs: lamp width (8px) + row gap (8px) */
+}
+
+.cf-sync-warning .cf-splitflap {
+  width: 100%;
+  max-width: none;
+}
+
+/* ── Radio group (indicator radio buttons) ───────────────── */
+
+.cf-radio-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--cf-s1);
+  margin-top: var(--cf-s1);
+}
+
+.cf-radio-group--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.cf-radio-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.cf-radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cf-s2);
+  min-width: 0;
+  padding: var(--cf-s1) var(--cf-s2);
+  border: 1px solid var(--cf-border);
+  border-radius: 2px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    box-shadow 80ms ease,
+    background 80ms ease;
+}
+
+.cf-radio-option--selected {
+  background: rgba(126, 200, 160, 0.08);
+  border-color: rgba(126, 200, 160, 0.35);
+  box-shadow: var(--cf-inset-shadow);
+}
+
+.cf-radio-option:hover:not(.cf-radio-option--selected) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cf-radio-option:focus-within {
+  border-color: var(--cf-green);
+  box-shadow:
+    0 0 0 2px rgba(126, 200, 160, 0.2),
+    0 0 10px rgba(126, 200, 160, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.cf-radio-lamp {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: var(--cf-lamp-success-dim);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition:
+    background 80ms ease,
+    box-shadow 80ms ease;
+}
+
+.cf-radio-lamp[data-selected='true'] {
+  background: var(--cf-lamp-success);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(57, 255, 20, 0.7);
+}
+
+.cf-radio-label {
+  margin-left: 8px;
+  font-family: var(--cf-font-stencil);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-text);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.cf-radio-option--selected .cf-radio-label {
+  color: var(--cf-green);
+}
+
+/* Compact time-param buttons (hour, minute) */
+.cf-radio-group--time .cf-radio-option {
+  padding: 8px;
+  min-height: 32px;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.cf-radio-group--time .cf-radio-lamp {
+  width: 6px;
+  height: 6px;
+  margin-top: 0;
+}
+
+.cf-radio-group--time .cf-radio-label {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+/* ── SER (Sequence of Events Recorder) ────────────────────── */
+
+.cf-ser {
+  display: flex;
+  flex-direction: column;
+  background: var(--cf-panel);
+  /* Brush-grain panel texture */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.055) 2px,
+    rgba(0, 0, 0, 0.055) 3px
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 6px 24px rgba(0, 0, 0, 0.85),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--cf-panel);
+  border-top-color: #2a2f2a;
+  border-radius: 2px;
+  padding: 12px 16px 16px;
+}
+
+/* Metal label strip mounted on panel face above the paper slot.
+   Left/right padding (26px = 18px tractor + 8px print margin) keeps
+   column headers aligned with the print area inside the paper. */
+.cf-ser-label-strip {
+  display: flex;
+  align-items: center;
+  padding: 5px 26px 4px;
+  background: #111511;
+  border: 1px solid var(--cf-border);
+  border-bottom: 2px solid #0b0f0b;
+  font-family: var(--cf-font-stencil);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--cf-text-dim);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* The mechanical paper slot — fixed height prevents layout jump on load */
+.cf-ser-slot {
+  position: relative;
+  background: #0f120f;
+  box-shadow:
+    inset 0 0 0 1px #141914,
+    inset 0 5px 16px rgba(0, 0, 0, 0.95),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.7),
+    inset 4px 0 12px rgba(0, 0, 0, 0.6),
+    inset -4px 0 12px rgba(0, 0, 0, 0.6);
+  height: 320px;
+  overflow: hidden;
+}
+
+/* Top depth gradient — paper emerging from behind the panel face */
+.cf-ser-slot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Bottom fade gradient */
+.cf-ser-slot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Scrollable paper strip.
+   Tractor-feed margins are pure CSS background layers with mixed attachment:
+     - strip colour and score lines: attachment:scroll  → fixed to element, never moves
+     - perforation holes:           attachment:local   → scrolls with content
+     - horizontal rules:            attachment:local   → scrolls with content
+   This makes holes track alongside printed text at all scroll positions. */
+.cf-ser-paper {
+  height: 100%;
+  overflow-y: auto;
+  background-color: #d4c5a9;
+  background-image:
+    /* Tractor holes — local so they scroll with content */
+    radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
+    radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
+    /* Score lines separating margin from print area — fixed to element */
+      linear-gradient(
+        to right,
+        transparent 17px,
+        rgba(0, 0, 0, 0.14) 17px,
+        rgba(0, 0, 0, 0.14) 18px,
+        transparent 18px
+      ),
+    linear-gradient(
+      to left,
+      transparent 17px,
+      rgba(0, 0, 0, 0.14) 17px,
+      rgba(0, 0, 0, 0.14) 18px,
+      transparent 18px
+    ),
+    /* Tractor strip colour — fixed to element */
+      linear-gradient(to right, #e2d6ba 18px, transparent 18px),
+    linear-gradient(to left, #e2d6ba 18px, transparent 18px),
+    /* Horizontal ruled lines — local so they stay locked to text rows */
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 23px,
+        rgba(0, 0, 0, 0.065) 23px,
+        rgba(0, 0, 0, 0.065) 24px
+      );
+  background-size:
+    18px 16px,
+    /* left holes tile  */ 18px 16px,
+    /* right holes tile */ 100% 100%,
+    /* left score line  */ 100% 100%,
+    /* right score line */ 100% 100%,
+    /* left strip       */ 100% 100%,
+    /* right strip      */ 100% 24px; /* rules tile       */
+  background-position:
+    left top,
+    right top,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  background-repeat: repeat-y, repeat-y, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-attachment:
+    local,
+    local,
+    /* holes  */ scroll,
+    scroll,
+    /* scores */ scroll,
+    scroll,
+    /* strips */ local; /* rules  */
+  padding-bottom: 16px;
+}
+
+/* Paper-advance animation: the feed wrapper starts with entries above
+   the viewport and the spacer ("NO ENTRIES") visible. It translates
+   DOWN so entries scroll in from the top and the spacer exits the bottom.
+   --cf-ser-offset is set as an inline style (entries × line-height). */
+@keyframes cf-ser-print {
+  from {
+    transform: translateY(calc(var(--cf-ser-offset) * -1));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.cf-ser-feed--printing {
+  animation: cf-ser-print 1.1s ease-in-out both;
+}
+
+/* Lock the scroll container during the advance so the user can't
+   interfere with the transform animation */
+.cf-ser-paper--printing {
+  overflow: hidden;
+}
+
+/* Spacer: same height as the slot so it fills the viewport when idle.
+   During animation it rides the feed wrapper out the bottom. */
+.cf-ser-spacer {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 26px;
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #7a8e7a;
+  letter-spacing: 0.1em;
+  user-select: none;
+}
+
+/* Log entry row — 26px side padding keeps text in the print area */
+.cf-ser-entry {
+  display: flex;
+  align-items: baseline;
+  padding: 0 26px;
+  line-height: 24px;
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #0f140f;
+}
+
+/* Shared column base — applied in both label strip and entry rows */
+.cf-ser-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Typewritten status codes — minimal ink, on-paper colours.
+   Applied via data-status on the render prop's inner <span>. */
+[data-status='SUCCESS'] {
+  color: #2f6b4e;
+  font-weight: 700;
+}
+
+[data-status='FAIL'],
+[data-status='ERROR'] {
+  color: #8a2e29;
+  font-weight: 700;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cf-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cf-text-dim);
+}

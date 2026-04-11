@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    # Only fire when CI was triggered by a direct push (not a pull_request review
+    # run). The head_branch job condition below further narrows this to prod.
+    branches-ignore: []
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA on prod to release (defaults to HEAD of prod)"
+        required: false
+        default: ""
+
+# ARM builds under QEMU are slow (10–20+ min is expected and not a failure).
+
+permissions:
+  contents: write
+  packages: write
+
+# Prevent concurrent releases; do not cancel in-progress runs so a release
+# already mid-flight is never abandoned.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Only run when CI passed on prod — this gates the release on the test suite.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout commit that CI tested
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ------------------------------------------------------------------ #
+      # Phase 1: Versioning                                                  #
+      # ------------------------------------------------------------------ #
+      - name: Compute next patch version
+        id: version
+        run: |
+          git fetch --tags
+          LATEST=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            NEXT="v1.0.0"
+          else
+            MAJOR=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f1)
+            MINOR=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f2)
+            PATCH=$(echo "$LATEST" | sed 's/^v//' | cut -d. -f3)
+            NEXT="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Computed next version: $NEXT (previous: ${LATEST:-none})"
+
+      - name: Create and push version tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists — reusing it (idempotent re-run)"
+          else
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
+
+      # ------------------------------------------------------------------ #
+      # Phase 2: Multi-arch Docker image build and publish                  #
+      # ------------------------------------------------------------------ #
+      - name: Set up QEMU (required for ARM emulation)
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          # linux/arm/v7 and linux/arm64 are built via QEMU emulation — expect
+          # these platforms to take significantly longer than linux/amd64.
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/budget-sortbot:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/budget-sortbot:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------ #
+      # Phase 3: GitHub Release                                              #
+      # ------------------------------------------------------------------ #
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          IMAGE_REF="ghcr.io/${OWNER}/budget-sortbot:${VERSION}"
+          BODY=$(
+            echo "## Docker Image"
+            echo ""
+            echo "Pull and run on any platform (\`linux/amd64\`, \`linux/arm64\`, \`linux/arm/v7\`):"
+            echo ""
+            echo '```bash'
+            echo "docker pull ${IMAGE_REF}"
+            echo "docker run -v /opt/budget-sortbot/data:/app/data ${IMAGE_REF}"
+            echo '```'
+            echo ""
+            echo "> **Note:** After the first push, set the GHCR package visibility to **Public** in *GitHub → Packages → budget-sortbot → Package Settings* so that unauthenticated users can pull the image."
+          )
+
+          # If the release already exists (idempotent re-run), skip creation.
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping creation (idempotent re-run)"
+          else
+            gh release create "$VERSION" \
+              --title "$VERSION" \
+              --generate-notes \
+              --notes "$BODY"
+          fi
