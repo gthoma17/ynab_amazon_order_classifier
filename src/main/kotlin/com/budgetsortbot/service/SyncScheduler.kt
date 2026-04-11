@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.DisposableBean
-import org.springframework.scheduling.support.CronTrigger
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
+import org.springframework.scheduling.support.CronTrigger
 import org.springframework.stereotype.Component
 import java.util.concurrent.ScheduledFuture
 
@@ -22,11 +22,11 @@ class SyncScheduler(
     private val emailIngestionService: EmailIngestionService,
     private val ynabSyncService: YnabSyncService,
     private val configService: ConfigService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) : DisposableBean {
-
     companion object {
         private val log = KotlinLogging.logger {}
+
         /** Fallback cron when no schedule is configured: every 5 hours. */
         internal const val DEFAULT_CRON = "0 0 */5 * * *"
     }
@@ -84,8 +84,9 @@ class SyncScheduler(
      */
     internal fun buildCronFromConfig(): String? {
         return try {
-            val json = configService.getValue(ConfigService.SCHEDULE_CONFIG)
-                ?: return DEFAULT_CRON
+            val json =
+                configService.getValue(ConfigService.SCHEDULE_CONFIG)
+                    ?: return DEFAULT_CRON
             val config = objectMapper.readValue(json, ScheduleConfig::class.java)
             config.toCron()
         } catch (e: Exception) {

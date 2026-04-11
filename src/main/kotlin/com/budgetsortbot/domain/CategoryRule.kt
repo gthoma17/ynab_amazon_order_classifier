@@ -14,16 +14,12 @@ data class CategoryRule(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false)
     val ynabCategoryId: String,
-
     @Column(nullable = false)
     val ynabCategoryName: String,
-
     @Column(nullable = false)
     val userDescription: String,
-
     @Column(nullable = false)
-    val updatedAt: Instant
+    val updatedAt: Instant,
 )

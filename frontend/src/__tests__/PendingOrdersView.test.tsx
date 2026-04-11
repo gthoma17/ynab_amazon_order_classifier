@@ -15,16 +15,14 @@ const pendingOrders = [
   {
     id: 2,
     orderDate: '2024-01-16T12:00:00Z',
-    totalAmount: 129.00,
+    totalAmount: 129.0,
     items: ['Keyboard'],
     status: 'PENDING',
     createdAt: '2024-01-16T12:05:00Z',
   },
 ]
 
-const server = setupServer(
-  http.get('/api/orders/pending', () => HttpResponse.json(pendingOrders))
-)
+const server = setupServer(http.get('/api/orders/pending', () => HttpResponse.json(pendingOrders)))
 
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())

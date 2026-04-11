@@ -3,12 +3,10 @@ package com.budgetsortbot.service
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.infrastructure.ynab.YnabTransaction
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlin.math.abs
 
 object MatchingStrategy {
-
     private val AMOUNT_TOLERANCE_MILLIUNITS = 10L
     private val DATE_WINDOW_DAYS = 3L
 
@@ -21,7 +19,10 @@ object MatchingStrategy {
      *
      * Returns the first matching transaction, or null if none found.
      */
-    fun match(order: AmazonOrder, transactions: List<YnabTransaction>): YnabTransaction? {
+    fun match(
+        order: AmazonOrder,
+        transactions: List<YnabTransaction>,
+    ): YnabTransaction? {
         val orderDate = order.orderDate.atZone(ZoneOffset.UTC).toLocalDate()
         val expectedMilliunits = order.totalAmount.multiply(BigDecimal(1000)).toLong()
 

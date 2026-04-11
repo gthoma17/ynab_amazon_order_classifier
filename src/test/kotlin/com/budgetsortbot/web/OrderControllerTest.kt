@@ -1,9 +1,9 @@
 package com.budgetsortbot.web
 
-import com.ninjasquad.springmockk.MockkBean
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.domain.OrderStatus
 import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,7 +17,6 @@ import java.time.Instant
 
 @WebMvcTest(OrderController::class)
 class OrderControllerTest {
-
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -26,20 +25,22 @@ class OrderControllerTest {
 
     @Test
     fun `GET api orders pending returns list of pending orders`() {
-        val orders = listOf(
-            AmazonOrder(
-                id = 1L,
-                emailMessageId = "msg-1@amazon.com",
-                orderDate = Instant.parse("2024-01-15T10:00:00Z"),
-                totalAmount = BigDecimal("49.99"),
-                itemsJson = """["USB Cable","Phone Case"]""",
-                status = OrderStatus.PENDING,
-                createdAt = Instant.parse("2024-01-15T10:05:00Z")
+        val orders =
+            listOf(
+                AmazonOrder(
+                    id = 1L,
+                    emailMessageId = "msg-1@amazon.com",
+                    orderDate = Instant.parse("2024-01-15T10:00:00Z"),
+                    totalAmount = BigDecimal("49.99"),
+                    itemsJson = """["USB Cable","Phone Case"]""",
+                    status = OrderStatus.PENDING,
+                    createdAt = Instant.parse("2024-01-15T10:05:00Z"),
+                ),
             )
-        )
         every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns orders
 
-        mockMvc.perform(get("/api/orders/pending"))
+        mockMvc
+            .perform(get("/api/orders/pending"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].id").value(1))
@@ -53,7 +54,8 @@ class OrderControllerTest {
     fun `GET api orders pending returns empty list when no pending orders`() {
         every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns emptyList()
 
-        mockMvc.perform(get("/api/orders/pending"))
+        mockMvc
+            .perform(get("/api/orders/pending"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.length()").value(0))
     }

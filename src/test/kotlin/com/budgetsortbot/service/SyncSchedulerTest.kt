@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class SyncSchedulerTest {
-
     private val emailIngestionService = mockk<EmailIngestionService>(relaxed = true)
     private val ynabSyncService = mockk<YnabSyncService>(relaxed = true)
     private val configService = mockk<ConfigService>()
@@ -83,7 +82,8 @@ class SyncSchedulerTest {
 
     @Test
     fun `buildCronFromConfig parses WEEKLY schedule correctly`() {
-        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"WEEKLY","hour":9,"minute":0,"dayOfWeek":"MON"}"""
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns
+            """{"type":"WEEKLY","hour":9,"minute":0,"dayOfWeek":"MON"}"""
 
         val cron = syncScheduler.buildCronFromConfig()
 

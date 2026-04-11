@@ -21,7 +21,6 @@ import org.springframework.web.client.RestTemplate
 import java.io.IOException
 
 class ConnectionProbeServiceTest {
-
     private lateinit var mockServer: MockRestServiceServer
     private lateinit var configService: ConfigService
     private lateinit var probeService: ConnectionProbeService
@@ -31,10 +30,11 @@ class ConnectionProbeServiceTest {
         val restTemplate = RestTemplate()
         mockServer = MockRestServiceServer.createServer(restTemplate)
         configService = mockk()
-        probeService = ConnectionProbeService(
-            restClientBuilder = RestClient.builder().requestFactory(restTemplate.requestFactory),
-            configService = configService
-        )
+        probeService =
+            ConnectionProbeService(
+                restClientBuilder = RestClient.builder().requestFactory(restTemplate.requestFactory),
+                configService = configService,
+            )
     }
 
     // --- probeFastMail ---
@@ -43,7 +43,8 @@ class ConnectionProbeServiceTest {
     fun `probeFastMail returns success when 200 response`() {
         every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "test-token"
 
-        mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer test-token"))
             .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON))
@@ -56,10 +57,40 @@ class ConnectionProbeServiceTest {
     }
 
     @Test
+    fun `probeFastMail uses override token instead of stored credential`() {
+        mockServer
+            .expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
+            .andExpect(method(HttpMethod.GET))
+            .andExpect(header("Authorization", "Bearer override-token"))
+            .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeFastMail(tokenOverride = "override-token")
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
+    fun `probeFastMail falls back to stored credential when override is null`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "stored-token"
+
+        mockServer
+            .expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
+            .andExpect(header("Authorization", "Bearer stored-token"))
+            .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeFastMail(tokenOverride = null)
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
     fun `probeFastMail returns auth error on 401`() {
         every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "bad-token"
 
-        mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andRespond(withStatus(HttpStatus.UNAUTHORIZED))
 
         val result = probeService.probeFastMail()
@@ -74,14 +105,17 @@ class ConnectionProbeServiceTest {
     fun `probeFastMail returns network error on IO failure`() {
         every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "test-token"
 
-        mockServer.expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
+        mockServer
+            .expect(requestTo("https://api.fastmail.com/.well-known/jmap"))
             .andRespond { _ -> throw IOException("Connection timed out") }
 
         val result = probeService.probeFastMail()
 
         assertFalse(result.success)
-        assertTrue(result.message.contains("timed out") || result.message.contains("unavailable"),
-            "Expected timeout message but got: ${result.message}")
+        assertTrue(
+            result.message.contains("timed out") || result.message.contains("unavailable"),
+            "Expected timeout message but got: ${result.message}",
+        )
         mockServer.verify()
     }
 
@@ -101,7 +135,8 @@ class ConnectionProbeServiceTest {
     fun `probeYnab returns success when 200 response`() {
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
 
-        mockServer.expect(requestTo("https://api.ynab.com/v1/budgets"))
+        mockServer
+            .expect(requestTo("https://api.ynab.com/v1/budgets"))
             .andExpect(method(HttpMethod.GET))
             .andExpect(header("Authorization", "Bearer ynab-token"))
             .andRespond(withSuccess("""{"data":{"budgets":[]}}""", MediaType.APPLICATION_JSON))
@@ -114,10 +149,39 @@ class ConnectionProbeServiceTest {
     }
 
     @Test
+    fun `probeYnab uses override token instead of stored credential`() {
+        mockServer
+            .expect(requestTo("https://api.ynab.com/v1/budgets"))
+            .andExpect(header("Authorization", "Bearer override-ynab-token"))
+            .andRespond(withSuccess("""{"data":{"budgets":[]}}""", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeYnab(tokenOverride = "override-ynab-token")
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
+    fun `probeYnab falls back to stored credential when override is null`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "stored-ynab-token"
+
+        mockServer
+            .expect(requestTo("https://api.ynab.com/v1/budgets"))
+            .andExpect(header("Authorization", "Bearer stored-ynab-token"))
+            .andRespond(withSuccess("""{"data":{"budgets":[]}}""", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeYnab(tokenOverride = null)
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
     fun `probeYnab returns auth error on 401`() {
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "bad-token"
 
-        mockServer.expect(requestTo("https://api.ynab.com/v1/budgets"))
+        mockServer
+            .expect(requestTo("https://api.ynab.com/v1/budgets"))
             .andRespond(withStatus(HttpStatus.UNAUTHORIZED))
 
         val result = probeService.probeYnab()
@@ -144,7 +208,8 @@ class ConnectionProbeServiceTest {
     fun `probeGemini returns success when 200 response`() {
         every { configService.getValue(ConfigService.GEMINI_KEY) } returns "gemini-api-key"
 
-        mockServer.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=gemini-api-key"))
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=gemini-api-key"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess("""{"models":[]}""", MediaType.APPLICATION_JSON))
 
@@ -156,10 +221,37 @@ class ConnectionProbeServiceTest {
     }
 
     @Test
+    fun `probeGemini uses override key instead of stored credential`() {
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=override-gemini-key"))
+            .andRespond(withSuccess("""{"models":[]}""", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeGemini(keyOverride = "override-gemini-key")
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
+    fun `probeGemini falls back to stored credential when override is null`() {
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns "stored-gemini-key"
+
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=stored-gemini-key"))
+            .andRespond(withSuccess("""{"models":[]}""", MediaType.APPLICATION_JSON))
+
+        val result = probeService.probeGemini(keyOverride = null)
+
+        assertTrue(result.success)
+        mockServer.verify()
+    }
+
+    @Test
     fun `probeGemini returns auth error on 400 invalid key`() {
         every { configService.getValue(ConfigService.GEMINI_KEY) } returns "bad-key"
 
-        mockServer.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=bad-key"))
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=bad-key"))
             .andRespond(withStatus(HttpStatus.BAD_REQUEST))
 
         val result = probeService.probeGemini()
@@ -173,7 +265,8 @@ class ConnectionProbeServiceTest {
     fun `probeGemini returns auth error on 401`() {
         every { configService.getValue(ConfigService.GEMINI_KEY) } returns "bad-key"
 
-        mockServer.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=bad-key"))
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=bad-key"))
             .andRespond(withStatus(HttpStatus.UNAUTHORIZED))
 
         val result = probeService.probeGemini()
@@ -198,14 +291,17 @@ class ConnectionProbeServiceTest {
     fun `probeGemini returns network error on IO failure`() {
         every { configService.getValue(ConfigService.GEMINI_KEY) } returns "test-key"
 
-        mockServer.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=test-key"))
+        mockServer
+            .expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models?key=test-key"))
             .andRespond { _ -> throw IOException("Connection reset by peer") }
 
         val result = probeService.probeGemini()
 
         assertFalse(result.success)
-        assertTrue(result.message.contains("timed out") || result.message.contains("unavailable"),
-            "Expected timeout/unavailable message but got: ${result.message}")
+        assertTrue(
+            result.message.contains("timed out") || result.message.contains("unavailable"),
+            "Expected timeout/unavailable message but got: ${result.message}",
+        )
         mockServer.verify()
     }
 }

@@ -1,11 +1,11 @@
 package com.budgetsortbot.service
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.domain.CategoryRule
 import com.budgetsortbot.domain.OrderStatus
 import com.budgetsortbot.infrastructure.ai.ClassificationProvider
 import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,7 +16,6 @@ import java.math.BigDecimal
 import java.time.Instant
 
 class ClassificationServiceTest {
-
     private val classificationProvider = mockk<ClassificationProvider>()
     private val categoryRuleRepository = mockk<CategoryRuleRepository>()
     private val configService = mockk<ConfigService>()
@@ -24,25 +23,43 @@ class ClassificationServiceTest {
 
     @BeforeEach
     fun setup() {
-        classificationService = ClassificationService(
-            classificationProvider, categoryRuleRepository, configService, jacksonObjectMapper()
-        )
+        classificationService =
+            ClassificationService(
+                classificationProvider,
+                categoryRuleRepository,
+                configService,
+                jacksonObjectMapper(),
+            )
     }
 
-    private val sampleRules = listOf(
-        CategoryRule(id = 1L, ynabCategoryId = "cat-electronics", ynabCategoryName = "Electronics", userDescription = "Gadgets", updatedAt = Instant.now()),
-        CategoryRule(id = 2L, ynabCategoryId = "cat-household", ynabCategoryName = "Household", userDescription = "Home items", updatedAt = Instant.now())
-    )
+    private val sampleRules =
+        listOf(
+            CategoryRule(
+                id = 1L,
+                ynabCategoryId = "cat-electronics",
+                ynabCategoryName = "Electronics",
+                userDescription = "Gadgets",
+                updatedAt = Instant.now(),
+            ),
+            CategoryRule(
+                id = 2L,
+                ynabCategoryId = "cat-household",
+                ynabCategoryName = "Household",
+                userDescription = "Home items",
+                updatedAt = Instant.now(),
+            ),
+        )
 
-    private fun makeOrder(itemsJson: String) = AmazonOrder(
-        id = 1L,
-        emailMessageId = "msg-1@amazon.com",
-        orderDate = Instant.now(),
-        totalAmount = BigDecimal("49.99"),
-        itemsJson = itemsJson,
-        status = OrderStatus.MATCHED,
-        createdAt = Instant.now()
-    )
+    private fun makeOrder(itemsJson: String) =
+        AmazonOrder(
+            id = 1L,
+            emailMessageId = "msg-1@amazon.com",
+            orderDate = Instant.now(),
+            totalAmount = BigDecimal("49.99"),
+            itemsJson = itemsJson,
+            status = OrderStatus.MATCHED,
+            createdAt = Instant.now(),
+        )
 
     @Test
     fun `classify returns category ID from provider`() {

@@ -3,6 +3,7 @@ build/
 
 # React build output (copied by Gradle task at build time)
 src/main/resources/static/assets/
+src/main/resources/static/index.html
 
 # Gradle wrapper
 .gradle/
@@ -14,3 +15,6 @@ src/main/resources/static/assets/
 
 # OS files
 .DS_Store
+
+# Runtime data directory (SQLite database)
+data/

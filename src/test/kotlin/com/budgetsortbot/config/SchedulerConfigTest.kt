@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProc
 
 @SpringBootTest
 class SchedulerConfigTest {
-
     @Autowired
     private lateinit var scheduledAnnotationBeanPostProcessor: ScheduledAnnotationBeanPostProcessor
 

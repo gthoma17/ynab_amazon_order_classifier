@@ -12,9 +12,10 @@ import org.springframework.web.client.RestClient
 /**
  * Provides lightweight read-only connection probes for each external integration.
  *
- * Each probe tests the **saved** credentials (read from [ConfigService]).
- * If credentials have been edited in the UI but not yet saved, the probe reflects
- * the previously-saved values. Users should save before testing new credentials.
+ * Each probe accepts an optional credential override. When an override is supplied
+ * (non-blank), it is used directly. Otherwise the credential is read from
+ * [ConfigService] (the persisted store). This allows the UI to test unsaved
+ * field values without requiring a save-first workflow.
  *
  * Probes never modify remote data:
  *  - FastMail: GET /.well-known/jmap
@@ -27,23 +28,27 @@ class ConnectionProbeService(
     private val configService: ConfigService,
     @Value("\${app.fastmail.base-url:https://api.fastmail.com}") private val fastmailBaseUrl: String = "https://api.fastmail.com",
     @Value("\${app.ynab.base-url:https://api.ynab.com/v1}") private val ynabBaseUrl: String = "https://api.ynab.com/v1",
-    @Value("\${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}") private val geminiBaseUrl: String = "https://generativelanguage.googleapis.com/v1beta"
+    @Value(
+        "\${app.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}",
+    ) private val geminiBaseUrl: String = "https://generativelanguage.googleapis.com/v1beta",
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
     private val client = restClientBuilder.build()
 
-    fun probeFastMail(): ProbeResult {
-        val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+    fun probeFastMail(tokenOverride: String? = null): ProbeResult {
+        val token =
+            tokenOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "FastMail API token not configured")
         }
         log.debug { "Probing FastMail" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$fastmailBaseUrl/.well-known/jmap")
                 .header("Authorization", "Bearer $token")
                 .retrieve()
@@ -51,14 +56,17 @@ class ConnectionProbeService(
         }
     }
 
-    fun probeYnab(): ProbeResult {
-        val token = configService.getValue(ConfigService.YNAB_TOKEN)
+    fun probeYnab(tokenOverride: String? = null): ProbeResult {
+        val token =
+            tokenOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.YNAB_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "YNAB credentials not configured")
         }
         log.debug { "Probing YNAB" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$ynabBaseUrl/budgets")
                 .header("Authorization", "Bearer $token")
                 .retrieve()
@@ -66,37 +74,41 @@ class ConnectionProbeService(
         }
     }
 
-    fun probeGemini(): ProbeResult {
-        val key = configService.getValue(ConfigService.GEMINI_KEY)
+    fun probeGemini(keyOverride: String? = null): ProbeResult {
+        val key =
+            keyOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.GEMINI_KEY)
         if (key.isNullOrBlank()) {
             return ProbeResult(success = false, message = "Gemini API key not configured")
         }
         log.debug { "Probing Gemini" }
         return probe {
-            client.get()
+            client
+                .get()
                 .uri("$geminiBaseUrl/models?key={key}", key)
                 .retrieve()
                 .toBodilessEntity()
         }
     }
 
-    private fun probe(action: () -> Unit): ProbeResult = try {
-        action()
-        ProbeResult(success = true, message = "Connected")
-    } catch (e: HttpClientErrorException.Unauthorized) {
-        log.debug { "Probe returned 401 Unauthorized" }
-        ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
-    } catch (e: ResourceAccessException) {
-        log.debug { "Probe network error: ${e.message}" }
-        ProbeResult(success = false, message = "Connection timed out — service may be temporarily unavailable")
-    } catch (e: HttpClientErrorException) {
-        log.debug { "Probe HTTP client error: ${e.statusCode.value()} ${e.statusText}" }
-        ProbeResult(success = false, message = "${e.statusCode.value()} ${e.statusText}")
-    } catch (e: HttpServerErrorException) {
-        log.debug { "Probe server error: ${e.statusCode.value()} ${e.statusText}" }
-        ProbeResult(success = false, message = "Service error: ${e.statusCode.value()} ${e.statusText}")
-    } catch (e: Exception) {
-        log.debug { "Probe unexpected error: ${e.message}" }
-        ProbeResult(success = false, message = "Connection failed: ${e.message ?: "unknown error"}")
-    }
+    private fun probe(action: () -> Unit): ProbeResult =
+        try {
+            action()
+            ProbeResult(success = true, message = "Connected")
+        } catch (e: HttpClientErrorException.Unauthorized) {
+            log.debug { "Probe returned 401 Unauthorized" }
+            ProbeResult(success = false, message = "401 Unauthorized — check your credentials")
+        } catch (e: ResourceAccessException) {
+            log.debug { "Probe network error: ${e.message}" }
+            ProbeResult(success = false, message = "Connection timed out — service may be temporarily unavailable")
+        } catch (e: HttpClientErrorException) {
+            log.debug { "Probe HTTP client error: ${e.statusCode.value()} ${e.statusText}" }
+            ProbeResult(success = false, message = "${e.statusCode.value()} ${e.statusText}")
+        } catch (e: HttpServerErrorException) {
+            log.debug { "Probe server error: ${e.statusCode.value()} ${e.statusText}" }
+            ProbeResult(success = false, message = "Service error: ${e.statusCode.value()} ${e.statusText}")
+        } catch (e: Exception) {
+            log.debug { "Probe unexpected error: ${e.message}" }
+            ProbeResult(success = false, message = "Connection failed: ${e.message ?: "unknown error"}")
+        }
 }

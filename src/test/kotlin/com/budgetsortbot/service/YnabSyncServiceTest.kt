@@ -23,7 +23,6 @@ import java.time.Instant
 import java.time.LocalDate
 
 class YnabSyncServiceTest {
-
     private val ynabClient = mockk<YnabClient>()
     private val amazonOrderRepository = mockk<AmazonOrderRepository>()
     private val syncLogRepository = mockk<SyncLogRepository>()
@@ -33,26 +32,44 @@ class YnabSyncServiceTest {
 
     @BeforeEach
     fun setup() {
-        ynabSyncService = YnabSyncService(
-            ynabClient, amazonOrderRepository, syncLogRepository, configService, classificationService
-        )
+        ynabSyncService =
+            YnabSyncService(
+                ynabClient,
+                amazonOrderRepository,
+                syncLogRepository,
+                configService,
+                classificationService,
+            )
         // Default: no start-from date or order cap
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns null
         every { configService.getValue(ConfigService.ORDER_CAP) } returns null
     }
 
-    private fun makeOrder(id: Long, amount: String, status: OrderStatus = OrderStatus.PENDING) = AmazonOrder(
+    private fun makeOrder(
+        id: Long,
+        amount: String,
+        status: OrderStatus = OrderStatus.PENDING,
+    ) = AmazonOrder(
         id = id,
         emailMessageId = "msg-$id@amazon.com",
         orderDate = Instant.parse("2024-01-15T10:00:00Z"),
         totalAmount = BigDecimal(amount),
         itemsJson = """["Keyboard"]""",
         status = status,
-        createdAt = Instant.now()
+        createdAt = Instant.now(),
     )
 
-    private fun makeTxn(id: String, amount: Long, date: LocalDate) = YnabTransaction(
-        id = id, date = date, amount = amount, memo = null, categoryId = null, payeeName = "Amazon.com"
+    private fun makeTxn(
+        id: String,
+        amount: Long,
+        date: LocalDate,
+    ) = YnabTransaction(
+        id = id,
+        date = date,
+        amount = amount,
+        memo = null,
+        categoryId = null,
+        payeeName = "Amazon.com",
     )
 
     // --- sync ---
@@ -150,7 +167,7 @@ class YnabSyncServiceTest {
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-02-01"
         // Order dated in January — before the Feb 1 cutoff
-        val oldOrder = makeOrder(1L, "49.99")  // orderDate = 2024-01-15
+        val oldOrder = makeOrder(1L, "49.99") // orderDate = 2024-01-15
         every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(oldOrder)
         val syncLogSlot = slot<SyncLog>()
         every { syncLogRepository.save(capture(syncLogSlot)) } answers { firstArg() }
@@ -168,7 +185,7 @@ class YnabSyncServiceTest {
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-01-15"
         // Order dated exactly on the cutoff — should be included
-        val order = makeOrder(1L, "49.99")  // orderDate = 2024-01-15
+        val order = makeOrder(1L, "49.99") // orderDate = 2024-01-15
         every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
         every { ynabClient.getTransactions(any(), any(), any()) } returns emptyList()
         val syncLogSlot = slot<SyncLog>()
@@ -225,6 +242,21 @@ class YnabSyncServiceTest {
     }
 
     @Test
+    fun `processOrder does not mark order COMPLETED when YNAB update fails`() {
+        val order = makeOrder(1L, "49.99")
+        val txn = makeTxn("txn-1", -49990L, LocalDate.of(2024, 1, 15))
+        val matchedOrder = order.copy(status = OrderStatus.MATCHED, ynabTransactionId = "txn-1")
+        val savedSlot = slot<AmazonOrder>()
+        every { amazonOrderRepository.save(capture(savedSlot)) } answers { firstArg() }
+        every { classificationService.classify(matchedOrder) } returns "cat-electronics"
+        every { ynabClient.updateTransaction(any(), any(), any(), any(), any()) } throws RuntimeException("YNAB error")
+
+        ynabSyncService.processOrder(order, listOf(txn), "budget-1", "token")
+
+        assertEquals(OrderStatus.MATCHED, savedSlot.captured.status)
+    }
+
+    @Test
     fun `processOrder does not mark order COMPLETED when classification fails`() {
         val order = makeOrder(1L, "49.99")
         val txn = makeTxn("txn-1", -49990L, LocalDate.of(2024, 1, 15))
@@ -238,4 +270,3 @@ class YnabSyncServiceTest {
         assertEquals(OrderStatus.MATCHED, savedSlot.captured.status)
     }
 }
-

@@ -1,31 +1,35 @@
 package com.budgetsortbot.domain
 
+import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import com.budgetsortbot.infrastructure.persistence.AmazonOrderRepository
 import java.math.BigDecimal
 import java.time.Instant
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AmazonOrderEntityTest {
-
     @Autowired
     private lateinit var amazonOrderRepository: AmazonOrderRepository
 
     @Test
     fun `can save and retrieve an AmazonOrder`() {
-        val order = AmazonOrder(
-            emailMessageId = "msg-001@amazon.com",
-            orderDate = Instant.parse("2024-01-15T10:00:00Z"),
-            totalAmount = BigDecimal("49.99"),
-            itemsJson = """["USB Cable","Phone Case"]""",
-            status = OrderStatus.PENDING,
-            createdAt = Instant.now()
-        )
+        val order =
+            AmazonOrder(
+                emailMessageId = "msg-001@amazon.com",
+                orderDate = Instant.parse("2024-01-15T10:00:00Z"),
+                totalAmount = BigDecimal("49.99"),
+                itemsJson = """["USB Cable","Phone Case"]""",
+                status = OrderStatus.PENDING,
+                createdAt = Instant.now(),
+            )
 
         val saved = amazonOrderRepository.save(order)
 
@@ -39,22 +43,26 @@ class AmazonOrderEntityTest {
 
     @Test
     fun `can find AmazonOrders by status`() {
-        amazonOrderRepository.save(AmazonOrder(
-            emailMessageId = "msg-002@amazon.com",
-            orderDate = Instant.now(),
-            totalAmount = BigDecimal("25.00"),
-            itemsJson = """["Notebook"]""",
-            status = OrderStatus.PENDING,
-            createdAt = Instant.now()
-        ))
-        amazonOrderRepository.save(AmazonOrder(
-            emailMessageId = "msg-003@amazon.com",
-            orderDate = Instant.now(),
-            totalAmount = BigDecimal("100.00"),
-            itemsJson = """["Headphones"]""",
-            status = OrderStatus.MATCHED,
-            createdAt = Instant.now()
-        ))
+        amazonOrderRepository.save(
+            AmazonOrder(
+                emailMessageId = "msg-002@amazon.com",
+                orderDate = Instant.now(),
+                totalAmount = BigDecimal("25.00"),
+                itemsJson = """["Notebook"]""",
+                status = OrderStatus.PENDING,
+                createdAt = Instant.now(),
+            ),
+        )
+        amazonOrderRepository.save(
+            AmazonOrder(
+                emailMessageId = "msg-003@amazon.com",
+                orderDate = Instant.now(),
+                totalAmount = BigDecimal("100.00"),
+                itemsJson = """["Headphones"]""",
+                status = OrderStatus.MATCHED,
+                createdAt = Instant.now(),
+            ),
+        )
 
         val pendingOrders = amazonOrderRepository.findByStatus(OrderStatus.PENDING)
 
@@ -64,42 +72,50 @@ class AmazonOrderEntityTest {
 
     @Test
     fun `emailMessageId must be unique`() {
-        amazonOrderRepository.save(AmazonOrder(
-            emailMessageId = "msg-duplicate@amazon.com",
-            orderDate = Instant.now(),
-            totalAmount = BigDecimal("10.00"),
-            itemsJson = """["Item"]""",
-            status = OrderStatus.PENDING,
-            createdAt = Instant.now()
-        ))
-
-        assertThrows(Exception::class.java) {
-            amazonOrderRepository.saveAndFlush(AmazonOrder(
+        amazonOrderRepository.save(
+            AmazonOrder(
                 emailMessageId = "msg-duplicate@amazon.com",
                 orderDate = Instant.now(),
-                totalAmount = BigDecimal("20.00"),
-                itemsJson = """["Other Item"]""",
+                totalAmount = BigDecimal("10.00"),
+                itemsJson = """["Item"]""",
                 status = OrderStatus.PENDING,
-                createdAt = Instant.now()
-            ))
+                createdAt = Instant.now(),
+            ),
+        )
+
+        assertThrows(Exception::class.java) {
+            amazonOrderRepository.saveAndFlush(
+                AmazonOrder(
+                    emailMessageId = "msg-duplicate@amazon.com",
+                    orderDate = Instant.now(),
+                    totalAmount = BigDecimal("20.00"),
+                    itemsJson = """["Other Item"]""",
+                    status = OrderStatus.PENDING,
+                    createdAt = Instant.now(),
+                ),
+            )
         }
     }
 
     @Test
     fun `can update status from PENDING to MATCHED and set ynabTransactionId`() {
-        val order = amazonOrderRepository.save(AmazonOrder(
-            emailMessageId = "msg-004@amazon.com",
-            orderDate = Instant.now(),
-            totalAmount = BigDecimal("75.50"),
-            itemsJson = """["Keyboard"]""",
-            status = OrderStatus.PENDING,
-            createdAt = Instant.now()
-        ))
+        val order =
+            amazonOrderRepository.save(
+                AmazonOrder(
+                    emailMessageId = "msg-004@amazon.com",
+                    orderDate = Instant.now(),
+                    totalAmount = BigDecimal("75.50"),
+                    itemsJson = """["Keyboard"]""",
+                    status = OrderStatus.PENDING,
+                    createdAt = Instant.now(),
+                ),
+            )
 
-        val matched = order.copy(
-            status = OrderStatus.MATCHED,
-            ynabTransactionId = "ynab-txn-xyz"
-        )
+        val matched =
+            order.copy(
+                status = OrderStatus.MATCHED,
+                ynabTransactionId = "ynab-txn-xyz",
+            )
         amazonOrderRepository.save(matched)
 
         val found = amazonOrderRepository.findById(order.id!!)
@@ -110,20 +126,24 @@ class AmazonOrderEntityTest {
 
     @Test
     fun `can transition order through full lifecycle to COMPLETED`() {
-        val order = amazonOrderRepository.save(AmazonOrder(
-            emailMessageId = "msg-005@amazon.com",
-            orderDate = Instant.now(),
-            totalAmount = BigDecimal("199.99"),
-            itemsJson = """["Monitor"]""",
-            status = OrderStatus.PENDING,
-            createdAt = Instant.now()
-        ))
+        val order =
+            amazonOrderRepository.save(
+                AmazonOrder(
+                    emailMessageId = "msg-005@amazon.com",
+                    orderDate = Instant.now(),
+                    totalAmount = BigDecimal("199.99"),
+                    itemsJson = """["Monitor"]""",
+                    status = OrderStatus.PENDING,
+                    createdAt = Instant.now(),
+                ),
+            )
 
-        val completed = order.copy(
-            status = OrderStatus.COMPLETED,
-            ynabTransactionId = "ynab-txn-abc",
-            ynabCategoryId = "cat-electronics"
-        )
+        val completed =
+            order.copy(
+                status = OrderStatus.COMPLETED,
+                ynabTransactionId = "ynab-txn-abc",
+                ynabCategoryId = "cat-electronics",
+            )
         amazonOrderRepository.save(completed)
 
         val found = amazonOrderRepository.findById(order.id!!)

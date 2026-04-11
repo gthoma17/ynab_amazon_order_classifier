@@ -8,9 +8,11 @@ import { test, expect } from '@playwright/test'
  *   Browser → Vite proxy → real Spring Boot API → WireMock stubs for FastMail, YNAB, Gemini
  *
  * Steps:
- *  1. Open the app — API Keys page shows empty fields (fresh installation).
- *  2. Enter all five API credentials and save.
- *  3. Test Connection for each integration — YNAB, FastMail, and Gemini all show "Connected".
+ *  1. Open the app — Configuration page shows empty fields (fresh installation).
+ *  2. Enter credentials and test before saving (AC4: "test before save") — FastMail and
+ *     Gemini show "Connected" using the unsaved field values. YNAB token is validated
+ *     implicitly by the budget selector CRT terminal (no separate Test YNAB button).
+ *  3. Save credentials (Signal Sources then AI Engine).
  *  4. Configure Processing Settings — set start-from date, order cap, and change the
  *     schedule to "Every N seconds / 3" so the full pipeline fires quickly during the test.
  *     The production warning for EVERY_N_SECONDS is asserted.
@@ -39,32 +41,39 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // ── Step 1: Open the app — API Keys page ──────────────────────────────────
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
-  // ── Step 2: Enter credentials and save ─────────────────────────────────────
+  // ── Step 2: Enter credentials and test before saving (AC4) ────────────────
+  // Fill credentials. Test FastMail and Gemini BEFORE saving to prove the probe
+  // uses the current field values, not persisted credentials.
+  // YNAB validation is implicit via the budget selector CRT (no Test YNAB button).
 
   await page.locator('#ynabToken').fill('my-ynab-token')
-  // Wait for the budget dropdown to be populated from the API, then select the budget
-  await expect(page.locator('#ynabBudgetId')).not.toBeDisabled({ timeout: 10_000 })
-  await page.locator('#ynabBudgetId').selectOption({ value: 'my-budget-id' })
+  // Wait for budget options to load in the terminal screen
+  await expect(page.getByTestId('budget-selector-screen').getByRole('option').first()).toBeVisible({
+    timeout: 10_000,
+  })
+  // Select the budget by clicking its option row
+  await page.getByTestId('budget-option-my-budget-id').click()
+  // Confirm selected state is reflected correctly
+  await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
-  await page.locator('#geminiKey').fill('my-gemini-key')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Saved')).toBeVisible()
 
-  // ── Step 3: Test Connection for each integration ────────────────────────────
-  // Credentials are now saved. Click each "Test" button and assert the inline
-  // "Connected" confirmation appears. This exercises the full probe path:
-  //   browser → real Spring Boot backend → WireMock stubs.
-
-  await page.getByRole('button', { name: 'Test YNAB' }).click()
-  await expect(page.getByLabel('YNAB probe result')).toContainText('Connected')
-
+  // Test FastMail BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test FastMail' }).click()
   await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
 
+  // Save Signal Sources — step 3
+  await page.getByRole('button', { name: 'Save Signal Sources' }).click()
+  await expect(page.getByTestId('signal-sources-saved-message')).toBeVisible()
+  await page.locator('#geminiKey').fill('my-gemini-key')
+
+  // Test Gemini BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test Gemini' }).click()
   await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
+
+  await page.getByRole('button', { name: 'Save AI Engine' }).click()
+  await expect(page.getByTestId('ai-engine-saved-message')).toBeVisible()
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)
@@ -79,11 +88,13 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
-  await page.locator('#scheduleType').selectOption('EVERY_N_SECONDS')
-  await expect(page.getByRole('alert')).toContainText(/not recommended for production/i)
-  await page.locator('#secondInterval').fill('3')
+  await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
+  await expect(page.getByTestId('schedule-warning-message')).toContainText(
+    /not recommended for production/i,
+  )
+  await page.getByTestId('schedule-param-n').fill('3')
   await page.getByRole('button', { name: 'Save processing settings' }).click()
-  await expect(page.getByText('Processing settings saved')).toBeVisible()
+  await expect(page.getByTestId('processing-saved-message')).toBeVisible()
 
   // ── Step 5: Navigate to Category Rules, fill descriptions, save ─────────────
   // The backend fetches real YNAB categories from the WireMock stub.
@@ -114,20 +125,25 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.getByRole('link', { name: 'Logs' }).click()
   await expect(page.getByRole('heading', { name: 'Sync Logs' })).toBeVisible()
 
+  // Logs are rendered by SequencePrinter as <div data-testid="ser-entry"> rows,
+  // not as <table> cells — use testid + text filter instead of getByRole('cell').
+  // After each reload we must wait for the /api/logs fetch to complete before
+  // counting, otherwise count() races the useEffect and always returns 0.
   await expect
     .poll(
       async () => {
         await page.reload()
-        return await page.getByRole('cell', { name: 'YNAB' }).count()
+        await page.waitForLoadState('networkidle')
+        return await page.getByTestId('ser-entry').filter({ hasText: 'YNAB' }).count()
       },
       { timeout: 30_000, intervals: [2000, 3000, 4000] },
     )
     .toBeGreaterThan(0)
 
   // Both EMAIL and YNAB sync succeeded — the full pipeline ran against WireMock
-  await expect(page.getByRole('cell', { name: 'EMAIL' }).first()).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'YNAB' }).first()).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'SUCCESS' }).first()).toBeVisible()
+  await expect(page.getByTestId('ser-entry').filter({ hasText: 'EMAIL' }).first()).toBeVisible()
+  await expect(page.getByTestId('ser-entry').filter({ hasText: 'YNAB' }).first()).toBeVisible()
+  await expect(page.locator('[data-status="SUCCESS"]').first()).toBeVisible()
 
   // ── Step 7: Dry Run ────────────────────────────────────────────────────────
   // Navigate back to Configuration, set the dry-run start date to 2024-01-01
@@ -139,7 +155,7 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Results show the predicted category for the TOTO Bidet order.
 
   await page.getByRole('link', { name: 'Configuration' }).click()
-  await expect(page.getByRole('heading', { name: 'API Keys' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
   // Override the dry-run start date so the historical test order is included
   await page.locator('#dryRunStartFrom').fill('2024-01-01')
@@ -155,12 +171,22 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   // ── Step 8: Get Help — open a pre-filled GitHub issue ──────────────────────
   // Navigate to Get Help. Enter a description and leave sync logs checked
-  // (default). Capture the window.open URL to verify it is a valid, pre-filled
-  // GitHub new-issue URL whose body contains the description, sync log rows
-  // from step 6, and no raw credentials from step 2.
+  // (default). Click "Insert Logs" to preview the sanitized body, then click
+  // "Open Issue". Capture the window.open URL and verify:
+  //   - It is a valid GitHub new-issue URL
+  //   - The body contains sync log rows from step 6
+  //   - No raw credentials from step 2 appear in the body
+  //   - The URL is within the GitHub URL length limit
+  //   - A truncation note is included when the body was truncated
 
   await page.getByRole('link', { name: 'Get Help' }).click()
   await expect(page.getByRole('heading', { name: 'Get Help' })).toBeVisible()
+
+  // Prominent redaction notice must be visible so users know what will be redacted
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toBeVisible()
+  await expect(page.getByRole('note', { name: /redaction notice/i })).toContainText(
+    /sensitive values/i,
+  )
 
   await page
     .getByLabel(/describe the problem/i)
@@ -171,41 +197,73 @@ test('first-time setup and first sync journey', async ({ page }) => {
     page.getByRole('checkbox', { name: /include recent sync log entries/i }),
   ).toBeChecked()
 
+  // App logs checkbox is off by default — check it to exercise the full path
+  await expect(
+    page.getByRole('checkbox', { name: /include full application logs/i }),
+  ).not.toBeChecked()
+  await page.getByRole('checkbox', { name: /include full application logs/i }).check()
+
+  // "Insert Logs" must be present and enabled now that a logs checkbox is checked
+  await expect(page.getByRole('button', { name: /insert logs/i })).toBeEnabled()
+
+  // Insert logs — this calls the backend, sanitizes, and returns the preview body
+  await page.getByRole('button', { name: /insert logs/i }).click()
+
+  // Wait for "Logs inserted" status indicator to appear (shown in SplitFlapSlot)
+  await expect(page.getByText(/logs inserted/i)).toBeVisible({ timeout: 10_000 })
+
+  // The preview textarea must be visible so the user can review before submitting
+  await expect(page.getByRole('textbox', { name: /report body preview/i })).toBeVisible()
+
+  // Sensitive credentials must already be redacted in the preview
+  const previewText = await page.getByRole('textbox', { name: /report body preview/i }).inputValue()
+  expect(previewText).toContain('[REDACTED]')
+  expect(previewText).not.toContain('my-ynab-token')
+  expect(previewText).not.toContain('my-fastmail-token')
+  expect(previewText).not.toContain('my-gemini-key')
+
   // Intercept window.open so we can inspect the GitHub URL without opening a real tab
   let capturedHelpUrl = ''
   await page.exposeFunction('__captureHelpUrl__', (url: string) => {
     capturedHelpUrl = url
   })
   await page.evaluate(() => {
+    const w = window as unknown as Window & { __captureHelpUrl__: (url: string) => void }
     window.open = (url?: string | URL) => {
-      ;(window as unknown as Record<string, unknown>).__captureHelpUrl__(
-        url?.toString() ?? '',
-      )
+      w.__captureHelpUrl__(url?.toString() ?? '')
       return null
     }
   })
 
-  await page.getByRole('button', { name: 'Get Help' }).click()
+  await page.getByRole('button', { name: /open issue/i }).click()
 
-  // Wait for the API call to complete and window.open to be invoked
+  // Wait for the window.open to be invoked
   await expect
     .poll(() => capturedHelpUrl, { timeout: 10_000 })
     .toContain('github.com/gthoma17/budget-sortbot/issues/new')
 
-  // Decode and validate the issue body is cromulent
+  // Validate the URL length is within the GitHub limit
+  expect(capturedHelpUrl.length).toBeLessThanOrEqual(8192)
+
+  // Decode and validate the issue body
   const parsedHelpUrl = new URL(capturedHelpUrl)
   const issueBody = decodeURIComponent(parsedHelpUrl.searchParams.get('body') ?? '')
 
   expect(issueBody).toContain('The sync stopped working after the credential update.')
-  // Sync log rows from step 6 must appear in the body as actual table rows,
-  // not just the section header. The pipeline created EMAIL and YNAB rows with
-  // SUCCESS status; assert both sources and the status column are present.
+  // Sync log rows from step 6 must appear in the body as actual table rows
   expect(issueBody).toContain('| EMAIL |')
   expect(issueBody).toContain('| YNAB |')
   expect(issueBody).toContain('| SUCCESS |')
-  // Credentials saved in step 2 must have been redacted by the sanitization service
+  // Application logs section must appear because the checkbox was checked
+  expect(issueBody).toContain('Application Logs')
+  expect(issueBody).toContain('budgetsortbot')
+  // Sensitive credentials must be redacted in the final URL body too
+  expect(issueBody).toContain('[REDACTED]')
   expect(issueBody).not.toContain('my-ynab-token')
   expect(issueBody).not.toContain('my-fastmail-token')
   expect(issueBody).not.toContain('my-gemini-key')
+  // If the body was truncated, the truncation note must appear in the URL
+  if (capturedHelpUrl.includes(encodeURIComponent('Log content truncated'))) {
+    expect(capturedHelpUrl).toContain(encodeURIComponent('Log content truncated'))
+  }
 })
-

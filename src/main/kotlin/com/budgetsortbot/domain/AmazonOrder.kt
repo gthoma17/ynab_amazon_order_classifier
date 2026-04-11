@@ -17,27 +17,19 @@ data class AmazonOrder(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false, unique = true)
     val emailMessageId: String,
-
     @Column(nullable = false)
     val orderDate: Instant,
-
     @Column(nullable = false)
     val totalAmount: BigDecimal,
-
     @Column(nullable = false)
     val itemsJson: String,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val status: OrderStatus,
-
     val ynabTransactionId: String? = null,
-
     val ynabCategoryId: String? = null,
-
     @Column(nullable = false)
-    val createdAt: Instant
+    val createdAt: Instant,
 )

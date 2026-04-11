@@ -1,10 +1,10 @@
 package com.budgetsortbot.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.budgetsortbot.domain.AmazonOrder
 import com.budgetsortbot.infrastructure.ai.ClassificationProvider
 import com.budgetsortbot.infrastructure.persistence.CategoryRuleRepository
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 
@@ -13,19 +13,19 @@ class ClassificationService(
     private val classificationProvider: ClassificationProvider,
     private val categoryRuleRepository: CategoryRuleRepository,
     private val configService: ConfigService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
-
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
     fun classify(order: AmazonOrder): String {
-        val apiKey = configService.getValue(ConfigService.GEMINI_KEY)
-            ?: run {
-                log.debug { "classify: Gemini API key not configured" }
-                throw RuntimeException("Gemini API key not configured")
-            }
+        val apiKey =
+            configService.getValue(ConfigService.GEMINI_KEY)
+                ?: run {
+                    log.debug { "classify: Gemini API key not configured" }
+                    throw RuntimeException("Gemini API key not configured")
+                }
         val rules = categoryRuleRepository.findAll()
         if (rules.isEmpty()) {
             log.debug { "classify: no category rules configured" }

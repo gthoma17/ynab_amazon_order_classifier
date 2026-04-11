@@ -21,5 +21,5 @@ data class DryRunResult(
     val proposedCategoryId: String? = null,
     val proposedCategoryName: String? = null,
     val errorMessage: String? = null,
-    @Column(nullable = false) val runAt: Instant
+    @Column(nullable = false) val runAt: Instant,
 )
