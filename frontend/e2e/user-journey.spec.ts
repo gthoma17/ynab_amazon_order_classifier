@@ -228,8 +228,9 @@ test('first-time setup and first sync journey', async ({ page }) => {
     capturedHelpUrl = url
   })
   await page.evaluate(() => {
+    const w = window as unknown as Window & { __captureHelpUrl__: (url: string) => void }
     window.open = (url?: string | URL) => {
-      ;(window as unknown as Record<string, unknown>).__captureHelpUrl__(url?.toString() ?? '')
+      w.__captureHelpUrl__(url?.toString() ?? '')
       return null
     }
   })

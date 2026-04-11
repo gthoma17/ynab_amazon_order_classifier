@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "tsc": "tsc",
     "prepare": "cd .. && ./frontend/node_modules/.bin/lefthook install"
   },
   "dependencies": {
