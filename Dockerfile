@@ -4,7 +4,7 @@
 FROM --platform=$BUILDPLATFORM node:20-alpine AS frontend-build
 WORKDIR /app
 COPY frontend/package*.json frontend/
-RUN cd frontend && npm ci
+RUN cd frontend && LEFTHOOK=0 npm ci
 COPY frontend/ frontend/
 RUN cd frontend && npm run build
 # Output: /app/src/main/resources/static/
