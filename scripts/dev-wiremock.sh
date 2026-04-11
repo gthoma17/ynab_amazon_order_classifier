@@ -73,20 +73,37 @@ fi
 # ── Start backend (WireMock + Spring Boot) ────────────────────────────────────
 banner
 echo -e "${BOLD}Starting backend (Spring Boot + WireMock)...${RESET}"
-./gradlew runDevServer --console=plain 2>&1 &
+./gradlew runDevServer --console=plain --no-configuration-cache 2>&1 &
 BACKEND_PID=$!
 
-# Wait until Spring Boot is ready
+# Wait until Spring Boot is ready (or Gradle exits with failure)
 echo -n "Waiting for backend on :8080 "
+READY=false
 for i in $(seq 1 60); do
+  # Fast-fail if Gradle has already exited (build error before server came up)
+  if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    echo ""
+    echo -e "${RED}✘  Backend process exited unexpectedly.${RESET}"
+    echo -e "${YELLOW}   Run '${BOLD}./gradlew runDevServer${RESET}${YELLOW}' directly to see the full error.${RESET}"
+    exit 1
+  fi
   if curl -sf http://localhost:8080/actuator/health >/dev/null 2>&1 || \
      curl -sf http://localhost:8080/api/config/keys >/dev/null 2>&1; then
     echo -e " ${GREEN}ready!${RESET}"
+    READY=true
     break
   fi
   echo -n "."
   sleep 2
 done
+
+if [[ "$READY" != "true" ]]; then
+  echo ""
+  echo -e "${RED}✘  Backend did not become ready after 120 s.${RESET}"
+  echo -e "${YELLOW}   Check output above or run '${BOLD}./gradlew runDevServer${RESET}${YELLOW}' directly.${RESET}"
+  kill "$BACKEND_PID" 2>/dev/null || true
+  exit 1
+fi
 
 echo ""
 
