@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGet, apiPost, apiPostWithBody, apiPut } from '../api'
+import { apiGet, apiPostWithBody, apiPut } from '../api'
 import CrtPanel from '../components/CrtPanel'
 import IndicatorPanel from '../components/IndicatorPanel'
 import RadioGroup from '../components/RadioGroup'
@@ -255,9 +255,13 @@ export default function ConfigView() {
     })
   }
 
-  function handleTest(endpoint: string, setProbe: (state: ProbeState) => void) {
+  function handleTest(
+    endpoint: string,
+    body: Record<string, string>,
+    setProbe: (state: ProbeState) => void,
+  ) {
     setProbe({ status: 'testing', message: '' })
-    apiPost<ProbeResult>(`/api/config/probe/${endpoint}`)
+    apiPostWithBody<ProbeResult>(`/api/config/probe/${endpoint}`, body)
       .then((result) =>
         setProbe({
           status: result.success ? 'success' : 'error',
@@ -317,9 +321,7 @@ export default function ConfigView() {
       <div className="cf-panel cf-view-header">
         <h1>Configuration</h1>
         <p>
-          <em>
-            &ldquo;Test Connection&rdquo; checks saved credentials. Save before testing new values.
-          </em>
+          <em>&ldquo;Test Connection&rdquo; tests the credentials currently in the fields.</em>
         </p>
       </div>
 
@@ -450,7 +452,13 @@ export default function ConfigView() {
             </div>
             <div className="cf-test-control">
               <button
-                onClick={() => handleTest('fastmail', setFastmailProbe)}
+                onClick={() =>
+                  handleTest(
+                    'fastmail',
+                    { fastmailApiToken: keys.fastmailApiToken },
+                    setFastmailProbe,
+                  )
+                }
                 disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
               >
                 Test FastMail
@@ -492,7 +500,7 @@ export default function ConfigView() {
           </div>
           <div className="cf-test-control">
             <button
-              onClick={() => handleTest('gemini', setGeminiProbe)}
+              onClick={() => handleTest('gemini', { geminiKey: keys.geminiKey }, setGeminiProbe)}
               disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
             >
               Test Gemini

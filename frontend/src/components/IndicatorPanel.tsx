@@ -15,8 +15,7 @@ export default function IndicatorPanel({
   message,
   readoutAriaLabel,
 }: IndicatorPanelProps) {
-  const slotMessage =
-    state === 'idle' ? null : state === 'testing' ? 'TESTING...' : message || null
+  const slotMessage = state === 'idle' ? null : state === 'testing' ? 'TESTING...' : message || null
   const slotColor = state === 'error' ? 'red' : state === 'testing' ? 'yellow' : 'green'
 
   return (

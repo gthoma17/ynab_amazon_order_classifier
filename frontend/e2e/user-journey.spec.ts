@@ -8,9 +8,11 @@ import { test, expect } from '@playwright/test'
  *   Browser → Vite proxy → real Spring Boot API → WireMock stubs for FastMail, YNAB, Gemini
  *
  * Steps:
- *  1. Open the app — API Keys page shows empty fields (fresh installation).
- *  2. Enter all five API credentials and save.
- *  3. Test Connection for each integration — YNAB, FastMail, and Gemini all show "Connected".
+ *  1. Open the app — Configuration page shows empty fields (fresh installation).
+ *  2. Enter credentials and test before saving (AC4: "test before save") — FastMail and
+ *     Gemini show "Connected" using the unsaved field values. YNAB token is validated
+ *     implicitly by the budget selector CRT terminal (no separate Test YNAB button).
+ *  3. Save credentials (Signal Sources then AI Engine).
  *  4. Configure Processing Settings — set start-from date, order cap, and change the
  *     schedule to "Every N seconds / 3" so the full pipeline fires quickly during the test.
  *     The production warning for EVERY_N_SECONDS is asserted.
@@ -41,7 +43,10 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
 
-  // ── Step 2: Enter credentials and save ─────────────────────────────────────
+  // ── Step 2: Enter credentials and test before saving (AC4) ────────────────
+  // Fill credentials. Test FastMail and Gemini BEFORE saving to prove the probe
+  // uses the current field values, not persisted credentials.
+  // YNAB validation is implicit via the budget selector CRT (no Test YNAB button).
 
   await page.locator('#ynabToken').fill('my-ynab-token')
   // Wait for budget options to load in the terminal screen
@@ -53,24 +58,22 @@ test('first-time setup and first sync journey', async ({ page }) => {
   // Confirm selected state is reflected correctly
   await expect(page.getByTestId('budget-option-selected')).toBeVisible()
   await page.locator('#fastmailApiToken').fill('my-fastmail-token')
-  await page.getByRole('button', { name: 'Save Signal Sources' }).click()
-  await expect(page.getByTestId('signal-sources-saved-message')).toBeVisible()
-  await page.locator('#geminiKey').fill('my-gemini-key')
-  await page.getByRole('button', { name: 'Save AI Engine' }).click()
-  await expect(page.getByTestId('ai-engine-saved-message')).toBeVisible()
 
-  // ── Step 3: Test Connection for each integration ────────────────────────────
-  // Credentials are now saved. Click each "Test" button and assert the inline
-  // "Connected" confirmation appears. This exercises the full probe path:
-  //   browser → real Spring Boot backend → WireMock stubs.
-  // Note: YNAB token validation is performed by the budget selector, not a
-  // dedicated probe button.
-
+  // Test FastMail BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test FastMail' }).click()
   await expect(page.getByLabel('FastMail probe result')).toContainText('Connected')
 
+  // Save Signal Sources — step 3
+  await page.getByRole('button', { name: 'Save Signal Sources' }).click()
+  await expect(page.getByTestId('signal-sources-saved-message')).toBeVisible()
+  await page.locator('#geminiKey').fill('my-gemini-key')
+
+  // Test Gemini BEFORE saving — proves "test before save" behaviour
   await page.getByRole('button', { name: 'Test Gemini' }).click()
   await expect(page.getByLabel('Gemini probe result')).toContainText('Connected')
+
+  await page.getByRole('button', { name: 'Save AI Engine' }).click()
+  await expect(page.getByTestId('ai-engine-saved-message')).toBeVisible()
 
   // ── Step 4: Configure Processing Settings ──────────────────────────────────
   // Set start-from date to 2024-01-01 so the test order (received 2024-01-15)

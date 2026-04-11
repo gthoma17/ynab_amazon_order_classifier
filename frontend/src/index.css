@@ -45,20 +45,15 @@
   /* ── Shadows / Bevels ────────────────────────────────────── */
   /* Panel: 4-edge bevel — top/left highlight (catches light), bottom/right shadow (falls away) */
   --cf-panel-shadow:
-    inset 1px 1px 0 rgba(232, 240, 232, 0.06),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+    inset 1px 1px 0 rgba(232, 240, 232, 0.06), inset -1px -1px 0 rgba(0, 0, 0, 0.4),
     0 2px 10px rgba(0, 0, 0, 0.7);
   --cf-inset-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(0, 0, 0, 0.9);
   /* Button: convex bevel — top/left specular, bottom drop-shadow → inverts on press */
   --cf-btn-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 1px 0 0 rgba(255, 255, 255, 0.07),
-    inset -1px 0 0 rgba(0, 0, 0, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.07),
+    inset -1px 0 0 rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.25),
     0 3px 0 rgba(0, 0, 0, 0.7);
-  --cf-btn-active:
-    inset 0 3px 6px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(0, 0, 0, 0.4);
+  --cf-btn-active: inset 0 3px 6px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* ── Reset & base ─────────────────────────────────────────── */
@@ -460,7 +455,9 @@ button:disabled {
   color: var(--cf-text-dim);
   /* Unchecked: OFF is pressed down */
   background: rgba(0, 0, 0, 0.45);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 0, 0, 0.6);
   border-radius: 1px 0 0 1px;
 }
 
@@ -480,7 +477,9 @@ button:disabled {
   color: rgba(232, 240, 232, 0.25);
   /* Unchecked: ON is raised */
   background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   border-radius: 0 1px 1px 0;
 }
 
@@ -491,13 +490,17 @@ button:disabled {
 
 .cf-toggle-label input[type='checkbox']:checked::before {
   background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: rgba(232, 240, 232, 0.25);
 }
 
 .cf-toggle-label input[type='checkbox']:checked::after {
   background: rgba(0, 0, 0, 0.45);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 0, 0, 0.6);
   color: var(--cf-lamp-success);
   text-shadow: 0 0 4px rgba(57, 255, 20, 0.6);
 }
@@ -1696,40 +1699,56 @@ textarea[data-placeholder='true']::placeholder {
     radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
     radial-gradient(circle at 9px 8px, rgba(20, 14, 6, 0.45) 3.5px, transparent 3.5px),
     /* Score lines separating margin from print area — fixed to element */
-    linear-gradient(to right, transparent 17px, rgba(0, 0, 0, 0.14) 17px, rgba(0, 0, 0, 0.14) 18px, transparent 18px),
-    linear-gradient(to left,  transparent 17px, rgba(0, 0, 0, 0.14) 17px, rgba(0, 0, 0, 0.14) 18px, transparent 18px),
+      linear-gradient(
+        to right,
+        transparent 17px,
+        rgba(0, 0, 0, 0.14) 17px,
+        rgba(0, 0, 0, 0.14) 18px,
+        transparent 18px
+      ),
+    linear-gradient(
+      to left,
+      transparent 17px,
+      rgba(0, 0, 0, 0.14) 17px,
+      rgba(0, 0, 0, 0.14) 18px,
+      transparent 18px
+    ),
     /* Tractor strip colour — fixed to element */
-    linear-gradient(to right, #e2d6ba 18px, transparent 18px),
-    linear-gradient(to left,  #e2d6ba 18px, transparent 18px),
+      linear-gradient(to right, #e2d6ba 18px, transparent 18px),
+    linear-gradient(to left, #e2d6ba 18px, transparent 18px),
     /* Horizontal ruled lines — local so they stay locked to text rows */
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 23px,
-      rgba(0, 0, 0, 0.065) 23px,
-      rgba(0, 0, 0, 0.065) 24px
-    );
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 23px,
+        rgba(0, 0, 0, 0.065) 23px,
+        rgba(0, 0, 0, 0.065) 24px
+      );
   background-size:
-    18px 16px,  /* left holes tile  */
-    18px 16px,  /* right holes tile */
-    100% 100%,  /* left score line  */
-    100% 100%,  /* right score line */
-    100% 100%,  /* left strip       */
-    100% 100%,  /* right strip      */
-    100% 24px;  /* rules tile       */
+    18px 16px,
+    /* left holes tile  */ 18px 16px,
+    /* right holes tile */ 100% 100%,
+    /* left score line  */ 100% 100%,
+    /* right score line */ 100% 100%,
+    /* left strip       */ 100% 100%,
+    /* right strip      */ 100% 24px; /* rules tile       */
   background-position:
     left top,
     right top,
-    0 0, 0 0, 0 0, 0 0, 0 0;
-  background-repeat:
-    repeat-y, repeat-y,
-    no-repeat, no-repeat, no-repeat, no-repeat,
-    repeat;
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  background-repeat: repeat-y, repeat-y, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
   background-attachment:
-    local,  local,   /* holes  */
-    scroll, scroll,  /* scores */
-    scroll, scroll,  /* strips */
-    local;           /* rules  */
+    local,
+    local,
+    /* holes  */ scroll,
+    scroll,
+    /* scores */ scroll,
+    scroll,
+    /* strips */ local; /* rules  */
   padding-bottom: 16px;
 }
 
@@ -1738,8 +1757,12 @@ textarea[data-placeholder='true']::placeholder {
    DOWN so entries scroll in from the top and the spacer exits the bottom.
    --cf-ser-offset is set as an inline style (entries × line-height). */
 @keyframes cf-ser-print {
-  from { transform: translateY(calc(var(--cf-ser-offset) * -1)); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(calc(var(--cf-ser-offset) * -1));
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .cf-ser-feed--printing {
@@ -1798,7 +1821,6 @@ textarea[data-placeholder='true']::placeholder {
   color: #8a2e29;
   font-weight: 700;
 }
-
 
 /* ── Scrollbar ────────────────────────────────────────────── */
 

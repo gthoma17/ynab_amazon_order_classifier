@@ -3,7 +3,6 @@ package com.budgetsortbot.e2e
 import com.budgetsortbot.Application
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -220,9 +219,7 @@ private fun stubYnabWithAuth(wireMock: WireMockServer) {
 
 // ─── FastMail ─────────────────────────────────────────────────────────────────
 
-private fun stubFastMailWithAuth(
-    wireMock: WireMockServer,
-) {
+private fun stubFastMailWithAuth(wireMock: WireMockServer) {
     val selfPort = 9090
     val validAuth = "Bearer $VALID_FASTMAIL_TOKEN"
 

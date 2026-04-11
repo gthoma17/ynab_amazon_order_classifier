@@ -1,5 +1,13 @@
 # Copilot Instructions for budget-sortbot
 
+## Before You Start Any Story
+
+**Read [`ARCHITECTURE_DECISIONS.md`](../ARCHITECTURE_DECISIONS.md) before beginning any task.**
+
+That document summarises every foundational architectural choice and links to the full ADR files under `docs/ADRs/`. Understanding prior decisions prevents accidentally reversing choices that were deliberate constraints (e.g., the 512 MB heap cap, SQLite pool size of 1, layered architecture style). If your story introduces a new architectural decision, create a new ADR file under `docs/ADRs/` using the filename pattern `YYYYMMDD_shortCamelCaseTitle.md` and add a summary row to `ARCHITECTURE_DECISIONS.md`.
+
+---
+
 ## Project Overview
 
 Budget Sortbot automatically classifies Amazon orders into YNAB budget categories. The pipeline is:
@@ -134,6 +142,7 @@ docker run -d -p 8080:8080 -v /opt/budget-sortbot/data:/app/data budget-sortbot
 - Run `npm run test:e2e` from `frontend/`; Playwright starts both the Vite dev server and `./gradlew runE2EServer` automatically via its `webServer` configuration (`reuseExistingServer: true` outside CI).
 - Start `./gradlew runE2EServer` manually only when you need to debug the E2E backend outside the normal Playwright test flow.
 - `E2EServer.kt` stubs FastMail JMAP, YNAB API, and Gemini with WireMock.
+- **When to write E2E tests:** Only extend `user-journey.spec.ts` when the story adds or changes user-visible behaviour (new UI flows, new API endpoints exercised from the browser). Pure chores (docs, tooling, CI config, refactors with no behaviour change) do **not** require E2E changes.
 
 ---
 

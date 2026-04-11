@@ -54,11 +54,7 @@ export default function SequencePrinter<T extends { id: number }>({
         const raw = (entry as Record<string, unknown>)[col.key]
         return (
           <span key={col.key} className="cf-ser-col" style={colStyle(col.width)}>
-            {col.render
-              ? col.render(entry)
-              : raw != null
-                ? String(raw)
-                : '\u2014'}
+            {col.render ? col.render(entry) : raw != null ? String(raw) : '\u2014'}
           </span>
         )
       })}
@@ -94,11 +90,7 @@ export default function SequencePrinter<T extends { id: number }>({
 
             {/* Spacer: same height as the slot. Shows "NO ENTRIES" when idle,
                 scrolls out the bottom during animation, removed after. */}
-            {!printed && (
-              <div className="cf-ser-spacer">
-                &mdash;&ensp;NO ENTRIES&ensp;&mdash;
-              </div>
-            )}
+            {!printed && <div className="cf-ser-spacer">&mdash;&ensp;NO ENTRIES&ensp;&mdash;</div>}
 
             {/* Remaining entries: positioned below the spacer during animation
                 (invisible), contiguous with the animated batch after spacer
