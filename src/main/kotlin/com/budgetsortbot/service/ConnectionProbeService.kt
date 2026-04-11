@@ -39,8 +39,9 @@ class ConnectionProbeService(
     private val client = restClientBuilder.build()
 
     fun probeFastMail(tokenOverride: String? = null): ProbeResult {
-        val token = tokenOverride?.takeIf { it.isNotBlank() }
-            ?: configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+        val token =
+            tokenOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "FastMail API token not configured")
         }
@@ -56,8 +57,9 @@ class ConnectionProbeService(
     }
 
     fun probeYnab(tokenOverride: String? = null): ProbeResult {
-        val token = tokenOverride?.takeIf { it.isNotBlank() }
-            ?: configService.getValue(ConfigService.YNAB_TOKEN)
+        val token =
+            tokenOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.YNAB_TOKEN)
         if (token.isNullOrBlank()) {
             return ProbeResult(success = false, message = "YNAB credentials not configured")
         }
@@ -73,8 +75,9 @@ class ConnectionProbeService(
     }
 
     fun probeGemini(keyOverride: String? = null): ProbeResult {
-        val key = keyOverride?.takeIf { it.isNotBlank() }
-            ?: configService.getValue(ConfigService.GEMINI_KEY)
+        val key =
+            keyOverride?.takeIf { it.isNotBlank() }
+                ?: configService.getValue(ConfigService.GEMINI_KEY)
         if (key.isNullOrBlank()) {
             return ProbeResult(success = false, message = "Gemini API key not configured")
         }

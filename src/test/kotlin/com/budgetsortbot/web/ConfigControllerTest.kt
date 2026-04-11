@@ -149,8 +149,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/fastmail")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"fastmailApiToken":"fmjt_test"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
     }
@@ -165,8 +164,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/fastmail")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"fastmailApiToken":"my-unsaved-token"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
 
         verify { connectionProbeService.probeFastMail(eq("my-unsaved-token")) }
     }
@@ -194,8 +192,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/fastmail")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"fastmailApiToken":"bad-token"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.message").value("401 Unauthorized — check your credentials"))
     }
@@ -209,8 +206,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/ynab")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"ynabToken":"my-ynab-token"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
     }
@@ -225,8 +221,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/ynab")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"ynabToken":"my-unsaved-ynab-token"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
 
         verify { connectionProbeService.probeYnab(eq("my-unsaved-ynab-token")) }
     }
@@ -240,8 +235,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/gemini")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"geminiKey":"my-gemini-key"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("Connected"))
     }
@@ -256,8 +250,7 @@ class ConfigControllerTest {
                 post("/api/config/probe/gemini")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"geminiKey":"my-unsaved-gemini-key"}"""),
-            )
-            .andExpect(status().isOk)
+            ).andExpect(status().isOk)
 
         verify { connectionProbeService.probeGemini(eq("my-unsaved-gemini-key")) }
     }
