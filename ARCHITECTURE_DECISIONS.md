@@ -15,7 +15,7 @@ This document is a quick-reference summary of the Architecture Decision Records 
 
 ## How to Write Good ADRs
 
-ADRs document **architecture decisions** (how the system is built), not product decisions (what features exist). Follow these principles:
+ADRs document **architecture decisions** (how the system is built), not product decisions (what features exist). Follow these principles.
 
 ### Focus on Architecture, Not Product
 
@@ -78,6 +78,11 @@ Configuration lives in code. ADRs explain *why* a config structure was chosen, n
 | 15 | Code hygiene (hooks + CI) | Spotless/ktlint, Prettier/ESLint, Lefthook pre-commit/pre-push hooks. CI gates on format/lint. | [ADR-0005](docs/ADRs/20260406_codeHygieneTooling.md) |
 | 16 | Release pipeline (multi-arch GHCR) | `workflow_run` on CI success. Auto-patch-bump. Multi-arch Docker with `--platform=$BUILDPLATFORM` for build stages. | [ADR-0006](docs/ADRs/20260403_releasePipeline.md) |
 | 17 | Help/issue reporting (security + data control) | Server-side credential sanitization. GitHub URL with query params (not API) for user data control. Truncation at 4000 chars. | [ADR-0007](docs/ADRs/20260403_helpIssueReporting.md) |
+| 18 | Skeuomorphic Industrial Control design system | All UI must follow the Skeuomorphic Industrial Control visual language documented in `UI_DESIGN_PRINCIPLES.md`. | [ADR-0008](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md#1-persistent-panel-pattern) |
+| 19 | Persistent panel pattern | UI panels always occupy a fixed housing; state changes drive content inside a panel, not the panel's existence. | [ADR-0008](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md#1-persistent-panel-pattern) |
+| 20 | SplitFlapSlot for status messages | Transient save confirmations and warnings use `SplitFlapSlot` (5 s timeout) not conditionally rendered text. | [ADR-0008](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md#2-split-flap-slot-as-saveStatus-indicator) |
+| 21 | RadioGroup for static option selection; CRT for dynamic | Use `RadioGroup` (indicator radio group) when all options are known ahead of time. Use a CRT terminal panel when options are retrieved dynamically (e.g., YNAB budget list). The budget selector CRT also serves as implicit YNAB token validation — no separate Test YNAB button is needed. | [ADR-0008](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md#3-indicator-radio-group-for-mode-selection) |
+| 22 | Self-hosted fonts, no external CDN | External font CDNs (Google Fonts) are prohibited; use system monospace fallbacks to preserve offline/privacy guarantees. | [ADR-0008](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md#6-self-hosted--system-fonts-only--no-external-cdn) |
 
 ---
 
@@ -92,3 +97,4 @@ Configuration lives in code. ADRs explain *why* a config structure was chosen, n
 | [20260406_codeHygieneTooling.md](docs/ADRs/20260406_codeHygieneTooling.md) | Code Hygiene Tooling (Pre-Commit Hooks + CI Enforcement) | 2026-04-06 | Accepted |
 | [20260403_releasePipeline.md](docs/ADRs/20260403_releasePipeline.md) | Automated Release Pipeline (Multi-Arch Docker to GHCR) | 2026-04-03 | Accepted |
 | [20260403_helpIssueReporting.md](docs/ADRs/20260403_helpIssueReporting.md) | Help/Issue Reporting Security and Data Control | 2026-04-03 | Accepted |
+| [20260408_skeuomorphicIndustrialControlUiDesignSystem.md](docs/ADRs/20260408_skeuomorphicIndustrialControlUiDesignSystem.md) | Skeuomorphic Industrial Control UI Design System | 2026-04-08 | Accepted |

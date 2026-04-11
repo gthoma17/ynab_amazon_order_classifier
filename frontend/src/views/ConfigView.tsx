@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPostWithBody, apiPut } from '../api'
+import CrtPanel from '../components/CrtPanel'
+import IndicatorPanel from '../components/IndicatorPanel'
+import RadioGroup from '../components/RadioGroup'
+import SplitFlapSlot from '../components/SplitFlapSlot'
 
 interface ApiKeysResponse {
   ynabToken: string | null
@@ -36,16 +40,12 @@ const emptyKeys: ApiKeyValues = {
   geminiKey: '',
 }
 
-// ── Budget selection ───────────────────────────────────────────────────────────
-
 interface Budget {
   id: string
   name: string
 }
 
 type BudgetsStatus = 'idle' | 'loading' | 'loaded' | 'error'
-
-// ── Processing guardrails ──────────────────────────────────────────────────────
 
 type ScheduleType =
   | 'EVERY_N_SECONDS'
@@ -72,8 +72,6 @@ interface ProcessingConfigResponse {
   scheduleConfig: ScheduleConfig | null
 }
 
-// ── Dry run ───────────────────────────────────────────────────────────────────
-
 interface DryRunResult {
   id: number
   orderId: number | null
@@ -93,29 +91,27 @@ const MINUTES = [0, 15, 30, 45]
 
 export default function ConfigView() {
   const [keys, setKeys] = useState<ApiKeyValues>(emptyKeys)
-  const [saved, setSaved] = useState(false)
-  const [ynabProbe, setYnabProbe] = useState<ProbeState>(idleProbe)
+  const [signalSourcesMessage, setSignalSourcesMessage] = useState<string | null>(null)
+  const [aiEngineMessage, setAiEngineMessage] = useState<string | null>(null)
   const [fastmailProbe, setFastmailProbe] = useState<ProbeState>(idleProbe)
   const [geminiProbe, setGeminiProbe] = useState<ProbeState>(idleProbe)
 
-  // Budget selection
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [budgetsStatus, setBudgetsStatus] = useState<BudgetsStatus>('idle')
   const [budgetsError, setBudgetsError] = useState('')
+  const [highlightedBudgetIndex, setHighlightedBudgetIndex] = useState(-1)
 
-  // Processing config
   const [orderCap, setOrderCap] = useState(0)
   const [startFromDate, setStartFromDate] = useState('')
   const [scheduleType, setScheduleType] = useState<ScheduleType>('EVERY_N_HOURS')
   const [secondInterval, setSecondInterval] = useState(10)
   const [minuteInterval, setMinuteInterval] = useState(30)
   const [hourInterval, setHourInterval] = useState(5)
-  const [scheduleHour, setScheduleHour] = useState(0)
+  const [scheduleHour, setScheduleHour] = useState(9)
   const [scheduleMinute, setScheduleMinute] = useState(0)
   const [scheduleDow, setScheduleDow] = useState('MON')
-  const [processingConfigSaved, setProcessingConfigSaved] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState<string | null>(null)
 
-  // Dry run — default start date to 1 month ago, computed once at mount
   const [dryRunStartFrom, setDryRunStartFrom] = useState(() => {
     const oneMonthAgo = new Date()
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
@@ -130,9 +126,6 @@ export default function ConfigView() {
 
     apiGet<ApiKeysResponse>('/api/config/keys').then((data) => {
       if (cancelled) return
-      // Use functional form: only populate a field if it is currently empty so
-      // that a slow response (e.g. during JVM warm-up in CI) never overwrites
-      // values the user has already typed into the form.
       setKeys((current) => ({
         ynabToken: current.ynabToken || (data.ynabToken ?? ''),
         ynabBudgetId: current.ynabBudgetId || (data.ynabBudgetId ?? ''),
@@ -157,7 +150,6 @@ export default function ConfigView() {
       }
     })
 
-    // Load any previous dry-run results
     apiGet<DryRunResult[]>('/api/config/dry-run/results')
       .then((results) => {
         if (!cancelled) setDryRunResults(results)
@@ -169,10 +161,6 @@ export default function ConfigView() {
     }
   }, [])
 
-  // Derive displayed budget state from ynabToken at render time to avoid
-  // synchronous setState calls in effects (react-hooks/set-state-in-effect).
-  // Only expose budgets when fully loaded — avoids showing stale options from a
-  // previous token while a new fetch is in flight.
   const displayBudgets = keys.ynabToken && budgetsStatus === 'loaded' ? budgets : []
   const displayBudgetsStatus: BudgetsStatus = keys.ynabToken ? budgetsStatus : 'idle'
   const displayBudgetsError = keys.ynabToken ? budgetsError : ''
@@ -184,8 +172,9 @@ export default function ConfigView() {
 
     let cancelled = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale budgets and signals loading state before async fetch
-    setBudgets([]) // clear stale data from a previous token before fetching
+    setBudgets([])
     setBudgetsStatus('loading')
+    setHighlightedBudgetIndex(-1)
     setBudgetsError('')
 
     const params = new URLSearchParams({ token: keys.ynabToken })
@@ -208,11 +197,41 @@ export default function ConfigView() {
     }
   }, [keys.ynabToken])
 
-  function handleSave() {
-    apiPut('/api/config/keys', keys).then(() => {
-      setSaved(true)
-      setYnabProbe(idleProbe)
+  // Auto-reset save slot messages after 5 seconds
+  useEffect(() => {
+    if (!signalSourcesMessage) return
+    const t = setTimeout(() => setSignalSourcesMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [signalSourcesMessage])
+
+  useEffect(() => {
+    if (!aiEngineMessage) return
+    const t = setTimeout(() => setAiEngineMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [aiEngineMessage])
+
+  useEffect(() => {
+    if (!processingMessage) return
+    const t = setTimeout(() => setProcessingMessage(null), 5000)
+    return () => clearTimeout(t)
+  }, [processingMessage])
+
+  function handleSaveSignalSources() {
+    apiPut('/api/config/keys', {
+      ynabToken: keys.ynabToken,
+      ynabBudgetId: keys.ynabBudgetId,
+      fastmailApiToken: keys.fastmailApiToken,
+    }).then(() => {
+      setSignalSourcesMessage('✓  SAVED')
       setFastmailProbe(idleProbe)
+    })
+  }
+
+  function handleSaveAiEngine() {
+    apiPut('/api/config/keys', {
+      geminiKey: keys.geminiKey,
+    }).then(() => {
+      setAiEngineMessage('✓  SAVED')
       setGeminiProbe(idleProbe)
     })
   }
@@ -232,7 +251,7 @@ export default function ConfigView() {
       startFromDate: startFromDate || null,
       scheduleConfig,
     }).then(() => {
-      setProcessingConfigSaved(true)
+      setProcessingMessage('✓  SAVED')
     })
   }
 
@@ -273,325 +292,516 @@ export default function ConfigView() {
       })
   }
 
+  function handleBudgetKeyDown(e: React.KeyboardEvent) {
+    if (displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlightedBudgetIndex((prev) => Math.min(prev + 1, displayBudgets.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlightedBudgetIndex((prev) => Math.max(prev - 1, 0))
+    } else if (e.key === 'Enter' && highlightedBudgetIndex >= 0) {
+      setKeys({ ...keys, ynabBudgetId: displayBudgets[highlightedBudgetIndex].id })
+    }
+  }
+
+  const budgetListboxActiveDescendant =
+    displayBudgetsStatus === 'loaded'
+      ? (() => {
+          const id =
+            highlightedBudgetIndex >= 0
+              ? displayBudgets[highlightedBudgetIndex]?.id
+              : keys.ynabBudgetId
+          return id ? `budget-option-${id}` : undefined
+        })()
+      : undefined
+
   return (
     <div>
-      <h1>API Keys</h1>
-      <p>
-        <em>"Test Connection" tests the credentials currently in the fields.</em>
-      </p>
+      <div className="cf-panel cf-view-header">
+        <h1>Configuration</h1>
+        <p>
+          <em>&ldquo;Test Connection&rdquo; tests the credentials currently in the fields.</em>
+        </p>
+      </div>
 
-      <section>
-        <h2>YNAB</h2>
-        <div>
-          <label htmlFor="ynabToken">YNAB Token</label>
-          <input
-            id="ynabToken"
-            value={keys.ynabToken}
-            onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
+      {/* ── SIGNAL SOURCES panel ──────────────────────────────────────────── */}
+      <div className="cf-panel">
+        <span className="cf-panel-label">Signal Sources</span>
+
+        {/* YNAB sub-panel */}
+        <div className="cf-panel" style={{ marginBottom: 'var(--cf-s3)' }}>
+          <span className="cf-panel-label">YNAB</span>
+          <section aria-label="YNAB credentials">
+            <div className="cf-form-row">
+              <label htmlFor="ynabToken">YNAB Token</label>
+              <input
+                id="ynabToken"
+                type="text"
+                className="cf-credential-input"
+                value={keys.ynabToken}
+                onChange={(e) => setKeys({ ...keys, ynabToken: e.target.value })}
+              />
+            </div>
+            <div className="cf-form-row">
+              <label id="budget-selector-label">Budget</label>
+              <CrtPanel
+                className="cf-budget-selector"
+                data-testid="budget-selector-screen"
+                role="listbox"
+                aria-labelledby="budget-selector-label"
+                aria-activedescendant={budgetListboxActiveDescendant}
+                tabIndex={
+                  displayBudgetsStatus === 'loaded' && displayBudgets.length > 0 ? 0 : undefined
+                }
+                onKeyDown={handleBudgetKeyDown}
+              >
+                {displayBudgetsStatus === 'idle' ? (
+                  <div className="cf-budget-standby">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>AWAITING TOKEN
+                    </span>
+                    <span className="cf-budget-cursor" aria-hidden="true">
+                      _
+                    </span>
+                  </div>
+                ) : displayBudgetsStatus === 'loading' ? (
+                  <div className="cf-budget-standby" aria-label="budgets loading">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>FETCHING BUDGETS...
+                    </span>
+                    <span className="cf-budget-cursor" aria-hidden="true">
+                      _
+                    </span>
+                  </div>
+                ) : displayBudgetsStatus === 'error' ? (
+                  <div className="cf-budget-error" role="alert">
+                    <span>
+                      <span aria-hidden="true">&gt; </span>CONNECTION FAILED
+                    </span>
+                    <span>&nbsp;</span>
+                    <span>&nbsp;&nbsp;{displayBudgetsError}</span>
+                    <span>&nbsp;&nbsp;CHECK YNAB TOKEN AND RETRY</span>
+                  </div>
+                ) : displayBudgets.length === 0 ? (
+                  <div className="cf-budget-empty">
+                    <span>NO BUDGETS FOUND</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="cf-budget-header">SELECT BUDGET</div>
+                    <div className="cf-budget-divider" aria-hidden="true">
+                      --------------------------------
+                    </div>
+                    <div className="cf-budget-list">
+                      {displayBudgets.map((b, index) => (
+                        <div
+                          key={b.id}
+                          id={`budget-option-${b.id}`}
+                          role="option"
+                          aria-selected={keys.ynabBudgetId === b.id}
+                          data-testid={
+                            keys.ynabBudgetId === b.id
+                              ? 'budget-option-selected'
+                              : `budget-option-${b.id}`
+                          }
+                          className={[
+                            'cf-budget-option',
+                            keys.ynabBudgetId === b.id ? 'cf-budget-option--selected' : '',
+                            highlightedBudgetIndex === index ? 'cf-budget-option--highlighted' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          onClick={() => {
+                            setKeys({ ...keys, ynabBudgetId: b.id })
+                            setHighlightedBudgetIndex(index)
+                          }}
+                        >
+                          <span aria-hidden="true" className="cf-budget-prompt">
+                            {keys.ynabBudgetId === b.id ? '>' : '\u00a0'}
+                          </span>
+                          <span className="cf-budget-name">{b.name}</span>
+                          {keys.ynabBudgetId === b.id && (
+                            <span aria-hidden="true" className="cf-budget-sel">
+                              [SEL]
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CrtPanel>
+            </div>
+          </section>
+        </div>
+
+        {/* FastMail sub-panel */}
+        <div className="cf-panel" style={{ marginBottom: 0 }}>
+          <span className="cf-panel-label">FastMail</span>
+          <section aria-label="FastMail credentials">
+            <div className="cf-form-row">
+              <label htmlFor="fastmailApiToken">FastMail API Token</label>
+              <input
+                id="fastmailApiToken"
+                type="text"
+                className="cf-credential-input"
+                value={keys.fastmailApiToken}
+                onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
+              />
+            </div>
+            <div className="cf-test-control">
+              <button
+                onClick={() =>
+                  handleTest(
+                    'fastmail',
+                    { fastmailApiToken: keys.fastmailApiToken },
+                    setFastmailProbe,
+                  )
+                }
+                disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
+              >
+                Test FastMail
+              </button>
+              <IndicatorPanel
+                label="FastMail"
+                state={fastmailProbe.status}
+                message={fastmailProbe.message}
+                readoutAriaLabel="FastMail probe result"
+              />
+            </div>
+          </section>
+        </div>
+
+        {/* Save Signal Sources */}
+        <div className="cf-btn-row">
+          <button onClick={handleSaveSignalSources}>Save Signal Sources</button>
+          <SplitFlapSlot
+            message={signalSourcesMessage}
+            testId="signal-sources-saved-slot"
+            messageTestId="signal-sources-saved-message"
           />
         </div>
-        <div>
-          <label htmlFor="ynabBudgetId">Budget</label>
-          {displayBudgetsStatus === 'loading' && (
-            <span aria-label="budgets loading">Loading budgets…</span>
-          )}
-          {displayBudgetsStatus === 'error' && <span role="alert">{displayBudgetsError}</span>}
-          <select
-            id="ynabBudgetId"
-            value={keys.ynabBudgetId}
-            onChange={(e) => setKeys({ ...keys, ynabBudgetId: e.target.value })}
-            disabled={
-              !keys.ynabToken || displayBudgetsStatus !== 'loaded' || displayBudgets.length === 0
-            }
+      </div>
+
+      {/* ── AI ENGINE panel ───────────────────────────────────────────────── */}
+      <div className="cf-panel">
+        <span className="cf-panel-label">AI Engine</span>
+        <section aria-label="Gemini credentials">
+          <div className="cf-form-row">
+            <label htmlFor="geminiKey">Gemini Key</label>
+            <input
+              id="geminiKey"
+              type="text"
+              className="cf-credential-input"
+              value={keys.geminiKey}
+              onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
+            />
+          </div>
+          <div className="cf-test-control">
+            <button
+              onClick={() => handleTest('gemini', { geminiKey: keys.geminiKey }, setGeminiProbe)}
+              disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
+            >
+              Test Gemini
+            </button>
+            <IndicatorPanel
+              label="Gemini"
+              state={geminiProbe.status}
+              message={geminiProbe.message}
+              readoutAriaLabel="Gemini probe result"
+            />
+          </div>
+          <div className="cf-btn-row">
+            <button onClick={handleSaveAiEngine}>Save AI Engine</button>
+            <SplitFlapSlot
+              message={aiEngineMessage}
+              testId="ai-engine-saved-slot"
+              messageTestId="ai-engine-saved-message"
+            />
+          </div>
+        </section>
+      </div>
+
+      {/* ── PROCESSING panel ──────────────────────────────────────────────── */}
+      <div className="cf-panel">
+        <span className="cf-panel-label">Processing</span>
+        <section aria-label="Processing settings">
+          <h2>Processing Settings</h2>
+
+          <div className="cf-form-row">
+            <label htmlFor="orderCap">Max orders per run (0 = unlimited)</label>
+            <input
+              id="orderCap"
+              type="number"
+              min={0}
+              value={orderCap}
+              onChange={(e) => setOrderCap(parseInt(e.target.value, 10) || 0)}
+            />
+          </div>
+
+          <div className="cf-form-row">
+            <label htmlFor="startFromDate">Start from date</label>
+            <input
+              id="startFromDate"
+              type="date"
+              value={startFromDate}
+              onChange={(e) => setStartFromDate(e.target.value)}
+            />
+          </div>
+
+          <fieldset>
+            <legend>Sync schedule</legend>
+
+            {(() => {
+              const nActive =
+                scheduleType === 'EVERY_N_HOURS' ||
+                scheduleType === 'EVERY_N_MINUTES' ||
+                scheduleType === 'EVERY_N_SECONDS'
+              const timeActive = scheduleType === 'DAILY' || scheduleType === 'WEEKLY'
+              const dayActive = scheduleType === 'WEEKLY'
+              const warningMessage =
+                scheduleType === 'EVERY_N_SECONDS'
+                  ? '⚠  NOT RECOMMENDED FOR PRODUCTION · DEV / TEST ONLY'
+                  : null
+
+              const nValue =
+                scheduleType === 'EVERY_N_SECONDS'
+                  ? secondInterval
+                  : scheduleType === 'EVERY_N_MINUTES'
+                    ? minuteInterval
+                    : hourInterval
+              const nMax = scheduleType === 'EVERY_N_HOURS' ? 23 : 59
+
+              function handleNChange(e: React.ChangeEvent<HTMLInputElement>) {
+                const v = parseInt(e.target.value, 10) || 1
+                if (scheduleType === 'EVERY_N_SECONDS') setSecondInterval(v)
+                else if (scheduleType === 'EVERY_N_MINUTES') setMinuteInterval(v)
+                else setHourInterval(v)
+              }
+
+              return (
+                <div className="cf-sync-schedule">
+                  <div className="cf-sync-mode">
+                    <RadioGroup<ScheduleType>
+                      name="scheduleType"
+                      ariaLabel="Frequency"
+                      value={scheduleType}
+                      onChange={setScheduleType}
+                      testIdPrefix="schedule-mode"
+                      options={[
+                        { value: 'WEEKLY', label: 'Weekly' },
+                        { value: 'DAILY', label: 'Daily' },
+                        { value: 'HOURLY', label: 'Hourly' },
+                        { value: 'EVERY_N_HOURS', label: 'Every N hours' },
+                        { value: 'EVERY_N_MINUTES', label: 'Every N minutes' },
+                        { value: 'EVERY_N_SECONDS', label: 'Every N seconds' },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="cf-sync-params">
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={nActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-n"
+                      />
+                      <div className={`cf-form-row${nActive ? ' cf-sync-param--active' : ''}`}>
+                        <label htmlFor="scheduleN">N</label>
+                        <input
+                          id="scheduleN"
+                          type="number"
+                          min={1}
+                          max={nMax}
+                          value={nActive ? nValue : ''}
+                          disabled={!nActive}
+                          onChange={handleNChange}
+                          data-testid="schedule-param-n"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={timeActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-hour"
+                      />
+                      <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                        <label>Hour</label>
+                        <RadioGroup<string>
+                          name="scheduleHour"
+                          ariaLabel="Hour"
+                          value={String(scheduleHour)}
+                          onChange={(v) => setScheduleHour(Number(v))}
+                          disabled={!timeActive}
+                          columns="repeat(12, 48px)"
+                          className="cf-radio-group--time"
+                          testId="schedule-param-hour"
+                          options={HOURS.map((h) => ({
+                            value: String(h),
+                            label: String(h).padStart(2, '0'),
+                          }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={timeActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-min"
+                      />
+                      <div className={`cf-form-row${timeActive ? ' cf-sync-param--active' : ''}`}>
+                        <label>Min</label>
+                        <RadioGroup<string>
+                          name="scheduleMinute"
+                          ariaLabel="Minute"
+                          value={String(scheduleMinute)}
+                          onChange={(v) => setScheduleMinute(Number(v))}
+                          disabled={!timeActive}
+                          columns="repeat(4, 48px)"
+                          className="cf-radio-group--time"
+                          testId="schedule-param-min"
+                          options={MINUTES.map((m) => ({
+                            value: String(m),
+                            label: ':' + String(m).padStart(2, '0'),
+                          }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={dayActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-day"
+                      />
+                      <div className={`cf-form-row${dayActive ? ' cf-sync-param--active' : ''}`}>
+                        <label>Day</label>
+                        <RadioGroup<string>
+                          name="scheduleDow"
+                          ariaLabel="Day of week"
+                          value={scheduleDow}
+                          onChange={setScheduleDow}
+                          disabled={!dayActive}
+                          columns={7}
+                          testId="schedule-param-day"
+                          options={DAYS_OF_WEEK.map((d) => ({ value: d, label: d }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-warning">
+                      <SplitFlapSlot
+                        message={warningMessage}
+                        color="red"
+                        testId="schedule-warning-slot"
+                        messageTestId="schedule-warning-message"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+          </fieldset>
+
+          <div className="cf-btn-row">
+            <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
+            <SplitFlapSlot
+              message={processingMessage}
+              testId="processing-saved-slot"
+              messageTestId="processing-saved-message"
+            />
+          </div>
+        </section>
+      </div>
+
+      {/* ── DRY RUN panel ─────────────────────────────────────────────────── */}
+      <div className="cf-panel">
+        <span className="cf-panel-label">Dry Run</span>
+        <section aria-label="Dry run">
+          <h2>Dry Run</h2>
+          <p style={{ marginBottom: 'var(--cf-s2)', fontSize: '12px' }}>
+            <em>
+              Preview what would be written to YNAB — no live changes are made. Order cap applies.
+              Gemini is called for classification.
+            </em>
+          </p>
+
+          <div className="cf-form-row">
+            <label htmlFor="dryRunStartFrom">Dry-run start from</label>
+            <input
+              id="dryRunStartFrom"
+              type="date"
+              value={dryRunStartFrom}
+              onChange={(e) => setDryRunStartFrom(e.target.value)}
+            />
+          </div>
+
+          <div className="cf-btn-row">
+            <button onClick={handleDryRun} disabled={dryRunStatus === 'running'}>
+              {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
+            </button>
+          </div>
+
+          {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
+
+          <CrtPanel
+            aria-live="polite"
+            style={{ marginTop: 'var(--cf-s3)', minHeight: '320px', overflowY: 'auto' }}
           >
-            {!keys.ynabToken ? (
-              <option value="">Enter a YNAB token first</option>
-            ) : displayBudgetsStatus === 'loaded' && displayBudgets.length === 0 ? (
-              <option value="">No budgets found</option>
+            {dryRunStatus === 'idle' && dryRunResults.length === 0 ? (
+              <p className="cf-terminal-standby">-- STANDING BY --</p>
             ) : (
               <>
-                <option value="">Select a budget…</option>
-                {displayBudgets.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
+                <h3>
+                  Dry Run Results ({dryRunResults.length} order
+                  {dryRunResults.length !== 1 ? 's' : ''})
+                </h3>
+                {dryRunResults.length === 0 ? (
+                  <p
+                    className="cf-terminal-empty"
+                    style={{ fontSize: '16px', padding: 'var(--cf-s3) 0' }}
+                  >
+                    No orders matched.
+                  </p>
+                ) : (
+                  <table className="cf-data-table" style={{ marginTop: 'var(--cf-s2)' }}>
+                    <thead>
+                      <tr>
+                        <th>Order date</th>
+                        <th>Amount</th>
+                        <th>Items</th>
+                        <th>Matched transaction</th>
+                        <th>Proposed category</th>
+                        <th>Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dryRunResults.map((r) => (
+                        <tr key={r.id} aria-label={`dry-run-row-${r.id}`}>
+                          <td>{new Date(r.orderDate).toLocaleDateString()}</td>
+                          <td>${r.totalAmount}</td>
+                          <td>{r.items.join(', ')}</td>
+                          <td>{r.ynabTransactionId ?? '—'}</td>
+                          <td>{r.proposedCategoryName ?? r.proposedCategoryId ?? '—'}</td>
+                          <td>{r.errorMessage ?? ''}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </>
             )}
-          </select>
-        </div>
-        <button
-          onClick={() => handleTest('ynab', { ynabToken: keys.ynabToken }, setYnabProbe)}
-          disabled={!keys.ynabToken || ynabProbe.status === 'testing'}
-        >
-          {ynabProbe.status === 'testing' ? 'Testing…' : 'Test YNAB'}
-        </button>
-        {ynabProbe.status === 'success' && (
-          <span aria-label="YNAB probe result">✓ {ynabProbe.message}</span>
-        )}
-        {ynabProbe.status === 'error' && (
-          <span aria-label="YNAB probe result">✗ {ynabProbe.message}</span>
-        )}
-      </section>
-
-      <section>
-        <h2>FastMail</h2>
-        <div>
-          <label htmlFor="fastmailApiToken">FastMail API Token</label>
-          <input
-            id="fastmailApiToken"
-            type="password"
-            value={keys.fastmailApiToken}
-            onChange={(e) => setKeys({ ...keys, fastmailApiToken: e.target.value })}
-          />
-        </div>
-        <button
-          onClick={() =>
-            handleTest('fastmail', { fastmailApiToken: keys.fastmailApiToken }, setFastmailProbe)
-          }
-          disabled={!keys.fastmailApiToken || fastmailProbe.status === 'testing'}
-        >
-          {fastmailProbe.status === 'testing' ? 'Testing…' : 'Test FastMail'}
-        </button>
-        {fastmailProbe.status === 'success' && (
-          <span aria-label="FastMail probe result">✓ {fastmailProbe.message}</span>
-        )}
-        {fastmailProbe.status === 'error' && (
-          <span aria-label="FastMail probe result">✗ {fastmailProbe.message}</span>
-        )}
-      </section>
-
-      <section>
-        <h2>Gemini</h2>
-        <div>
-          <label htmlFor="geminiKey">Gemini Key</label>
-          <input
-            id="geminiKey"
-            value={keys.geminiKey}
-            onChange={(e) => setKeys({ ...keys, geminiKey: e.target.value })}
-          />
-        </div>
-        <button
-          onClick={() => handleTest('gemini', { geminiKey: keys.geminiKey }, setGeminiProbe)}
-          disabled={!keys.geminiKey || geminiProbe.status === 'testing'}
-        >
-          {geminiProbe.status === 'testing' ? 'Testing…' : 'Test Gemini'}
-        </button>
-        {geminiProbe.status === 'success' && (
-          <span aria-label="Gemini probe result">✓ {geminiProbe.message}</span>
-        )}
-        {geminiProbe.status === 'error' && (
-          <span aria-label="Gemini probe result">✗ {geminiProbe.message}</span>
-        )}
-      </section>
-
-      <button onClick={handleSave}>Save</button>
-      {saved && <p>Saved</p>}
-
-      {/* ── Processing guardrails ──────────────────────────────────────────── */}
-      <section>
-        <h2>Processing Settings</h2>
-
-        <div>
-          <label htmlFor="orderCap">Max orders per run (0 = unlimited)</label>
-          <input
-            id="orderCap"
-            type="number"
-            min={0}
-            value={orderCap}
-            onChange={(e) => setOrderCap(parseInt(e.target.value, 10) || 0)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="startFromDate">Start from date</label>
-          <input
-            id="startFromDate"
-            type="date"
-            value={startFromDate}
-            onChange={(e) => setStartFromDate(e.target.value)}
-          />
-        </div>
-
-        <fieldset>
-          <legend>Sync schedule</legend>
-
-          <label htmlFor="scheduleType">Frequency</label>
-          <select
-            id="scheduleType"
-            value={scheduleType}
-            onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
-          >
-            <option value="HOURLY">Every hour</option>
-            <option value="EVERY_N_HOURS">Every N hours</option>
-            <option value="EVERY_N_MINUTES">Every N minutes</option>
-            <option value="EVERY_N_SECONDS">Every N seconds</option>
-            <option value="DAILY">Daily</option>
-            <option value="WEEKLY">Weekly</option>
-          </select>
-
-          {scheduleType === 'EVERY_N_SECONDS' && (
-            <div>
-              <label htmlFor="secondInterval">Every N seconds</label>
-              <input
-                id="secondInterval"
-                type="number"
-                min={1}
-                max={59}
-                value={secondInterval}
-                onChange={(e) => setSecondInterval(parseInt(e.target.value, 10) || 1)}
-              />
-              <p role="alert">
-                ⚠ Not recommended for production — intended for development and testing only.
-              </p>
-            </div>
-          )}
-
-          {scheduleType === 'EVERY_N_MINUTES' && (
-            <div>
-              <label htmlFor="minuteInterval">Every N minutes</label>
-              <input
-                id="minuteInterval"
-                type="number"
-                min={1}
-                max={59}
-                value={minuteInterval}
-                onChange={(e) => setMinuteInterval(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-          )}
-
-          {scheduleType === 'EVERY_N_HOURS' && (
-            <div>
-              <label htmlFor="hourInterval">Every N hours</label>
-              <input
-                id="hourInterval"
-                type="number"
-                min={1}
-                max={23}
-                value={hourInterval}
-                onChange={(e) => setHourInterval(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-          )}
-
-          {(scheduleType === 'DAILY' || scheduleType === 'WEEKLY') && (
-            <>
-              <div>
-                <label htmlFor="scheduleHour">Hour</label>
-                <select
-                  id="scheduleHour"
-                  value={scheduleHour}
-                  onChange={(e) => setScheduleHour(parseInt(e.target.value, 10))}
-                >
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {String(h).padStart(2, '0')}:00
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="scheduleMinute">Minute</label>
-                <select
-                  id="scheduleMinute"
-                  value={scheduleMinute}
-                  onChange={(e) => setScheduleMinute(parseInt(e.target.value, 10))}
-                >
-                  {MINUTES.map((m) => (
-                    <option key={m} value={m}>
-                      :{String(m).padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-
-          {scheduleType === 'WEEKLY' && (
-            <div>
-              <label htmlFor="scheduleDow">Day of week</label>
-              <select
-                id="scheduleDow"
-                value={scheduleDow}
-                onChange={(e) => setScheduleDow(e.target.value)}
-              >
-                {DAYS_OF_WEEK.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </fieldset>
-
-        <button onClick={handleSaveProcessingConfig}>Save processing settings</button>
-        {processingConfigSaved && <p>Processing settings saved</p>}
-      </section>
-
-      {/* ── Dry run ────────────────────────────────────────────────────────── */}
-      <section>
-        <h2>Dry Run</h2>
-        <p>
-          <em>
-            Preview what would be written to YNAB — no live changes are made. Order cap applies.
-            Gemini is called for classification.
-          </em>
-        </p>
-
-        <div>
-          <label htmlFor="dryRunStartFrom">Dry-run start from</label>
-          <input
-            id="dryRunStartFrom"
-            type="date"
-            value={dryRunStartFrom}
-            onChange={(e) => setDryRunStartFrom(e.target.value)}
-          />
-        </div>
-
-        <button onClick={handleDryRun} disabled={dryRunStatus === 'running'}>
-          {dryRunStatus === 'running' ? 'Running…' : 'Run Dry Run'}
-        </button>
-
-        {dryRunStatus === 'error' && <p role="alert">{dryRunError}</p>}
-
-        {(dryRunStatus === 'done' || dryRunResults.length > 0) && (
-          <div aria-live="polite">
-            <h3>
-              Dry Run Results ({dryRunResults.length} order{dryRunResults.length !== 1 ? 's' : ''})
-            </h3>
-            {dryRunResults.length === 0 ? (
-              <p>No orders matched.</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Order date</th>
-                    <th>Amount</th>
-                    <th>Items</th>
-                    <th>Matched transaction</th>
-                    <th>Proposed category</th>
-                    <th>Note</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dryRunResults.map((r) => (
-                    <tr key={r.id} aria-label={`dry-run-row-${r.id}`}>
-                      <td>{new Date(r.orderDate).toLocaleDateString()}</td>
-                      <td>${r.totalAmount}</td>
-                      <td>{r.items.join(', ')}</td>
-                      <td>{r.ynabTransactionId ?? '—'}</td>
-                      <td>{r.proposedCategoryName ?? r.proposedCategoryId ?? '—'}</td>
-                      <td>{r.errorMessage ?? ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-      </section>
+          </CrtPanel>
+        </section>
+      </div>
     </div>
   )
 }

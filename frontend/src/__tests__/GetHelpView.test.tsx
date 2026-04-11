@@ -50,10 +50,12 @@ describe('GetHelpView', () => {
     expect(screen.getByRole('button', { name: /open issue/i })).toBeDisabled()
   })
 
-  it('enables the Open Issue button once description has text', async () => {
+  it('enables the Open Issue button once description has text and logs are inserted', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
+    await user.click(screen.getByRole('button', { name: /insert logs/i }))
+    await waitFor(() => expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument())
     expect(screen.getByRole('button', { name: /open issue/i })).not.toBeDisabled()
   })
 
@@ -69,19 +71,19 @@ describe('GetHelpView', () => {
     expect(screen.getByRole('button', { name: /insert logs/i })).toBeInTheDocument()
   })
 
-  it('hides Insert Logs button when neither logs checkbox is checked', async () => {
+  it('disables Insert Logs button when neither logs checkbox is checked', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.click(screen.getByRole('checkbox', { name: /include recent sync log entries/i }))
-    expect(screen.queryByRole('button', { name: /insert logs/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /insert logs/i })).toBeDisabled()
   })
 
-  it('shows a warning modal when Open Issue is clicked with logs checked but not inserted', async () => {
+  it('disables Open Issue when logs are checked but not yet inserted', async () => {
     const user = userEvent.setup()
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
-    await user.click(screen.getByRole('button', { name: /open issue/i }))
-    expect(screen.getByRole('dialog', { name: /logs not inserted warning/i })).toBeInTheDocument()
+    // sync logs checkbox is checked by default — button should be disabled until logs are inserted
+    expect(screen.getByRole('button', { name: /open issue/i })).toBeDisabled()
   })
 
   it('opens issue directly when Open Issue is clicked with no logs checkboxes checked', async () => {
@@ -109,7 +111,7 @@ describe('GetHelpView', () => {
     render(<GetHelpView />)
     await user.type(screen.getByLabelText(/describe the problem/i), 'Something broke')
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/✓ logs inserted/i))
+    await waitFor(() => expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument())
     await user.click(screen.getByRole('button', { name: /open issue/i }))
 
     await waitFor(() => {
@@ -171,10 +173,7 @@ describe('GetHelpView', () => {
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
 
     await waitFor(() => {
-      const statuses = screen.getAllByRole('status')
-      expect(statuses.some((el) => /sensitive values.*removed/i.test(el.textContent ?? ''))).toBe(
-        true,
-      )
+      expect(screen.getByText('SENSITIVE VALUES REDACTED')).toBeInTheDocument()
     })
   })
 
@@ -192,8 +191,7 @@ describe('GetHelpView', () => {
     // Insert logs so truncated flag is received from the API
     await user.click(screen.getByRole('button', { name: /insert logs/i }))
     await waitFor(() => {
-      const statuses = screen.getAllByRole('status')
-      expect(statuses.some((el) => /✓ logs inserted/i.test(el.textContent ?? ''))).toBe(true)
+      expect(screen.getByText('LOGS INSERTED')).toBeInTheDocument()
     })
     await user.click(screen.getByRole('button', { name: /open issue/i }))
 
