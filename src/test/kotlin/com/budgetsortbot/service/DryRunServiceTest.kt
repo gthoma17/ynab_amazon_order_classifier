@@ -55,9 +55,10 @@ class DryRunServiceTest {
         // Common defaults
         every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "ynab-token"
         every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "budget-1"
-        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns null
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "fastmail-token"
         every { configService.getValue(ConfigService.ORDER_CAP) } returns null
         every { configService.getAllCategoryRules() } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), any()) } returns emptyList()
         justRun { dryRunResultRepository.deleteAll() }
         every { dryRunResultRepository.saveAll(any<List<DryRunResult>>()) } answers { firstArg() }
         every { syncLogRepository.save(any()) } answers { firstArg() }
@@ -155,22 +156,82 @@ class DryRunServiceTest {
     }
 
     @Test
-    fun `runDryRun logs Gemini failure but continues processing`() {
-        val order = makeOrder(1L, "49.99")
-        val txn = makeTxn("txn-1", -49990L, LocalDate.now().minusDays(5))
-        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
-        every { ynabClient.getTransactions(any(), any(), any()) } returns listOf(txn)
-        every { classificationService.classify(order) } throws RuntimeException("Gemini down")
-        val savedResults = slot<List<DryRunResult>>()
-        every { dryRunResultRepository.saveAll(capture(savedResults)) } answers { firstArg() }
+    fun `runDryRun fails with FAIL status when FastMail token is not configured`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns null
         val logSlot = slot<SyncLog>()
         every { syncLogRepository.save(capture(logSlot)) } answers { firstArg() }
 
         dryRunService.runDryRun()
 
-        // Result saved with error, but the overall run succeeds
-        assertEquals("Gemini down", savedResults.captured[0].errorMessage)
-        assertEquals(SyncStatus.SUCCESS, logSlot.captured.status)
+        assertEquals(SyncStatus.FAIL, logSlot.captured.status)
+        assertEquals("FastMail API token not configured", logSlot.captured.message)
+        verify { ynabClient wasNot io.mockk.Called }
+    }
+
+    @Test
+    fun `runDryRun fails with FAIL status when FastMail token is blank`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "  "
+        val logSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(logSlot)) } answers { firstArg() }
+
+        dryRunService.runDryRun()
+
+        assertEquals(SyncStatus.FAIL, logSlot.captured.status)
+        assertEquals("FastMail API token not configured", logSlot.captured.message)
+        verify { ynabClient wasNot io.mockk.Called }
+    }
+
+    @Test
+    fun `runDryRun fails with FAIL status when FastMail API call throws exception`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "bad-token"
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns emptyList()
+        every { emailProviderClient.searchOrders(any(), any()) } throws RuntimeException("401 Unauthorized")
+        val logSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(logSlot)) } answers { firstArg() }
+
+        dryRunService.runDryRun()
+
+        assertEquals(SyncStatus.FAIL, logSlot.captured.status)
+        assertEquals(true, logSlot.captured.message?.contains("FastMail"))
+        assertEquals(true, logSlot.captured.message?.contains("401 Unauthorized"))
+        verify { ynabClient wasNot io.mockk.Called }
+    }
+
+    @Test
+    fun `runDryRun fails with FAIL status when YNAB API call throws exception`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "fastmail-token"
+        val order = makeOrder(1L, "49.99")
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
+        every { emailProviderClient.searchOrders(any(), any()) } returns emptyList()
+        every { ynabClient.getTransactions(any(), any(), any()) } throws RuntimeException("401 Unauthorized")
+        val logSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(logSlot)) } answers { firstArg() }
+
+        dryRunService.runDryRun()
+
+        assertEquals(SyncStatus.FAIL, logSlot.captured.status)
+        assertEquals(true, logSlot.captured.message?.contains("YNAB"))
+        assertEquals(true, logSlot.captured.message?.contains("401 Unauthorized"))
+    }
+
+    @Test
+    fun `runDryRun fails with FAIL status when Gemini API call throws exception`() {
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "fastmail-token"
+        val order = makeOrder(1L, "49.99")
+        val txn = makeTxn("txn-1", -49990L, LocalDate.now().minusDays(5))
+        every { amazonOrderRepository.findByStatus(OrderStatus.PENDING) } returns listOf(order)
+        every { emailProviderClient.searchOrders(any(), any()) } returns emptyList()
+        every { ynabClient.getTransactions(any(), any(), any()) } returns listOf(txn)
+        every { classificationService.classify(order) } throws RuntimeException("API key invalid")
+        val logSlot = slot<SyncLog>()
+        every { syncLogRepository.save(capture(logSlot)) } answers { firstArg() }
+
+        dryRunService.runDryRun()
+
+        assertEquals(SyncStatus.FAIL, logSlot.captured.status)
+        assertEquals(true, logSlot.captured.message?.contains("Gemini"))
+        assertEquals(true, logSlot.captured.message?.contains("API key invalid"))
+        verify(exactly = 0) { dryRunResultRepository.saveAll(any<List<DryRunResult>>()) }
     }
 
     @Test
