@@ -62,4 +62,18 @@ describe('LogsView', () => {
       expect(screen.getByText(/no entries/i)).toBeInTheDocument()
     })
   })
+
+  it('displays logs in reverse-chronological order (newest first)', async () => {
+    render(<LogsView />)
+    await waitFor(() => {
+      expect(screen.getByText('EMAIL')).toBeInTheDocument()
+      expect(screen.getByText('YNAB')).toBeInTheDocument()
+    })
+    const entries = screen.getAllByTestId('ser-entry')
+    const texts = entries.map((e) => e.textContent ?? '')
+    const ynabIndex = texts.findIndex((t) => t.includes('YNAB'))
+    const emailIndex = texts.findIndex((t) => t.includes('EMAIL'))
+    // YNAB log (11:00) is newer than EMAIL log (10:00) — must appear first
+    expect(ynabIndex).toBeLessThan(emailIndex)
+  })
 })

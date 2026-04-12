@@ -145,6 +145,19 @@ test('first-time setup and first sync journey', async ({ page }) => {
   await expect(page.getByTestId('ser-entry').filter({ hasText: 'YNAB' }).first()).toBeVisible()
   await expect(page.locator('[data-status="SUCCESS"]').first()).toBeVisible()
 
+  // Verify logs are displayed reverse-chronologically (most recent first).
+  // When more than one entry exists, the first entry's timestamp must be
+  // >= the last entry's timestamp.
+  const logEntries = page.getByTestId('ser-entry')
+  const logCount = await logEntries.count()
+  if (logCount >= 2) {
+    const firstLastRun = await logEntries.first().locator('.cf-ser-col').nth(1).textContent()
+    const lastLastRun = await logEntries.last().locator('.cf-ser-col').nth(1).textContent()
+    expect(Date.parse((firstLastRun ?? '').trim())).toBeGreaterThanOrEqual(
+      Date.parse((lastLastRun ?? '').trim()),
+    )
+  }
+
   // ── Step 7: Dry Run ────────────────────────────────────────────────────────
   // Navigate back to Configuration, set the dry-run start date to 2024-01-01
   // so the test order (from 2024-01-15) is included in the preview, then
