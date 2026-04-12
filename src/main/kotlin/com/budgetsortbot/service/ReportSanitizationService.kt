@@ -15,6 +15,7 @@ class ReportSanitizationService(
          */
         val NON_SENSITIVE_KEYS: Set<String> =
             setOf(
+                ConfigService.YNAB_BUDGET_ID,
                 ConfigService.ORDER_CAP,
                 ConfigService.SCHEDULE_CONFIG,
                 ConfigService.START_FROM_DATE,

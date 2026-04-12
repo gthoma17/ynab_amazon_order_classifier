@@ -100,6 +100,18 @@ data class ScheduleConfigDto(
     val dayOfWeek: String? = null,
 )
 
+// ── Help config state ─────────────────────────────────────────────────────────
+
+/**
+ * One row in the configuration-state diagnostic panel on the GET HELP page.
+ * Sensitive keys always carry [HelpController.SENSITIVE_PLACEHOLDER]; the raw
+ * secret value is never included in the response.
+ */
+data class ConfigStateEntryDto(
+    val key: String,
+    val displayValue: String,
+)
+
 // ── Help report ───────────────────────────────────────────────────────────────
 
 data class HelpReportRequest(
