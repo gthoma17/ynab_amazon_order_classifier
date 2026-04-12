@@ -60,9 +60,24 @@ class DryRunService(
         val sinceInstant = effectiveStartDate.atStartOfDay(ZoneOffset.UTC).toInstant()
         val runAt = Instant.now()
 
-        val token = configService.getValue(ConfigService.YNAB_TOKEN)
+        // Validate FastMail credentials before attempting any API calls (fail-fast).
+        val fastmailToken = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
+        if (fastmailToken.isNullOrBlank()) {
+            log.warn { "FastMail API token not configured, aborting dry run" }
+            syncLogRepository.save(
+                SyncLog(
+                    source = SyncSource.DRY_RUN,
+                    lastRun = runAt,
+                    status = SyncStatus.FAIL,
+                    message = "FastMail API token not configured",
+                ),
+            )
+            return
+        }
+
+        val ynabToken = configService.getValue(ConfigService.YNAB_TOKEN)
         val budgetId = configService.getValue(ConfigService.YNAB_BUDGET_ID)
-        if (token == null || budgetId == null) {
+        if (ynabToken.isNullOrBlank() || budgetId.isNullOrBlank()) {
             log.warn { "YNAB credentials not configured, aborting dry run" }
             syncLogRepository.save(
                 SyncLog(
@@ -88,8 +103,15 @@ class DryRunService(
         var overallMessage: String? = null
 
         try {
-            // Step 1: gather orders — existing PENDING orders + freshly fetched emails
-            val orders = gatherOrders(sinceInstant, orderCap)
+            // Step 1: gather orders — existing PENDING orders + freshly fetched emails.
+            // Failures from FastMail are wrapped with a clear system label so the log
+            // message tells the user exactly which credential to check.
+            val orders =
+                try {
+                    gatherOrders(sinceInstant, orderCap)
+                } catch (e: Exception) {
+                    throw RuntimeException("Failed to fetch emails from FastMail: ${e.message}", e)
+                }
 
             if (orders.isEmpty()) {
                 log.info { "Dry run: no eligible orders found since $effectiveStartDate" }
@@ -111,10 +133,18 @@ class DryRunService(
                     .atZone(ZoneOffset.UTC)
                     .toLocalDate()
                     .minusDays(1)
-            val transactions = ynabClient.getTransactions(budgetId, token, sinceDate)
+            val transactions =
+                try {
+                    ynabClient.getTransactions(budgetId, ynabToken, sinceDate)
+                } catch (e: Exception) {
+                    throw RuntimeException("Failed to fetch transactions from YNAB: ${e.message}", e)
+                }
             log.debug { "Dry run: fetched ${transactions.size} YNAB transaction(s) since $sinceDate" }
 
-            // Step 3: match + classify (no writes to YNAB or amazon_orders)
+            // Step 3: match + classify (no writes to YNAB or amazon_orders).
+            // Gemini classification failures are propagated immediately (fail-fast) so
+            // invalid Gemini credentials surface as a FAILURE rather than a silent
+            // per-order errorMessage with an overall SUCCESS status.
             val results =
                 orders.map { order ->
                     val matched = MatchingStrategy.match(order, transactions)
@@ -131,14 +161,12 @@ class DryRunService(
                             runAt = runAt,
                         )
                     } else {
-                        var categoryId: String? = null
-                        var errorMsg: String? = null
-                        try {
-                            categoryId = classificationService.classify(order)
-                        } catch (e: Exception) {
-                            log.warn(e) { "Dry run: Gemini classification failed for order id=${order.id}" }
-                            errorMsg = e.message
-                        }
+                        val categoryId =
+                            try {
+                                classificationService.classify(order)
+                            } catch (e: Exception) {
+                                throw RuntimeException("Failed to classify order with Gemini: ${e.message}", e)
+                            }
                         val categoryName = resolveCategoryName(categoryId)
                         DryRunResult(
                             orderId = order.id,
@@ -148,7 +176,6 @@ class DryRunService(
                             ynabTransactionId = matched.id,
                             proposedCategoryId = categoryId,
                             proposedCategoryName = categoryName,
-                            errorMessage = errorMsg,
                             runAt = runAt,
                         )
                     }
@@ -197,18 +224,16 @@ class DryRunService(
         sinceInstant: Instant,
         alreadyKnownIds: Set<String>,
     ): List<AmazonOrder> {
+        // Token is validated before gatherOrders() is called, but we guard here for safety.
         val token = configService.getValue(ConfigService.FASTMAIL_API_TOKEN)
-        if (token == null) return emptyList()
+        if (token.isNullOrBlank()) throw RuntimeException("FastMail API token not configured")
 
-        return try {
-            val emails = emailProviderClient.searchOrders(token, sinceInstant)
-            emails
-                .filter { it.messageId !in alreadyKnownIds }
-                .mapNotNull { email -> parseEmail(email) }
-        } catch (e: Exception) {
-            log.warn(e) { "Dry run: failed to fetch emails from FastMail; continuing with DB orders only" }
-            emptyList()
-        }
+        // Do NOT catch exceptions here — let them propagate so the outer try-catch in
+        // runDryRun() can record a FAILURE rather than silently returning an empty list.
+        val emails = emailProviderClient.searchOrders(token, sinceInstant)
+        return emails
+            .filter { it.messageId !in alreadyKnownIds }
+            .mapNotNull { email -> parseEmail(email) }
     }
 
     private fun parseEmail(email: EmailOrder): AmazonOrder? {
