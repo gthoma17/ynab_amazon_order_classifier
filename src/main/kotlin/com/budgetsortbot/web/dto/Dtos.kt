@@ -98,6 +98,7 @@ data class ScheduleConfigDto(
     val hour: Int? = null,
     val minute: Int = 0,
     val dayOfWeek: String? = null,
+    val hourlyMinuteOffset: Int? = null,
 )
 
 // ── Help report ───────────────────────────────────────────────────────────────

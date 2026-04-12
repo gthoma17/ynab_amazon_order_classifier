@@ -472,9 +472,10 @@ describe('ConfigView', () => {
       expect(screen.queryByTestId('schedule-warning-message')).not.toBeInTheDocument(),
     )
 
-    // Switch to HOURLY — all params inactive
+    // Switch to HOURLY — offset lamp active, N/hour/min/day inactive
     await user.click(screen.getByRole('radio', { name: /^hourly$/i }))
     expect(screen.getByTestId('schedule-param-n')).toBeDisabled()
+    expect(screen.getByTestId('schedule-lamp-offset')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
@@ -492,7 +493,7 @@ describe('ConfigView', () => {
     render(<ConfigView />)
     await waitFor(() => screen.getByLabelText(/max orders per run/i))
 
-    // Default: EVERY_N_HOURS — hour/minute/dayOfWeek should be null in body
+    // Default: EVERY_N_HOURS — hour/minute/dayOfWeek/hourlyMinuteOffset should be null in body
     await user.click(screen.getByRole('button', { name: /save processing settings/i }))
     await waitFor(() => expect(capturedBody).not.toBeNull())
     const sc = (capturedBody as Record<string, unknown>).scheduleConfig as Record<string, unknown>
@@ -502,6 +503,62 @@ describe('ConfigView', () => {
     expect(sc.dayOfWeek).toBeNull()
     expect(sc.minuteInterval).toBeNull()
     expect(sc.secondInterval).toBeNull()
+    expect(sc.hourlyMinuteOffset).toBeNull()
+  })
+
+  it('hourly offset selector: visible only for HOURLY, persisted correctly', async () => {
+    const user = userEvent.setup()
+    let capturedBody: unknown = null
+    server.use(
+      http.put('/api/config/processing', async ({ request }) => {
+        capturedBody = await request.json()
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    render(<ConfigView />)
+    await waitFor(() => screen.getByLabelText(/max orders per run/i))
+
+    // Offset radio group not active for default EVERY_N_HOURS mode
+    expect(screen.getByTestId('schedule-lamp-offset')).not.toHaveAttribute('data-active')
+
+    // Switch to HOURLY — offset selector becomes active
+    await user.click(screen.getByRole('radio', { name: /^hourly$/i }))
+    expect(screen.getByTestId('schedule-lamp-offset')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-param-offset')).toBeInTheDocument()
+
+    // Select :30 offset
+    await user.click(
+      within(screen.getByTestId('schedule-param-offset')).getByRole('radio', { name: ':30' }),
+    )
+
+    // Save and confirm hourlyMinuteOffset is 30 in the PUT body
+    await user.click(screen.getByRole('button', { name: /save processing settings/i }))
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    const sc = (capturedBody as Record<string, unknown>).scheduleConfig as Record<string, unknown>
+    expect(sc.type).toBe('HOURLY')
+    expect(sc.hourlyMinuteOffset).toBe(30)
+    expect(sc.hour).toBeNull()
+    expect(sc.dayOfWeek).toBeNull()
+  })
+
+  it('hourly offset loaded from API response', async () => {
+    server.use(
+      http.get('/api/config/processing', () =>
+        HttpResponse.json({
+          orderCap: 0,
+          startFromDate: null,
+          installedAt: null,
+          scheduleConfig: { type: 'HOURLY', hourlyMinuteOffset: 45 },
+        }),
+      ),
+    )
+    render(<ConfigView />)
+    await waitFor(() => expect(screen.getByRole('radio', { name: /^hourly$/i })).toBeChecked())
+
+    // :45 should be the selected offset
+    expect(
+      within(screen.getByTestId('schedule-param-offset')).getByRole('radio', { name: ':45' }),
+    ).toBeChecked()
   })
 
   // --- Split-flap slot journey ---
@@ -557,16 +614,26 @@ describe('ConfigView', () => {
 
     // EVERY_N_HOURS: N lamp active, others inactive
     expect(screen.getByTestId('schedule-lamp-n')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-offset')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
 
-    // Switch to WEEKLY: hour, min, day lamps active; N inactive
+    // Switch to WEEKLY: hour, min, day lamps active; N and offset inactive
     await user.click(screen.getByRole('radio', { name: /^weekly$/i }))
     expect(screen.getByTestId('schedule-lamp-n')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-offset')).not.toHaveAttribute('data-active')
     expect(screen.getByTestId('schedule-lamp-hour')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('schedule-lamp-min')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('schedule-lamp-day')).toHaveAttribute('data-active', 'true')
+
+    // Switch to HOURLY: offset lamp active; all others inactive
+    await user.click(screen.getByRole('radio', { name: /^hourly$/i }))
+    expect(screen.getByTestId('schedule-lamp-n')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-offset')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByTestId('schedule-lamp-hour')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-min')).not.toHaveAttribute('data-active')
+    expect(screen.getByTestId('schedule-lamp-day')).not.toHaveAttribute('data-active')
   })
 
   // --- Dry run ---

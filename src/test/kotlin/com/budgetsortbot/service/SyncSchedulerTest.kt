@@ -63,6 +63,15 @@ class SyncSchedulerTest {
     }
 
     @Test
+    fun `buildCronFromConfig parses HOURLY schedule with offset 30 correctly`() {
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"HOURLY","hourlyMinuteOffset":30}"""
+
+        val cron = syncScheduler.buildCronFromConfig()
+
+        assertEquals("0 30 * * * *", cron)
+    }
+
+    @Test
     fun `buildCronFromConfig parses EVERY_N_HOURS schedule correctly`() {
         every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"EVERY_N_HOURS","hourInterval":3}"""
 
