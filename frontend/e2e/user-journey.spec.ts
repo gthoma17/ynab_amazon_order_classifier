@@ -88,7 +88,17 @@ test('first-time setup and first sync journey', async ({ page }) => {
 
   await page.locator('#startFromDate').fill('2024-01-01')
   await page.locator('#orderCap').fill('10')
+
+  // Verify hourly minute offset selector appears only when Hourly is selected
+  await page.getByTestId('schedule-mode-HOURLY').click()
+  await expect(page.getByTestId('schedule-lamp-offset')).toHaveAttribute('data-active', 'true')
+  // Select :30 offset (scoped to offset param group to avoid ambiguity with the minute selector)
+  await page.getByTestId('schedule-param-offset').getByRole('radio', { name: ':30' }).click()
+
+  // Switch away from Hourly — offset lamp should deactivate
   await page.getByTestId('schedule-mode-EVERY_N_SECONDS').click()
+  await expect(page.getByTestId('schedule-lamp-offset')).not.toHaveAttribute('data-active')
+
   await expect(page.getByTestId('schedule-warning-message')).toContainText(
     /not recommended for production/i,
   )

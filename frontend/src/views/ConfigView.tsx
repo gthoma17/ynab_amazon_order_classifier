@@ -63,6 +63,7 @@ interface ScheduleConfig {
   hour?: number | null
   minute?: number
   dayOfWeek?: string | null
+  hourlyMinuteOffset?: number | null
 }
 
 interface ProcessingConfigResponse {
@@ -107,6 +108,7 @@ export default function ConfigView() {
   const [secondInterval, setSecondInterval] = useState(10)
   const [minuteInterval, setMinuteInterval] = useState(30)
   const [hourInterval, setHourInterval] = useState(5)
+  const [hourlyMinuteOffset, setHourlyMinuteOffset] = useState(0)
   const [scheduleHour, setScheduleHour] = useState(9)
   const [scheduleMinute, setScheduleMinute] = useState(0)
   const [scheduleDow, setScheduleDow] = useState('MON')
@@ -144,6 +146,7 @@ export default function ConfigView() {
         setSecondInterval(sc.secondInterval ?? 10)
         setMinuteInterval(sc.minuteInterval ?? 30)
         setHourInterval(sc.hourInterval ?? 5)
+        setHourlyMinuteOffset(sc.hourlyMinuteOffset ?? 0)
         setScheduleHour(sc.hour ?? 0)
         setScheduleMinute(sc.minute ?? 0)
         setScheduleDow(sc.dayOfWeek ?? 'MON')
@@ -245,6 +248,7 @@ export default function ConfigView() {
       hour: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleHour : null,
       minute: scheduleType === 'DAILY' || scheduleType === 'WEEKLY' ? scheduleMinute : 0,
       dayOfWeek: scheduleType === 'WEEKLY' ? scheduleDow : null,
+      hourlyMinuteOffset: scheduleType === 'HOURLY' ? hourlyMinuteOffset : null,
     }
     apiPut('/api/config/processing', {
       orderCap,
@@ -558,6 +562,7 @@ export default function ConfigView() {
                 scheduleType === 'EVERY_N_HOURS' ||
                 scheduleType === 'EVERY_N_MINUTES' ||
                 scheduleType === 'EVERY_N_SECONDS'
+              const hourlyActive = scheduleType === 'HOURLY'
               const timeActive = scheduleType === 'DAILY' || scheduleType === 'WEEKLY'
               const dayActive = scheduleType === 'WEEKLY'
               const warningMessage =
@@ -619,6 +624,32 @@ export default function ConfigView() {
                           disabled={!nActive}
                           onChange={handleNChange}
                           data-testid="schedule-param-n"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cf-sync-param-row">
+                      <span
+                        className="cf-param-lamp"
+                        data-active={hourlyActive ? 'true' : undefined}
+                        aria-hidden="true"
+                        data-testid="schedule-lamp-offset"
+                      />
+                      <div className={`cf-form-row${hourlyActive ? ' cf-sync-param--active' : ''}`}>
+                        <label>Offset</label>
+                        <RadioGroup<string>
+                          name="hourlyMinuteOffset"
+                          ariaLabel="Minute offset"
+                          value={String(hourlyMinuteOffset)}
+                          onChange={(v) => setHourlyMinuteOffset(Number(v))}
+                          disabled={!hourlyActive}
+                          columns="repeat(4, 48px)"
+                          className="cf-radio-group--time"
+                          testId="schedule-param-offset"
+                          options={MINUTES.map((m) => ({
+                            value: String(m),
+                            label: ':' + String(m).padStart(2, '0'),
+                          }))}
                         />
                       </div>
                     </div>

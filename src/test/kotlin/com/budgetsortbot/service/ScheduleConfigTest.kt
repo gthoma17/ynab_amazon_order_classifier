@@ -42,6 +42,42 @@ class ScheduleConfigTest {
     }
 
     @Test
+    fun `HOURLY with offset 0 fires at minute 0`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = 0)
+        assertEquals("0 0 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `HOURLY with offset 15 fires at minute 15`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = 15)
+        assertEquals("0 15 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `HOURLY with offset 30 fires at minute 30`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = 30)
+        assertEquals("0 30 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `HOURLY with offset 45 fires at minute 45`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = 45)
+        assertEquals("0 45 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `HOURLY with invalid offset defaults to minute 0`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = 7)
+        assertEquals("0 0 * * * *", config.toCron())
+    }
+
+    @Test
+    fun `HOURLY with null offset defaults to minute 0`() {
+        val config = ScheduleConfig(type = ScheduleType.HOURLY, hourlyMinuteOffset = null)
+        assertEquals("0 0 * * * *", config.toCron())
+    }
+
+    @Test
     fun `EVERY_N_HOURS with interval 5 produces correct cron`() {
         val config = ScheduleConfig(type = ScheduleType.EVERY_N_HOURS, hourInterval = 5)
         assertEquals("0 0 */5 * * *", config.toCron())

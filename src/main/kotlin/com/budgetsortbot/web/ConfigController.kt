@@ -164,6 +164,7 @@ class ConfigController(
             hour = hour,
             minute = minute,
             dayOfWeek = dayOfWeek,
+            hourlyMinuteOffset = hourlyMinuteOffset,
         )
 
     private fun ScheduleConfigDto.toDomain() =
@@ -175,6 +176,7 @@ class ConfigController(
             hour = hour,
             minute = minute,
             dayOfWeek = dayOfWeek,
+            hourlyMinuteOffset = hourlyMinuteOffset,
         )
 
     private fun DryRunResult.toResponse(): DryRunResultResponse {

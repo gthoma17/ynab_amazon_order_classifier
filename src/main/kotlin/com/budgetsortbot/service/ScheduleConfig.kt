@@ -37,6 +37,11 @@ data class ScheduleConfig(
      * Accepts Spring cron day names: MON, TUE, WED, THU, FRI, SAT, SUN.
      */
     val dayOfWeek: String? = null,
+    /**
+     * Minute offset within the hour. Used when type = HOURLY.
+     * Allowed values: 0, 15, 30, 45. Invalid or null values default to 0.
+     */
+    val hourlyMinuteOffset: Int? = null,
 ) {
     /**
      * Converts this configuration to a 6-field Spring cron expression.
@@ -52,7 +57,10 @@ data class ScheduleConfig(
                 val n = minuteInterval?.takeIf { it >= 1 } ?: return null
                 "0 */$n * * * *"
             }
-            ScheduleType.HOURLY -> "0 0 * * * *"
+            ScheduleType.HOURLY -> {
+                val m = hourlyMinuteOffset?.takeIf { it in listOf(0, 15, 30, 45) } ?: 0
+                "0 $m * * * *"
+            }
             ScheduleType.EVERY_N_HOURS -> {
                 val n = hourInterval?.takeIf { it >= 1 } ?: return null
                 "0 0 */$n * * *"
