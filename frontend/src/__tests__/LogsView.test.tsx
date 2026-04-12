@@ -3,20 +3,21 @@ import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import LogsView from '../views/LogsView'
 
+// Logs returned in reverse-chronological order (as the backend now guarantees)
 const syncLogs = [
-  {
-    id: 1,
-    source: 'EMAIL',
-    lastRun: '2024-01-15T10:00:00Z',
-    status: 'SUCCESS',
-    message: null,
-  },
   {
     id: 2,
     source: 'YNAB',
     lastRun: '2024-01-15T11:00:00Z',
     status: 'FAIL',
     message: 'Connection timeout',
+  },
+  {
+    id: 1,
+    source: 'EMAIL',
+    lastRun: '2024-01-15T10:00:00Z',
+    status: 'SUCCESS',
+    message: null,
   },
 ]
 
