@@ -5,12 +5,14 @@ import com.budgetsortbot.domain.SyncSource
 import com.budgetsortbot.domain.SyncStatus
 import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
 import com.budgetsortbot.service.ApplicationLogService
+import com.budgetsortbot.service.ConfigService
 import com.budgetsortbot.service.ReportSanitizationService
 import com.budgetsortbot.web.dto.HelpReportRequest
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +21,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -37,6 +40,9 @@ class HelpControllerTest {
 
     @MockkBean
     private lateinit var reportSanitizationService: ReportSanitizationService
+
+    @MockkBean
+    private lateinit var configService: ConfigService
 
     private val objectMapper = jacksonObjectMapper()
 
@@ -282,5 +288,60 @@ class HelpControllerTest {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.body").value(containsString("Application Logs")))
             .andExpect(jsonPath("$.body").value(containsString("No application log entries found")))
+    }
+
+    @Test
+    fun `GET api help config-state returns SENSITIVE_PLACEHOLDER for credential keys`() {
+        every { configService.getValue(ConfigService.YNAB_TOKEN) } returns "secret-token"
+        every { configService.getValue(ConfigService.FASTMAIL_API_TOKEN) } returns "fm-secret"
+        every { configService.getValue(ConfigService.GEMINI_KEY) } returns "gemini-secret"
+        every { configService.getValue(ConfigService.YNAB_BUDGET_ID) } returns "my-budget-id"
+        every { configService.getValue(ConfigService.ORDER_CAP) } returns "10"
+        every { configService.getValue(ConfigService.SCHEDULE_CONFIG) } returns """{"type":"HOURLY"}"""
+        every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-01-01"
+        every { configService.getValue(ConfigService.INSTALLED_AT) } returns "2024-01-01T00:00:00Z"
+
+        // Key order mirrors HelpController.KNOWN_CONFIG_KEYS:
+        // [0]=YNAB_TOKEN, [1]=YNAB_BUDGET_ID, [2]=FASTMAIL_API_TOKEN,
+        // [3]=GEMINI_KEY, [4]=ORDER_CAP, [5]=SCHEDULE_CONFIG, [6]=START_FROM_DATE, [7]=INSTALLED_AT
+        mockMvc
+            .perform(get("/api/help/config-state"))
+            .andExpect(status().isOk)
+            // Sensitive keys carry the placeholder — never the raw value
+            .andExpect(jsonPath("$[0].key").value("YNAB_TOKEN"))
+            .andExpect(jsonPath("$[0].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[2].key").value("FASTMAIL_API_TOKEN"))
+            .andExpect(jsonPath("$[2].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[3].key").value("GEMINI_KEY"))
+            .andExpect(jsonPath("$[3].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            // Non-sensitive keys expose their actual values
+            .andExpect(jsonPath("$[1].key").value("YNAB_BUDGET_ID"))
+            .andExpect(jsonPath("$[1].displayValue").value("my-budget-id"))
+            .andExpect(jsonPath("$[4].key").value("ORDER_CAP"))
+            .andExpect(jsonPath("$[4].displayValue").value("10"))
+    }
+
+    @Test
+    fun `GET api help config-state returns SENSITIVE_PLACEHOLDER for unset credential keys`() {
+        every { configService.getValue(any()) } returns null
+
+        // Key order: [0]=YNAB_TOKEN, [2]=FASTMAIL_API_TOKEN, [3]=GEMINI_KEY
+        mockMvc
+            .perform(get("/api/help/config-state"))
+            .andExpect(status().isOk)
+            // Sensitive keys with no value still show the placeholder
+            .andExpect(jsonPath("$[0].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[2].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[3].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+    }
+
+    @Test
+    fun `GET api help config-state returns all known config keys`() {
+        every { configService.getValue(any()) } returns null
+
+        mockMvc
+            .perform(get("/api/help/config-state"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$", hasSize<Any>(8)))
     }
 }

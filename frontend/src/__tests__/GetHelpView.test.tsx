@@ -6,6 +6,7 @@ import { vi } from 'vitest'
 import GetHelpView from '../views/GetHelpView'
 
 const server = setupServer(
+  http.get('/api/help/config-state', () => HttpResponse.json([])),
   http.post('/api/help/report', () =>
     HttpResponse.json({
       body: '## Problem Description\n\nSomething broke\n',
@@ -220,5 +221,39 @@ describe('GetHelpView', () => {
   it('includes a note about no data being sent automatically', () => {
     render(<GetHelpView />)
     expect(screen.getByText(/you control final submission/i)).toBeInTheDocument()
+  })
+
+  it('shows config state panel with SENSITIVE VALUES REMOVED for credential keys', async () => {
+    server.use(
+      http.get('/api/help/config-state', () =>
+        HttpResponse.json([
+          { key: 'YNAB_TOKEN', displayValue: 'SENSITIVE VALUES REMOVED' },
+          { key: 'YNAB_BUDGET_ID', displayValue: 'my-budget-id' },
+          { key: 'FASTMAIL_API_TOKEN', displayValue: 'SENSITIVE VALUES REMOVED' },
+          { key: 'GEMINI_KEY', displayValue: 'SENSITIVE VALUES REMOVED' },
+          { key: 'ORDER_CAP', displayValue: '10' },
+        ]),
+      ),
+    )
+
+    render(<GetHelpView />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('region', { name: /system configuration state/i }),
+      ).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('config-state-YNAB_TOKEN')).toHaveTextContent(
+      'SENSITIVE VALUES REMOVED',
+    )
+    expect(screen.getByTestId('config-state-FASTMAIL_API_TOKEN')).toHaveTextContent(
+      'SENSITIVE VALUES REMOVED',
+    )
+    expect(screen.getByTestId('config-state-GEMINI_KEY')).toHaveTextContent(
+      'SENSITIVE VALUES REMOVED',
+    )
+    expect(screen.getByTestId('config-state-YNAB_BUDGET_ID')).toHaveTextContent('my-budget-id')
+    expect(screen.getByTestId('config-state-ORDER_CAP')).toHaveTextContent('10')
   })
 })

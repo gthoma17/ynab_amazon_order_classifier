@@ -91,9 +91,10 @@ class ReportSanitizationServiceTest {
                 AppConfig(key = "ORDER_CAP", value = "10", updatedAt = Instant.now()),
                 AppConfig(key = "START_FROM_DATE", value = "2024-01-01", updatedAt = Instant.now()),
                 AppConfig(key = "INSTALLED_AT", value = "2024-01-01T00:00:00Z", updatedAt = Instant.now()),
+                AppConfig(key = "YNAB_BUDGET_ID", value = "my-budget-id", updatedAt = Instant.now()),
             )
 
-        val text = """Schedule: {"type":"HOURLY"} cap=10 since=2024-01-01"""
+        val text = """Schedule: {"type":"HOURLY"} cap=10 since=2024-01-01 budget=my-budget-id"""
         val (result, wasSanitized) = service.sanitize(text)
 
         assertEquals(text, result)

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { apiPostWithBody } from '../api'
+import { useEffect, useState } from 'react'
+import { apiGet, apiPostWithBody } from '../api'
 import IndicatorAndMessageButton from '../components/IndicatorAndMessageButton'
 import SplitFlapSlot from '../components/SplitFlapSlot'
 
@@ -14,6 +14,11 @@ interface HelpReportResponse {
   truncated: boolean
 }
 
+interface ConfigStateEntry {
+  key: string
+  displayValue: string
+}
+
 export default function GetHelpView() {
   const [description, setDescription] = useState('')
   const [includeSyncLogs, setIncludeSyncLogs] = useState(true)
@@ -24,6 +29,17 @@ export default function GetHelpView() {
   const [sanitized, setSanitized] = useState(false)
   const [truncated, setTruncated] = useState(false)
   const [logsInserted, setLogsInserted] = useState(false)
+  // Config state is fetched once on mount so users can see what will be in the report.
+  // Redaction is applied server-side: sensitive values are never sent over the wire.
+  const [configState, setConfigState] = useState<ConfigStateEntry[]>([])
+
+  useEffect(() => {
+    apiGet<ConfigStateEntry[]>('/api/help/config-state')
+      .then(setConfigState)
+      .catch(() => {
+        // Non-fatal: config state panel simply stays empty on error
+      })
+  }, [])
 
   const logsRequested = includeSyncLogs || includeAppLogs
 
@@ -118,6 +134,41 @@ export default function GetHelpView() {
             the sanitized content before submitting.
           </p>
         </div>
+
+        {configState.length > 0 && (
+          <div
+            role="region"
+            aria-label="System configuration state"
+            className="cf-panel"
+            style={{ marginBottom: 'var(--cf-s3)' }}
+          >
+            <span className="cf-panel-label">System State</span>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <tbody>
+                {configState.map((entry) => (
+                  <tr key={entry.key}>
+                    <td
+                      style={{
+                        padding: '2px 8px 2px 0',
+                        fontFamily: 'var(--cf-font-mono)',
+                        opacity: 0.7,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {entry.key}
+                    </td>
+                    <td
+                      style={{ padding: '2px 0', fontFamily: 'var(--cf-font-mono)' }}
+                      data-testid={`config-state-${entry.key}`}
+                    >
+                      {entry.displayValue}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="cf-form-row">
           <label htmlFor="description">

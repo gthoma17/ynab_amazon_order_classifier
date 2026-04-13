@@ -2,11 +2,14 @@ package com.budgetsortbot.web
 
 import com.budgetsortbot.infrastructure.persistence.SyncLogRepository
 import com.budgetsortbot.service.ApplicationLogService
+import com.budgetsortbot.service.ConfigService
 import com.budgetsortbot.service.ReportSanitizationService
+import com.budgetsortbot.web.dto.ConfigStateEntryDto
 import com.budgetsortbot.web.dto.HelpReportRequest
 import com.budgetsortbot.web.dto.HelpReportResponse
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -19,6 +22,7 @@ class HelpController(
     private val syncLogRepository: SyncLogRepository,
     private val applicationLogService: ApplicationLogService,
     private val reportSanitizationService: ReportSanitizationService,
+    private val configService: ConfigService,
 ) {
     companion object {
         // 3–4 most recent sync runs, ordered most-recent-first
@@ -43,6 +47,29 @@ class HelpController(
         // before the truncation note pushes the total over the limit.
         private val MAX_ENCODED_BODY_LENGTH =
             MAX_GITHUB_URL_LENGTH - GITHUB_BASE_URL.length - TRUNCATION_NOTE_BUDGET
+
+        /**
+         * Placeholder shown for every sensitive config key in the config-state panel.
+         * The raw secret value is NEVER included in the API response (server-side redaction).
+         * Add new sensitive keys to [ReportSanitizationService.NON_SENSITIVE_KEYS]'s inverse —
+         * i.e. omit them from NON_SENSITIVE_KEYS — to have them automatically covered here.
+         */
+        const val SENSITIVE_PLACEHOLDER = "SENSITIVE VALUES REMOVED"
+
+        /**
+         * All known app_config keys, in display order for the config-state panel.
+         * When a new key is added to [ConfigService], add it here too.
+         */
+        private val KNOWN_CONFIG_KEYS = listOf(
+            ConfigService.YNAB_TOKEN,
+            ConfigService.YNAB_BUDGET_ID,
+            ConfigService.FASTMAIL_API_TOKEN,
+            ConfigService.GEMINI_KEY,
+            ConfigService.ORDER_CAP,
+            ConfigService.SCHEDULE_CONFIG,
+            ConfigService.START_FROM_DATE,
+            ConfigService.INSTALLED_AT,
+        )
 
         /**
          * Encodes [value] exactly as JavaScript's `encodeURIComponent` does:
@@ -75,6 +102,27 @@ class HelpController(
             return sb.toString()
         }
     }
+
+    /**
+     * Returns the current app_config state with sensitive values replaced by
+     * [SENSITIVE_PLACEHOLDER]. The raw secret is never transmitted over the wire.
+     * Sensitive keys with no value set still return [SENSITIVE_PLACEHOLDER] to
+     * avoid leaking whether a credential has been configured.
+     */
+    @GetMapping("/config-state")
+    fun getConfigState(): List<ConfigStateEntryDto> =
+        KNOWN_CONFIG_KEYS.map { key ->
+            val isSensitive = key !in ReportSanitizationService.NON_SENSITIVE_KEYS
+            ConfigStateEntryDto(
+                key = key,
+                displayValue =
+                    if (isSensitive) {
+                        SENSITIVE_PLACEHOLDER
+                    } else {
+                        configService.getValue(key) ?: ""
+                    },
+            )
+        }
 
     @PostMapping("/report")
     fun createReport(
