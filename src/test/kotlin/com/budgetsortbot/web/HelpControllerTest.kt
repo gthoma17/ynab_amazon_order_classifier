@@ -301,47 +301,38 @@ class HelpControllerTest {
         every { configService.getValue(ConfigService.START_FROM_DATE) } returns "2024-01-01"
         every { configService.getValue(ConfigService.INSTALLED_AT) } returns "2024-01-01T00:00:00Z"
 
+        // Key order mirrors HelpController.KNOWN_CONFIG_KEYS:
+        // [0]=YNAB_TOKEN, [1]=YNAB_BUDGET_ID, [2]=FASTMAIL_API_TOKEN,
+        // [3]=GEMINI_KEY, [4]=ORDER_CAP, [5]=SCHEDULE_CONFIG, [6]=START_FROM_DATE, [7]=INSTALLED_AT
         mockMvc
             .perform(get("/api/help/config-state"))
             .andExpect(status().isOk)
             // Sensitive keys carry the placeholder — never the raw value
-            .andExpect(
-                jsonPath("$[?(@.key=='YNAB_TOKEN')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
-            .andExpect(
-                jsonPath("$[?(@.key=='FASTMAIL_API_TOKEN')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
-            .andExpect(
-                jsonPath("$[?(@.key=='GEMINI_KEY')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
+            .andExpect(jsonPath("$[0].key").value("YNAB_TOKEN"))
+            .andExpect(jsonPath("$[0].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[2].key").value("FASTMAIL_API_TOKEN"))
+            .andExpect(jsonPath("$[2].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[3].key").value("GEMINI_KEY"))
+            .andExpect(jsonPath("$[3].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
             // Non-sensitive keys expose their actual values
-            .andExpect(jsonPath("$[?(@.key=='YNAB_BUDGET_ID')].displayValue").value(containsString("my-budget-id")))
-            .andExpect(jsonPath("$[?(@.key=='ORDER_CAP')].displayValue").value(containsString("10")))
+            .andExpect(jsonPath("$[1].key").value("YNAB_BUDGET_ID"))
+            .andExpect(jsonPath("$[1].displayValue").value("my-budget-id"))
+            .andExpect(jsonPath("$[4].key").value("ORDER_CAP"))
+            .andExpect(jsonPath("$[4].displayValue").value("10"))
     }
 
     @Test
     fun `GET api help config-state returns SENSITIVE_PLACEHOLDER for unset credential keys`() {
         every { configService.getValue(any()) } returns null
 
+        // Key order: [0]=YNAB_TOKEN, [2]=FASTMAIL_API_TOKEN, [3]=GEMINI_KEY
         mockMvc
             .perform(get("/api/help/config-state"))
             .andExpect(status().isOk)
             // Sensitive keys with no value still show the placeholder
-            .andExpect(
-                jsonPath("$[?(@.key=='YNAB_TOKEN')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
-            .andExpect(
-                jsonPath("$[?(@.key=='FASTMAIL_API_TOKEN')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
-            .andExpect(
-                jsonPath("$[?(@.key=='GEMINI_KEY')].displayValue")
-                    .value(containsString(HelpController.SENSITIVE_PLACEHOLDER)),
-            )
+            .andExpect(jsonPath("$[0].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[2].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
+            .andExpect(jsonPath("$[3].displayValue").value(HelpController.SENSITIVE_PLACEHOLDER))
     }
 
     @Test
